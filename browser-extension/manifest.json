@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "OzonHelper 采集助手",
+  "version": "0.1.0",
+  "description": "一键采集 Ozon 商品全字段信息，自动同步到 OzonHelper 平台",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.ozon.ru/*",
+    "https://ozonhelper.local/*"
+  ],
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_title": "OzonHelper 采集"
+  },
+  "background": {
+    "service_worker": "src/background/background.ts"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.ozon.ru/product/*"],
+      "js": ["src/content/extractor.ts"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
