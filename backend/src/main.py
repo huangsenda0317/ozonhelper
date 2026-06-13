@@ -62,6 +62,7 @@ from src.api.selection_pool import router as selection_pool_router
 from src.api.ai_endpoints import router as ai_router
 from src.api.products import router as products_router
 from src.api.exchange_rate import router as exchange_rate_router
+from src.api.tracking import router as tracking_router
 
 app.include_router(auth_router, tags=['认证'])
 app.include_router(rankings_router, tags=['榜单发现'])
@@ -69,3 +70,4 @@ app.include_router(selection_pool_router, tags=['选品池'])
 app.include_router(ai_router, tags=['AI 处理'])
 app.include_router(products_router, tags=['商品采集'])
 app.include_router(exchange_rate_router, tags=['汇率'])
+app.include_router(tracking_router, tags=['店铺跟踪'])
