@@ -30,11 +30,13 @@ class StorageClient:
 
     @staticmethod
     def _make_client(endpoint: str, secure: bool) -> Minio:
+        # 固定 region，避免公网 endpoint 经 Nginx 反代时 region 探测触发 SignatureDoesNotMatch
         return Minio(
             endpoint,
             access_key=settings.minio_access_key,
             secret_key=settings.minio_secret_key,
             secure=secure,
+            region='us-east-1',
         )
 
     def _ensure_bucket(self):
