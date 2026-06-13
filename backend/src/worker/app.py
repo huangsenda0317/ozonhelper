@@ -1,0 +1,29 @@
+"""Celery 应用实例 — 异步任务队列"""
+
+from celery import Celery
+
+from src.config import get_settings
+import src.models  # noqa: F401 — 注册全部 ORM 模型，避免 Worker 中 FK 解析失败
+
+settings = get_settings()
+
+celery_app = Celery(
+    'ozonhelper',
+    broker=settings.redis_url,
+    backend=settings.redis_url,
+    include=[
+        'src.worker.scraper_tasks',
+        'src.worker.ai_tasks',
+    ],
+)
+
+celery_app.conf.update(
+    task_serializer='json',
+    accept_content=['json'],
+    result_serializer='json',
+    timezone='Asia/Shanghai',
+    enable_utc=True,
+    task_track_started=True,
+    task_acks_late=True,
+    worker_prefetch_multiplier=1,
+)
