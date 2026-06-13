@@ -24,12 +24,10 @@ class StorageClient:
         self._ensure_bucket()
 
     def _resolve_public_endpoint(self) -> tuple[str, bool]:
-        """生产环境且配置了公网域名时，预签名 URL 使用公网 endpoint；否则用内部 endpoint。"""
-        use_public = (
-            settings.app_env == 'production'
-            and bool(settings.minio_public_endpoint)
-        )
-        if use_public:
+        """development 强制本地 endpoint；其余环境有公网域名则用公网。"""
+        if settings.app_env == 'development':
+            return settings.minio_endpoint, settings.minio_secure
+        if settings.minio_public_endpoint:
             return settings.minio_public_endpoint, settings.minio_public_secure
         return settings.minio_endpoint, settings.minio_secure
 
