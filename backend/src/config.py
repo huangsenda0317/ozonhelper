@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     minio_secret_key: str = 'minioadmin'
     minio_bucket: str = 'ozonhelper-images'
     minio_secure: bool = False
+    # 浏览器访问用公网域名（预签名 URL）；留空则与 minio_endpoint 相同
+    minio_public_endpoint: str = ''
+    minio_public_secure: bool = False
 
     # 加密密钥 (Fernet)
     encryption_key: str = ''
