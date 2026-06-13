@@ -17,14 +17,25 @@ class StorageClient:
     """MinIO/S3 图片存储客户端。"""
 
     def __init__(self):
-        self.client = Minio(
-            settings.minio_endpoint,
+        self.bucket = settings.minio_bucket
+        self.client = self._make_client(settings.minio_endpoint, settings.minio_secure)
+        public_endpoint = settings.minio_public_endpoint or settings.minio_endpoint
+        public_secure = (
+            settings.minio_public_secure
+            if settings.minio_public_endpoint
+            else settings.minio_secure
+        )
+        self._presign_client = self._make_client(public_endpoint, public_secure)
+        self._ensure_bucket()
+
+    @staticmethod
+    def _make_client(endpoint: str, secure: bool) -> Minio:
+        return Minio(
+            endpoint,
             access_key=settings.minio_access_key,
             secret_key=settings.minio_secret_key,
-            secure=settings.minio_secure,
+            secure=secure,
         )
-        self.bucket = settings.minio_bucket
-        self._ensure_bucket()
 
     def _ensure_bucket(self):
         """确保存储桶存在。"""
@@ -46,8 +57,10 @@ class StorageClient:
         return object_name
 
     def get_presigned_url(self, object_name: str, expires: int = 86400) -> str:
-        """生成预签名下载 URL（默认 24 小时）。"""
-        return self.client.presigned_get_object(self.bucket, object_name, expires=timedelta(seconds=expires))
+        """生成预签名下载 URL（默认 24 小时），使用公网 endpoint 供浏览器访问。"""
+        return self._presign_client.presigned_get_object(
+            self.bucket, object_name, expires=timedelta(seconds=expires)
+        )
 
     def get_bytes(self, object_name: str) -> bytes:
         """从 MinIO 读取对象字节。"""

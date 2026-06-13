@@ -35,6 +35,8 @@ services:
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
+      # 与 MINIO_PUBLIC_ENDPOINT 对应，预签名 URL 经 Nginx 反代时需设置
+      MINIO_SERVER_URL: ${MINIO_SERVER_URL:-http://localhost:9000}
     ports:
       - "9000:9000"
       - "9001:9001"
