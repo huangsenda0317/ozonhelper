@@ -7,6 +7,9 @@ from functools import lru_cache
 class Settings(BaseSettings):
     """应用配置。所有值从环境变量或 .env 文件加载。"""
 
+    # development | production（控制 MinIO 预签名 URL 是否走公网域名）
+    app_env: str = 'development'
+
     # 数据库
     database_url: str = 'postgresql+asyncpg://ozonhelper:ozonhelper@localhost:5432/ozonhelper'
 

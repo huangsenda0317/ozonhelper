@@ -6,8 +6,8 @@ echo "🚀 OzonHelper 跟卖全链路平台 — 启动中..."
 
 # 1. 检查 .env 文件
 if [ ! -f backend/.env ]; then
-    echo "📝 创建 backend/.env (从 .env.example 复制)..."
-    cp backend/.env.example backend/.env
+    echo "📝 创建 backend/.env (从 .env.development.example 复制)..."
+    cp backend/.env.development.example backend/.env
     echo "⚠️  请编辑 backend/.env 填入真实的 API 密钥:"
     echo "   - VOLCENGINE_ACCESS_KEY_ID / VOLCENGINE_SECRET_ACCESS_KEY (SeedEdit 3.0)"
     echo "   - TENCENT_SECRET_ID / TENCENT_SECRET_KEY (腾讯云 TMT 翻译)"

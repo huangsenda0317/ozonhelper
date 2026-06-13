@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { apiClient } from "@/lib/api-client";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -50,6 +52,8 @@ interface AITask {
 }
 
 export default function AIEditPage() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [tasks, setTasks] = useState<AITask[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -96,10 +100,24 @@ export default function AIEditPage() {
   }, []);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
     fetchTasks();
+  }, [authLoading, isAuthenticated, fetchTasks, router]);
+
+  const hasActiveTasks = tasks.some(
+    (t) => t.status === "pending" || t.status === "running"
+  );
+
+  useEffect(() => {
+    if (authLoading || !isAuthenticated || !hasActiveTasks) return;
+
     const interval = setInterval(fetchTasks, 2000);
     return () => clearInterval(interval);
-  }, [fetchTasks]);
+  }, [authLoading, isAuthenticated, hasActiveTasks, fetchTasks]);
 
   const getStatusLabel = (task: AITask): string | undefined => {
     if (task.status === "pending") {

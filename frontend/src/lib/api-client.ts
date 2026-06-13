@@ -1,6 +1,13 @@
 /** 前端 API 客户端 — fetch 封装、JWT 注入、错误处理 */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1';
+
+let onUnauthorized: (() => void) | null = null;
+
+/** 注册 401 回调（由 AuthProvider 注入，用于清除过期登录态） */
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  onUnauthorized = handler;
+}
 
 interface ApiResponse<T> {
   success: boolean;
@@ -68,6 +75,9 @@ class ApiClient {
     }
 
     if (!response.ok) {
+      if (response.status === 401 && onUnauthorized) {
+        onUnauthorized();
+      }
       const error = json.error || { code: 'UNKNOWN', message: '未知错误' };
       throw new ApiError(error.code, error.message, response.status);
     }
@@ -130,6 +140,9 @@ class ApiClient {
     }
 
     if (!response.ok) {
+      if (response.status === 401 && onUnauthorized) {
+        onUnauthorized();
+      }
       const error = json.error || { code: 'UNKNOWN', message: '未知错误' };
       throw new ApiError(error.code, error.message, response.status);
     }

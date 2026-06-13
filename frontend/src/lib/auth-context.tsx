@@ -1,8 +1,9 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-import { ApiError, apiClient } from './api-client';
+import { ApiError, apiClient, setUnauthorizedHandler } from './api-client';
 
 interface User {
   user_id: string;
@@ -21,22 +22,54 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+function readStoredUser(): User | null {
+  const stored = localStorage.getItem('user');
+  if (!stored) return null;
+  try {
+    return JSON.parse(stored) as User;
+  } catch {
+    localStorage.removeItem('user');
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [hasToken, setHasToken] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 从 localStorage 恢复登录状态
+  const logout = useCallback(() => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setHasToken(false);
+  }, []);
+
+  // 从 localStorage 恢复登录状态（须同时有 token 与 user）
   useEffect(() => {
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch {
-        localStorage.removeItem('user');
-      }
+    const token = localStorage.getItem('access_token');
+    const storedUser = readStoredUser();
+    if (token && storedUser) {
+      setUser(storedUser);
+      setHasToken(true);
+    } else {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('user');
+      setUser(null);
+      setHasToken(false);
     }
     setIsLoading(false);
   }, []);
+
+  // API 返回 401 时清除过期/跨环境的 token（如生产 token 用于本地开发）
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      logout();
+      router.push('/login');
+    });
+    return () => setUnauthorizedHandler(null);
+  }, [logout, router]);
 
   const login = useCallback(async (email: string, password: string) => {
     const response = await apiClient.request<{
@@ -56,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const userData: User = { user_id: '', email, name: email };
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
+    setHasToken(true);
   }, []);
 
   const register = useCallback(async (email: string, password: string, name: string) => {
@@ -74,18 +108,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
-    setUser(null);
-  }, []);
-
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading,
-        isAuthenticated: !!user,
+        isAuthenticated: !!user && hasToken,
         login,
         register,
         logout,

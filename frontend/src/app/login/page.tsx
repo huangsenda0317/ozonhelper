@@ -23,7 +23,7 @@ export default function LoginPage() {
       await login(email, password);
       router.push('/rankings');
     } catch (err: any) {
-      setError(err.message || '登录失败，请检查邮箱和密码');
+      setError(err.message || '登录失败，请检查账号和密码');
     } finally {
       setLoading(false);
     }
@@ -40,14 +40,15 @@ export default function LoginPage() {
         )}
         <form onSubmit={handleSubmit} className="space-y-lg">
           <div>
-            <label className="block text-body-sm font-medium text-ink-muted-80 mb-xs">邮箱</label>
+            <label className="block text-body-sm font-medium text-ink-muted-80 mb-xs">账号</label>
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="username"
               className="w-full px-lg py-sm text-body border border-gray-300 rounded-pill focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="user@example.com"
+              placeholder="admin"
             />
           </div>
           <div>
@@ -57,6 +58,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="current-password"
               className="w-full px-lg py-sm text-body border border-gray-300 rounded-pill focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="请输入密码"
             />

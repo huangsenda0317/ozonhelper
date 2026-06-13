@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api.error_handler import AppException, app_exception_handler, general_exception_handler
 from src.api.exceptions import AppException
 from src.api.logging_middleware import LoggingMiddleware
+from src.bootstrap.admin_user import bootstrap_admin_user
 
 
 @asynccontextmanager
@@ -15,6 +16,7 @@ async def lifespan(app: FastAPI):
     """应用生命周期管理。"""
     # 启动时
     print('🚀 OzonHelper API 启动中...')
+    await bootstrap_admin_user()
     yield
     # 关闭时
     print('👋 OzonHelper API 关闭')

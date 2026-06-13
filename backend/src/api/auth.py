@@ -11,6 +11,7 @@ from src.api.exceptions import DuplicateException, NotFoundException, Unauthoriz
 from src.auth.api_key import generate_api_key, KEY_PREFIX
 from src.auth.jwt import create_access_token
 from src.auth.password import hash_password, verify_password
+from src.bootstrap.admin_user import normalize_login_account
 from src.database import get_db
 from src.models.api_key import ApiKey
 from src.models.user import User
@@ -59,7 +60,8 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
 @router.post('/login', response_model=ApiResponse[TokenResponse])
 async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
     """用户登录。"""
-    stmt = select(User).where(User.email == request.email, User.is_active == True)
+    login_email = normalize_login_account(request.email)
+    stmt = select(User).where(User.email == login_email, User.is_active == True)
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
 

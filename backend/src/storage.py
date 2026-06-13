@@ -19,14 +19,19 @@ class StorageClient:
     def __init__(self):
         self.bucket = settings.minio_bucket
         self.client = self._make_client(settings.minio_endpoint, settings.minio_secure)
-        public_endpoint = settings.minio_public_endpoint or settings.minio_endpoint
-        public_secure = (
-            settings.minio_public_secure
-            if settings.minio_public_endpoint
-            else settings.minio_secure
-        )
+        public_endpoint, public_secure = self._resolve_public_endpoint()
         self._presign_client = self._make_client(public_endpoint, public_secure)
         self._ensure_bucket()
+
+    def _resolve_public_endpoint(self) -> tuple[str, bool]:
+        """生产环境且配置了公网域名时，预签名 URL 使用公网 endpoint；否则用内部 endpoint。"""
+        use_public = (
+            settings.app_env == 'production'
+            and bool(settings.minio_public_endpoint)
+        )
+        if use_public:
+            return settings.minio_public_endpoint, settings.minio_public_secure
+        return settings.minio_endpoint, settings.minio_secure
 
     @staticmethod
     def _make_client(endpoint: str, secure: bool) -> Minio:
@@ -59,10 +64,26 @@ class StorageClient:
         return object_name
 
     def get_presigned_url(self, object_name: str, expires: int = 86400) -> str:
-        """生成预签名下载 URL（默认 24 小时），使用公网 endpoint 供浏览器访问。"""
+        """生成预签名下载 URL（默认 24 小时）。"""
         return self._presign_client.presigned_get_object(
             self.bucket, object_name, expires=timedelta(seconds=expires)
         )
+
+    def _extract_object_name(self, value: str) -> str | None:
+        """从 object_name 或历史预签名 URL 中提取 MinIO 对象路径。"""
+        if not value.startswith(('http://', 'https://')):
+            return value
+        marker = f'/{self.bucket}/'
+        if marker not in value:
+            return None
+        return value.split(marker, 1)[1].split('?', 1)[0]
+
+    def _refresh_presigned_url(self, value: str, expires: int = 86400) -> str:
+        """将历史预签名 URL 按当前环境重新签名（开发/生产切换时避免旧域名）。"""
+        object_name = self._extract_object_name(value)
+        if object_name:
+            return self.get_presigned_url(object_name, expires=expires)
+        return value
 
     def get_bytes(self, object_name: str) -> bytes:
         """从 MinIO 读取对象字节。"""
@@ -80,7 +101,8 @@ class StorageClient:
         object_names: list[str] = list(input_data.get('object_names') or [])
         if object_names:
             return [self.get_presigned_url(name, expires=expires) for name in object_names]
-        return list(input_data.get('image_urls') or [])
+        stored_urls = list(input_data.get('image_urls') or [])
+        return [self._refresh_presigned_url(url, expires=expires) for url in stored_urls]
 
     def resolve_output_data(self, output_data: dict | None, expires: int = 86400) -> dict | None:
         """将 output_data 中的 object_names 解析为可访问的 processed_images URL。"""
@@ -92,8 +114,11 @@ class StorageClient:
 
         if not object_names and result.get('processed_images'):
             for item in result['processed_images']:
-                if isinstance(item, str) and not item.startswith(('http://', 'https://')):
-                    object_names.append(item)
+                if not isinstance(item, str):
+                    continue
+                extracted = self._extract_object_name(item)
+                if extracted:
+                    object_names.append(extracted)
 
         if object_names:
             result['object_names'] = object_names
