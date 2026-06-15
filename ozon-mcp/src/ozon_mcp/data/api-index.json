@@ -1,0 +1,7289 @@
+[
+  {
+    "operation_id": "Promos",
+    "path": "/v1/actions",
+    "method": "GET",
+    "title": "活动清单",
+    "request_fields": [],
+    "request_example": null
+  },
+  {
+    "operation_id": "ActionsAutoAddProductsCandidates",
+    "path": "/v1/actions/auto-add/products/candidates",
+    "method": "POST",
+    "title": "获取可自动添加到促销活动中的商品列表",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "auto_add_date",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "action_id": "250204",
+      "auto_add_date": "2035-08-28T14:00:00Z",
+      "limit": "1",
+      "offset": "0"
+    }
+  },
+  {
+    "operation_id": "ActionsAutoAddProductsDelete",
+    "path": "/v1/actions/auto-add/products/delete",
+    "method": "POST",
+    "title": "从促销活动自动添加列表中删除商品",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "auto_add_date",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "product_ids",
+        "type": "strings",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "action_id": "250204",
+      "auto_add_date": "2035-08-28T14:00:00Z",
+      "product_ids": [
+        "14914"
+      ]
+    }
+  },
+  {
+    "operation_id": "ActionsAutoAddProductsList",
+    "path": "/v1/actions/auto-add/products/list",
+    "method": "POST",
+    "title": "获取促销活动自动添加列表中的商品列表",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "auto_add_date",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "action_id": "250204",
+      "auto_add_date": "2035-08-28T14:00:00Z",
+      "limit": "1",
+      "offset": "0"
+    }
+  },
+  {
+    "operation_id": "ActionsAutoAddProductsUpdate",
+    "path": "/v1/actions/auto-add/products/update",
+    "method": "POST",
+    "title": "在促销活动自动添加列表中添加或更新商品",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "auto_add_date",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "to_update",
+        "type": "objects",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "action_id": "250204",
+      "auto_add_dates": "2035-08-28T14:00:00Z",
+      "to_update": [
+        {
+          "currency": "RUB",
+          "product_id": "14914",
+          "quantity": 10,
+          "action_price": 100
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "PromosCandidates",
+    "path": "/v1/actions/candidates",
+    "method": "POST",
+    "title": "可用的促销商品清单",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "last_id",
+        "type": "number",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "action_id": 63337,
+      "limit": 10,
+      "last_id": "bnVсbA==123123das"
+    }
+  },
+  {
+    "operation_id": "promos_task_approve",
+    "path": "/v1/actions/discounts-task/approve",
+    "method": "POST",
+    "title": "同意折扣申请",
+    "request_fields": [
+      {
+        "name": "tasks",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "tasks": [
+        {
+          "id": 78901,
+          "approved_price": 12500,
+          "seller_comment": "ok",
+          "approved_quantity_min": 3,
+          "approved_quantity_max": 7
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "promos_task_decline",
+    "path": "/v1/actions/discounts-task/decline",
+    "method": "POST",
+    "title": "取消折扣申请",
+    "request_fields": [
+      {
+        "name": "tasks",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "tasks": [
+        {
+          "id": 78901,
+          "seller_comment": "Ok"
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "promos_task_list",
+    "path": "/v1/actions/discounts-task/list",
+    "method": "POST",
+    "title": "申请折扣列表",
+    "request_fields": [
+      {
+        "name": "status",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "page",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "status": "UNKNOWN",
+      "page": 1,
+      "limit": 50
+    }
+  },
+  {
+    "operation_id": "PromosProducts",
+    "path": "/v1/actions/products",
+    "method": "POST",
+    "title": "参与&nbsp;活动的商品列表",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "last_id",
+        "type": "number",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "action_id": 66011,
+      "limit": 10,
+      "last_id": "bnVсbA=="
+    }
+  },
+  {
+    "operation_id": "PromosProductsActivate",
+    "path": "/v1/actions/products/activate",
+    "method": "POST",
+    "title": "在促销活动中增加一个商品",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "number",
+        "required": true
+      },
+      {
+        "name": "products",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "action_id": 60564,
+      "products": [
+        {
+          "action_price": 356,
+          "product_id": 1389,
+          "stock": 10
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "PromosProductsDeactivate",
+    "path": "/v1/actions/products/deactivate",
+    "method": "POST",
+    "title": "从活动中删除商品",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "number",
+        "required": true
+      },
+      {
+        "name": "product_ids",
+        "type": "numbers",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "action_id": 66011,
+      "product_ids": [
+        14975
+      ]
+    }
+  },
+  {
+    "operation_id": "AnalyticsAPI_AnalyticsGetData",
+    "path": "/v1/analytics/data",
+    "method": "POST",
+    "title": "分析数据",
+    "request_fields": [
+      {
+        "name": "date_from",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "date_to",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "dimension",
+        "type": "strings",
+        "required": true
+      },
+      {
+        "name": "filters",
+        "type": "objects",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "metrics",
+        "type": "strings",
+        "required": true
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "sort",
+        "type": "objects",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "date_from": "2020-09-01",
+      "date_to": "2021-10-15",
+      "metrics": [
+        "hits_view_search"
+      ],
+      "dimension": [
+        "sku",
+        "day"
+      ],
+      "filters": [],
+      "sort": [
+        {
+          "key": "hits_view_search",
+          "order": "DESC"
+        }
+      ],
+      "limit": 1000,
+      "offset": 0
+    }
+  },
+  {
+    "operation_id": "AnalyticsAPI_AnalyticsProductQueries",
+    "path": "/v1/analytics/product-queries",
+    "method": "POST",
+    "title": "获取商品搜索查询信息",
+    "request_fields": [
+      {
+        "name": "date_from",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "date_to",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "page",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "page_size",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "skus",
+        "type": "strings",
+        "required": true
+      },
+      {
+        "name": "sort_by",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "date_from": "2019-08-24T14:15:22Z",
+      "date_to": "2019-08-24T14:15:22Z",
+      "page": 0,
+      "page_size": 1000,
+      "skus": [
+        "string"
+      ],
+      "sort_by": "BY_SEARCHES",
+      "sort_dir": "DESCENDING"
+    }
+  },
+  {
+    "operation_id": "AnalyticsAPI_AnalyticsProductQueriesDetails",
+    "path": "/v1/analytics/product-queries/details",
+    "method": "POST",
+    "title": "有关特定商品查询的信息",
+    "request_fields": [
+      {
+        "name": "date_from",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "date_to",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "limit_by_sku",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "page",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "page_size",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "skus",
+        "type": "strings",
+        "required": true
+      },
+      {
+        "name": "sort_by",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "date_from": "2019-08-24T14:15:22Z",
+      "date_to": "2019-08-24T14:15:22Z",
+      "limit_by_sku": 0,
+      "page": 0,
+      "page_size": 1000,
+      "skus": [
+        "string"
+      ],
+      "sort_by": "BY_SEARCHES",
+      "sort_dir": "DESCENDING"
+    }
+  },
+  {
+    "operation_id": "AssemblyCarriagePostingList",
+    "path": "/v1/assembly/carriage/posting/list",
+    "method": "POST",
+    "title": "获取发运中的货件列表",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "cursor": "string",
+      "filter": {
+        "carriage_id": 0,
+        "cutoff_from": "2019-08-24T14:15:22Z",
+        "cutoff_to": "2019-08-24T14:15:22Z",
+        "delivery_method_id": 0
+      },
+      "limit": 0
+    }
+  },
+  {
+    "operation_id": "AssemblyCarriageProductList",
+    "path": "/v1/assembly/carriage/product/list",
+    "method": "POST",
+    "title": "获取发运中的商品列表",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "cursor": "string",
+      "filter": {
+        "carriage_id": 0,
+        "cutoff_from": "2019-08-24T14:15:22Z",
+        "cutoff_to": "2019-08-24T14:15:22Z",
+        "delivery_method_id": 0
+      },
+      "limit": 0
+    }
+  },
+  {
+    "operation_id": "AssemblyFbsPostingList",
+    "path": "/v1/assembly/fbs/posting/list",
+    "method": "POST",
+    "title": "获取货件列表",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "filter": {
+        "cutoff_from": "2026-03-01T00:00:00Z",
+        "cutoff_to": "2026-03-07T23:59:59Z",
+        "delivery_method_id": 323123321
+      },
+      "limit": 50,
+      "sort_dir": "ASC",
+      "cursor": ""
+    }
+  },
+  {
+    "operation_id": "AssemblyFbsProductList",
+    "path": "/v1/assembly/fbs/product/list",
+    "method": "POST",
+    "title": "获取货件中的商品列表",
+    "request_fields": [
+      {
+        "name": "filter",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "filter": {
+        "cutoff_from": "2019-08-24T14:15:22Z",
+        "cutoff_to": "2019-08-24T14:15:22Z",
+        "delivery_method_id": 0
+      },
+      "limit": 0,
+      "offset": 0,
+      "sort_dir": "ASC"
+    }
+  },
+  {
+    "operation_id": "add-barcode",
+    "path": "/v1/barcode/add",
+    "method": "POST",
+    "title": "为商品绑定条形码",
+    "request_fields": [
+      {
+        "name": "barcodes",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "barcodes": [
+        {
+          "barcode": "112772873170",
+          "sku": "99887766"
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "generate-barcode",
+    "path": "/v1/barcode/generate",
+    "method": "POST",
+    "title": "创建商品条形码",
+    "request_fields": [
+      {
+        "name": "product_ids",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "product_ids": [
+        "99887766"
+      ]
+    }
+  },
+  {
+    "operation_id": "CarriageAPI_CarriageApprove",
+    "path": "/v1/carriage/approve",
+    "method": "POST",
+    "title": "发运确认",
+    "request_fields": [
+      {
+        "name": "carriage_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "containers_count",
+        "type": "integer",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "carriage_id": 0,
+      "containers_count": 0
+    }
+  },
+  {
+    "operation_id": "CarriageAPI_CarriageCancel",
+    "path": "/v1/carriage/cancel",
+    "method": "POST",
+    "title": "发运删除",
+    "request_fields": [
+      {
+        "name": "carriage_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "carriage_id": 0
+    }
+  },
+  {
+    "operation_id": "CarriageAPI_CarriageCreate",
+    "path": "/v1/carriage/create",
+    "method": "POST",
+    "title": "创建发运",
+    "request_fields": [
+      {
+        "name": "all_blr_traceable",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "delivery_method_id",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "departure_date",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "all_blr_traceable": true,
+      "delivery_method_id": 0,
+      "departure_date": "2019-08-24T14:15:22Z"
+    }
+  },
+  {
+    "operation_id": "CarriageGet",
+    "path": "/v1/carriage/get",
+    "method": "POST",
+    "title": "运输信息",
+    "request_fields": [
+      {
+        "name": "carriage_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "carriage_id": 0
+    }
+  },
+  {
+    "operation_id": "carriagePassCreate",
+    "path": "/v1/carriage/pass/create",
+    "method": "POST",
+    "title": "创建通行证",
+    "request_fields": [
+      {
+        "name": "arrival_passes",
+        "type": "objects",
+        "required": true
+      },
+      {
+        "name": "carriage_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "carriage_id": 5000123456,
+      "arrival_passes": [
+        {
+          "driver_name": "string",
+          "driver_phone": "+79991234567",
+          "vehicle_license_plate": "string",
+          "vehicle_model": "string",
+          "with_returns": true
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "carriagePassDelete",
+    "path": "/v1/carriage/pass/delete",
+    "method": "POST",
+    "title": "删除通行证",
+    "request_fields": [
+      {
+        "name": "arrival_pass_ids",
+        "type": "strings",
+        "required": true
+      },
+      {
+        "name": "carriage_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "carriage_id": 5000123456,
+      "arrival_pass_ids": [
+        6000123456,
+        6000123457
+      ]
+    }
+  },
+  {
+    "operation_id": "carriagePassUpdate",
+    "path": "/v1/carriage/pass/update",
+    "method": "POST",
+    "title": "更新通行证",
+    "request_fields": [
+      {
+        "name": "arrival_passes",
+        "type": "objects",
+        "required": true
+      },
+      {
+        "name": "carriage_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "carriage_id": 5000123456,
+      "arrival_passes": [
+        {
+          "id": 6000123456,
+          "driver_name": "string",
+          "driver_phone": "+79991234567",
+          "vehicle_license_plate": "string",
+          "vehicle_model": "string",
+          "with_returns": true
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "CarriageAPI_SetPostings",
+    "path": "/v1/carriage/set-postings",
+    "method": "POST",
+    "title": "发运组成商品更改",
+    "request_fields": [
+      {
+        "name": "carriage_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "posting_numbers",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "carriage_id": 0,
+      "posting_numbers": [
+        "string"
+      ]
+    }
+  },
+  {
+    "operation_id": "ChatAPI_ChatSendFile",
+    "path": "/v1/chat/send/file",
+    "method": "POST",
+    "title": "发送文件",
+    "request_fields": [
+      {
+        "name": "base64_content",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "chat_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "base64_content": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+      "chat_id": "99feb3fc-a474-469f-95d5-268b470cc607",
+      "name": "tempor"
+    }
+  },
+  {
+    "operation_id": "ChatAPI_ChatSendMessage",
+    "path": "/v1/chat/send/message",
+    "method": "POST",
+    "title": "发送信息",
+    "request_fields": [
+      {
+        "name": "chat_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "chat_id": "99feb3fc-a474-469f-95d5-268b470cc607",
+      "text": "test"
+    }
+  },
+  {
+    "operation_id": "ChatAPI_ChatStart",
+    "path": "/v1/chat/start",
+    "method": "POST",
+    "title": "创建新聊天",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "posting_number": "47873153-0052-1"
+    }
+  },
+  {
+    "operation_id": "WarehouseAPI_DeliveryMethodList",
+    "path": "/v1/delivery-method/list",
+    "method": "POST",
+    "title": "仓库物流方式清单",
+    "request_fields": [
+      {
+        "name": "filter",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "filter": {
+        "provider_id": 424,
+        "status": "ACTIVE",
+        "warehouse_id": 15588127982000
+      },
+      "limit": 100,
+      "offset": 0
+    }
+  },
+  {
+    "operation_id": "DescriptionCategoryAPI_GetAttributes",
+    "path": "/v1/description-category/attribute",
+    "method": "POST",
+    "title": "类别特征列表",
+    "request_fields": [
+      {
+        "name": "description_category_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "language",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "type_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "description_category_id": 200000933,
+      "language": "DEFAULT",
+      "type_id": 93080
+    }
+  },
+  {
+    "operation_id": "DescriptionCategoryAPI_GetAttributeValues",
+    "path": "/v1/description-category/attribute/values",
+    "method": "POST",
+    "title": "特征值指南",
+    "request_fields": [
+      {
+        "name": "attribute_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "description_category_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "language",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "last_value_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "type_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "attribute_id": 85,
+      "description_category_id": 17054869,
+      "language": "DEFAULT",
+      "last_value_id": 100,
+      "limit": 100,
+      "type_id": 97311
+    }
+  },
+  {
+    "operation_id": "DescriptionCategoryAPI_SearchAttributeValues",
+    "path": "/v1/description-category/attribute/values/search",
+    "method": "POST",
+    "title": "根据属性的参考值进行搜索",
+    "request_fields": [
+      {
+        "name": "attribute_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "description_category_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "type_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "value",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "attribute_id": 85,
+      "description_category_id": 17054869,
+      "limit": 100,
+      "type_id": 97311,
+      "value": "Name"
+    }
+  },
+  {
+    "operation_id": "DescriptionCategoryTips",
+    "path": "/v1/description-category/tips",
+    "method": "POST",
+    "title": "获取用于确定商品类目的提示",
+    "request_fields": [
+      {
+        "name": "type_id",
+        "type": "strings",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "type_id": [
+        "string"
+      ]
+    }
+  },
+  {
+    "operation_id": "DescriptionCategoryAPI_GetTree",
+    "path": "/v1/description-category/tree",
+    "method": "POST",
+    "title": "商品类别和类型的树形图",
+    "request_fields": [
+      {
+        "name": "language",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "language": "DEFAULT"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpCreateAct",
+    "path": "/v1/fbp/act-from/create",
+    "method": "POST",
+    "title": "生成验收证明书",
+    "request_fields": [
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpCheckActState",
+    "path": "/v1/fbp/act-from/get",
+    "method": "POST",
+    "title": "获取验收证明书生成状态",
+    "request_fields": [
+      {
+        "name": "file_uuid",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "file_uuid": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpCreateConsignmentNote",
+    "path": "/v1/fbp/act-to/create",
+    "method": "POST",
+    "title": "生成货物运单",
+    "request_fields": [
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpCheckConsignmentNoteState",
+    "path": "/v1/fbp/act-to/get",
+    "method": "POST",
+    "title": "获取货物运单生成状态",
+    "request_fields": [
+      {
+        "name": "code",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "code": "string",
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpArchiveGet",
+    "path": "/v1/fbp/archive/get",
+    "method": "POST",
+    "title": "获取已完成交货信息",
+    "request_fields": [
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpArchiveList",
+    "path": "/v1/fbp/archive/list",
+    "method": "POST",
+    "title": "获取已完成交货列表",
+    "request_fields": [
+      {
+        "name": "count",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "last_id",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "count": "string",
+      "last_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpDraftDirectCreate",
+    "path": "/v1/fbp/draft/direct/create",
+    "method": "POST",
+    "title": "创建不指定配送方法的交货申请草稿",
+    "request_fields": [
+      {
+        "name": "bundle_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "delivery_details",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "package_units_count",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "bundle_id": "string",
+      "delivery_details": {
+        "timeslot_start": "2019-08-24T14:15:22Z"
+      },
+      "package_units_count": 0,
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpDraftDirectDelete",
+    "path": "/v1/fbp/draft/direct/delete",
+    "method": "POST",
+    "title": "删除交货申请草稿",
+    "request_fields": [
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpDraftDirectProductValidate",
+    "path": "/v1/fbp/draft/direct/product/validate",
+    "method": "POST",
+    "title": "检查合作伙伴仓库商品列表",
+    "request_fields": [
+      {
+        "name": "skus",
+        "type": "objects",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "skus": [
+        {
+          "count": 0,
+          "sku": 0
+        }
+      ],
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpDraftDirectRegistrate",
+    "path": "/v1/fbp/draft/direct/registrate",
+    "method": "POST",
+    "title": "将草稿单转为正式交货",
+    "request_fields": [
+      {
+        "name": "row_version",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "row_version": 0,
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpDraftDirectSellerDlvCreate",
+    "path": "/v1/fbp/draft/direct/seller-dlv/create",
+    "method": "POST",
+    "title": "创建由卖家配送的草稿",
+    "request_fields": [
+      {
+        "name": "bundle_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "delivery_details",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "package_units_count",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "bundle_id": "string",
+      "delivery_details": {
+        "driver_name": "string",
+        "timeslot_start": "2019-08-24T14:15:22Z",
+        "vehicle_number": "string",
+        "vehicle_type": "string"
+      },
+      "package_units_count": 0,
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpDraftDirectSellerDlvEdit",
+    "path": "/v1/fbp/draft/direct/seller-dlv/edit",
+    "method": "POST",
+    "title": "更新草稿中由卖家配送的信息",
+    "request_fields": [
+      {
+        "name": "driver_name",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "row_version",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "vehicle_number",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "vehicle_type",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "driver_name": "string",
+      "row_version": 0,
+      "supply_id": "string",
+      "vehicle_number": "string",
+      "vehicle_type": "string"
+    }
+  },
+  {
+    "operation_id": "FbpDraftDirectTimeslotEdit",
+    "path": "/v1/fbp/draft/direct/timeslot/edit",
+    "method": "POST",
+    "title": "编辑草稿中的时间段",
+    "request_fields": [
+      {
+        "name": "row_version",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "timeslot_start",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "row_version": 0,
+      "supply_id": "string",
+      "timeslot_start": "2019-08-24T14:15:22Z"
+    }
+  },
+  {
+    "operation_id": "FbpDraftDirectGetTimeslot",
+    "path": "/v1/fbp/draft/direct/timeslot/get",
+    "method": "POST",
+    "title": "获取直供的时间段列表",
+    "request_fields": [
+      {
+        "name": "bundle_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "interval_end",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "interval_start",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "bundle_id": "string",
+      "interval_end": "2019-08-24T14:15:22Z",
+      "interval_start": "2019-08-24T14:15:22Z",
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpDraftDirectTplDlvCreate",
+    "path": "/v1/fbp/draft/direct/tpl-dlv/create",
+    "method": "POST",
+    "title": "创建第三方物流公司配送的申请草稿",
+    "request_fields": [
+      {
+        "name": "bundle_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "delivery_details",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "package_units_count",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "bundle_id": "string",
+      "delivery_details": {
+        "timeslot_start": "2019-08-24T14:15:22Z",
+        "tracking_number": "string",
+        "transport_company_name": "string"
+      },
+      "package_units_count": 0,
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpDraftDirectTplDlvEdit",
+    "path": "/v1/fbp/draft/direct/tpl-dlv/edit",
+    "method": "POST",
+    "title": "编辑采用第三方承运商配送方法的交货草稿",
+    "request_fields": [
+      {
+        "name": "row_version",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "tracking_number",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "transport_company_name",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "row_version": 0,
+      "supply_id": "string",
+      "tracking_number": "string",
+      "transport_company_name": "string"
+    }
+  },
+  {
+    "operation_id": "FbpDraftDropOffCreate",
+    "path": "/v1/fbp/draft/drop-off/create",
+    "method": "POST",
+    "title": "创建接收点配送草稿",
+    "request_fields": [
+      {
+        "name": "bundle_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "delivery_details",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "package_units_count",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "bundle_id": "string",
+      "delivery_details": {
+        "drop_off_date": "string",
+        "drop_off_point_id": 0,
+        "drop_off_province_uuid": "string"
+      },
+      "package_units_count": 0,
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpDraftDropOffDelete",
+    "path": "/v1/fbp/draft/drop-off/delete",
+    "method": "POST",
+    "title": "删除接收点配送草稿",
+    "request_fields": [
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpDraftDropOffDlvEdit",
+    "path": "/v1/fbp/draft/drop-off/dlv/edit",
+    "method": "POST",
+    "title": "编辑接收点配送草稿的配送详情",
+    "request_fields": [
+      {
+        "name": "drop_off_date",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "drop_off_point_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "drop_off_province_uuid",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "row_version",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "drop_off_date": "string",
+      "drop_off_point_id": 0,
+      "drop_off_province_uuid": "string",
+      "row_version": 0,
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpDraftDropOffPointList",
+    "path": "/v1/fbp/draft/drop-off/point/list",
+    "method": "POST",
+    "title": "获取省份内接收点列表",
+    "request_fields": [
+      {
+        "name": "next_page_number",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "page_size",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "province_uuid",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "next_page_number": 0,
+      "page_size": 0,
+      "province_uuid": "string",
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpDraftDropOffPointTimetable",
+    "path": "/v1/fbp/draft/drop-off/point/timetable",
+    "method": "POST",
+    "title": "获取接收点的营业时间表",
+    "request_fields": [
+      {
+        "name": "drop_off_point_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "province_uuid",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "drop_off_point_id": 0,
+      "province_uuid": "string",
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpDraftDropOffProductValidate",
+    "path": "/v1/fbp/draft/drop-off/product/validate",
+    "method": "POST",
+    "title": "检查合作伙伴仓库可接收的商品列表",
+    "request_fields": [
+      {
+        "name": "skus",
+        "type": "objects",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "skus": [
+        {
+          "count": 0,
+          "sku": 0
+        }
+      ],
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpDraftDropOffProvinceList",
+    "path": "/v1/fbp/draft/drop-off/province/list",
+    "method": "POST",
+    "title": "获取省份列表",
+    "request_fields": [
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpDraftDropOffRegistrate",
+    "path": "/v1/fbp/draft/drop-off/registrate",
+    "method": "POST",
+    "title": "将草稿转为正式交货",
+    "request_fields": [
+      {
+        "name": "row_version",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "row_version": 0,
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpDraftGet",
+    "path": "/v1/fbp/draft/get",
+    "method": "POST",
+    "title": "获取交货草稿信息",
+    "request_fields": [
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpDraftList",
+    "path": "/v1/fbp/draft/list",
+    "method": "POST",
+    "title": "交货草稿列表",
+    "request_fields": [
+      {
+        "name": "count",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "last_id",
+        "type": "integer",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "count": 0,
+      "last_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpDraftPickupCreate",
+    "path": "/v1/fbp/draft/pick-up/create",
+    "method": "POST",
+    "title": "创建 pick-up 交货申请草稿",
+    "request_fields": [
+      {
+        "name": "bundle_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "delivery_details",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "package_units_count",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "bundle_id": "string",
+      "delivery_details": {
+        "address": "string",
+        "comment": "string",
+        "date": "2019-08-24T14:15:22Z",
+        "sender_name": "string",
+        "sender_phone": "string"
+      },
+      "package_units_count": 0,
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpDraftPickUpDelete",
+    "path": "/v1/fbp/draft/pick-up/delete",
+    "method": "POST",
+    "title": "取消 pick-up 交货申请草稿",
+    "request_fields": [
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpDraftPickupDlvEdit",
+    "path": "/v1/fbp/draft/pick-up/dlv/edit",
+    "method": "POST",
+    "title": "修改 pick-up 交货申请",
+    "request_fields": [
+      {
+        "name": "pickup_details",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "row_version",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "pickup_details": {
+        "address": "string",
+        "comment": "string",
+        "date": "2019-08-24T14:15:22Z",
+        "sender_name": "string",
+        "sender_phone": "string"
+      },
+      "row_version": 0,
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpDraftPickUpProductValidate",
+    "path": "/v1/fbp/draft/pick-up/product/validate",
+    "method": "POST",
+    "title": "验证用于 pick-up 交货的商品列表",
+    "request_fields": [
+      {
+        "name": "skus",
+        "type": "objects",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "skus": [
+        {
+          "count": 0,
+          "sku": 0
+        }
+      ],
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpDraftPickUpRegistrate",
+    "path": "/v1/fbp/draft/pick-up/registrate",
+    "method": "POST",
+    "title": "将草稿单转为正式交货",
+    "request_fields": [
+      {
+        "name": "row_version",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "row_version": 0,
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpCreateLabel",
+    "path": "/v1/fbp/label/create",
+    "method": "POST",
+    "title": "创建标签生成任务",
+    "request_fields": [
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpGetLabel",
+    "path": "/v1/fbp/label/get",
+    "method": "POST",
+    "title": "获取标签生成任务状态",
+    "request_fields": [
+      {
+        "name": "code",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "code": "string",
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpOrderDirectCancel",
+    "path": "/v1/fbp/order/direct/cancel",
+    "method": "POST",
+    "title": "取消交货",
+    "request_fields": [
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpOrderDirectSellerDlvEdit",
+    "path": "/v1/fbp/order/direct/seller-dlv/edit",
+    "method": "POST",
+    "title": "更新卖家自配送信息",
+    "request_fields": [
+      {
+        "name": "driver_name",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "row_version",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "vehicle_number",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "vehicle_type",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "driver_name": "string",
+      "row_version": 0,
+      "supply_id": "string",
+      "vehicle_number": "string",
+      "vehicle_type": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpEditTimeslot",
+    "path": "/v1/fbp/order/direct/timeslot/edit",
+    "method": "POST",
+    "title": "编辑交货申请中的时间段",
+    "request_fields": [
+      {
+        "name": "row_version",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "timeslot_start",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "row_version": 0,
+      "supply_id": "string",
+      "timeslot_start": "2019-08-24T14:15:22Z"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpAvailableTimeslotList",
+    "path": "/v1/fbp/order/direct/timeslot/list",
+    "method": "POST",
+    "title": "获取交货时间段列表",
+    "request_fields": [
+      {
+        "name": "interval_end",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "interval_start",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "interval_end": "2019-08-24T14:15:22Z",
+      "interval_start": "2019-08-24T14:15:22Z",
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpOrderDropOffCancel",
+    "path": "/v1/fbp/order/drop-off/cancel",
+    "method": "POST",
+    "title": "取消 drop-off 交货",
+    "request_fields": [
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpOrderDropOffDlvEdit",
+    "path": "/v1/fbp/order/drop-off/dlv/edit",
+    "method": "POST",
+    "title": "编辑收货点的送货信息",
+    "request_fields": [
+      {
+        "name": "drop_off_date",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "row_version",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "drop_off_date": "string",
+      "row_version": 0,
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpOrderDropOffTimetable",
+    "path": "/v1/fbp/order/drop-off/timetable",
+    "method": "POST",
+    "title": "获取接收点的营业时间表",
+    "request_fields": [
+      {
+        "name": "drop_off_point_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "province_uuid",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "drop_off_point_id": 0,
+      "province_uuid": "string",
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpOrderGet",
+    "path": "/v1/fbp/order/get",
+    "method": "POST",
+    "title": "获取关于特定交货的信息",
+    "request_fields": [
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpOrderList",
+    "path": "/v1/fbp/order/list",
+    "method": "POST",
+    "title": "获取交货列表",
+    "request_fields": [
+      {
+        "name": "count",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "last_id",
+        "type": "integer",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "count": 0,
+      "last_id": 0
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpOrderPickUpCancel",
+    "path": "/v1/fbp/order/pick-up/cancel",
+    "method": "POST",
+    "title": "取消上门揽收交货",
+    "request_fields": [
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpAPI_FbpOrderPickUpDlvEdit",
+    "path": "/v1/fbp/order/pick-up/dlv/edit",
+    "method": "POST",
+    "title": "更改取货地点信息",
+    "request_fields": [
+      {
+        "name": "pickup_details",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "row_version",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "supply_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "pickup_details": {
+        "sender_name": "string",
+        "sender_phone": "string"
+      },
+      "row_version": 0,
+      "supply_id": "string"
+    }
+  },
+  {
+    "operation_id": "FbpWarehouseList",
+    "path": "/v1/fbp/warehouse/list",
+    "method": "POST",
+    "title": "获取合作伙伴仓库列表",
+    "request_fields": [],
+    "request_example": null
+  },
+  {
+    "operation_id": "PostingAPI_FbsPostingProductExemplarUpdate",
+    "path": "/v1/fbs/posting/product/exemplar/update",
+    "method": "POST",
+    "title": "Обновить данные экземпляров",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "posting_number": "string"
+    }
+  },
+  {
+    "operation_id": "GetFinanceAccrualByDay",
+    "path": "/v1/finance/accrual/by-day",
+    "method": "POST",
+    "title": "获取某日应计项目",
+    "request_fields": [
+      {
+        "name": "date",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "last_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "date": "string",
+      "last_id": "string"
+    }
+  },
+  {
+    "operation_id": "GetFinanceAccrualPostings",
+    "path": "/v1/finance/accrual/postings",
+    "method": "POST",
+    "title": "获取按货件统计的应计项目",
+    "request_fields": [
+      {
+        "name": "posting_numbers",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "posting_numbers": [
+        "string"
+      ]
+    }
+  },
+  {
+    "operation_id": "GetFinanceAccrualTypes",
+    "path": "/v1/finance/accrual/types",
+    "method": "POST",
+    "title": "获取应计项目参考信息",
+    "request_fields": [],
+    "request_example": null
+  },
+  {
+    "operation_id": "GetFinanceBalanceV1",
+    "path": "/v1/finance/balance",
+    "method": "POST",
+    "title": "获取余额报告",
+    "request_fields": [
+      {
+        "name": "date_from",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "date_to",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "date_from": "2019-08-24",
+      "date_to": "2019-09-24"
+    }
+  },
+  {
+    "operation_id": "FinanceAPI_FinanceCashFlowStatementList",
+    "path": "/v1/finance/cash-flow-statement/list",
+    "method": "POST",
+    "title": "财务报告",
+    "request_fields": [
+      {
+        "name": "date",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "page",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "with_details",
+        "type": "boolean",
+        "required": true
+      },
+      {
+        "name": "page_size",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "date": {
+        "from": "2022-01-01T00:00:00.000Z",
+        "to": "2022-12-31T00:00:00.000Z"
+      },
+      "with_details": true,
+      "page": 1,
+      "page_size": 1
+    }
+  },
+  {
+    "operation_id": "ReportAPI_GetCompensationReport",
+    "path": "/v1/finance/compensation",
+    "method": "POST",
+    "title": "赔偿报告",
+    "request_fields": [
+      {
+        "name": "date",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "language",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "date": "2023-09",
+      "language": "RU"
+    }
+  },
+  {
+    "operation_id": "ReportAPI_GetDecompensationReport",
+    "path": "/v1/finance/decompensation",
+    "method": "POST",
+    "title": "赔偿返还报告",
+    "request_fields": [
+      {
+        "name": "date",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "language",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "date": "2023-09",
+      "language": "RU"
+    }
+  },
+  {
+    "operation_id": "FinanceAPI_GetRealizationByDayReportV1",
+    "path": "/v1/finance/realization/by-day",
+    "method": "POST",
+    "title": "每日商品销售报告",
+    "request_fields": [
+      {
+        "name": "day",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "month",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "year",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "day": 0,
+      "month": 0,
+      "year": 0
+    }
+  },
+  {
+    "operation_id": "FinanceAPI_GetRealizationReportV1",
+    "path": "/v1/finance/realization/posting",
+    "method": "POST",
+    "title": "按订单细分的商品销售报告",
+    "request_fields": [
+      {
+        "name": "month",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "year",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "month": 2,
+      "year": 2025
+    }
+  },
+  {
+    "operation_id": "PassList",
+    "path": "/v1/pass/list",
+    "method": "POST",
+    "title": "通行证列表",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "cursor": "",
+      "filter": {
+        "arrival_pass_ids": [
+          "5000123456",
+          "5000123457"
+        ],
+        "arrival_reason": "FBS_DELIVERY",
+        "dropoff_point_ids": [
+          "7000123456",
+          "7000123457"
+        ],
+        "only_active_passes": true,
+        "warehouse_ids": [
+          "3000007863",
+          "3000007864"
+        ]
+      },
+      "limit": 1000
+    }
+  },
+  {
+    "operation_id": "PolygonAPI_BindPolygon",
+    "path": "/v1/polygon/bind",
+    "method": "POST",
+    "title": "将快递方式与快递设施联系起来",
+    "request_fields": [
+      {
+        "name": "delivery_method_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "polygons",
+        "type": "objects",
+        "required": true
+      },
+      {
+        "name": "warehouse_location",
+        "type": "object",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "delivery_method_id": 0,
+      "polygons": [
+        {
+          "polygon_id": "1323",
+          "time": "30"
+        }
+      ],
+      "warehouse_location": {
+        "lat": "58.52391272075821",
+        "lon": "31.236791610717773"
+      }
+    }
+  },
+  {
+    "operation_id": "PolygonAPI_CreatePolygon",
+    "path": "/v1/polygon/create",
+    "method": "POST",
+    "title": "创建一个快递的设施",
+    "request_fields": [
+      {
+        "name": "coordinates",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "coordinates": "[[[30.149574279785153,59.86550435303646],[30.21205902099609,59.846884387977326],[30.255661010742184,59.86240174913176],[30.149574279785153,59.86550435303646]]]"
+    }
+  },
+  {
+    "operation_id": "PostingAPI_GetCarriageAvailableList",
+    "path": "/v1/posting/carriage-available/list",
+    "method": "POST",
+    "title": "可供运输的列表",
+    "request_fields": [
+      {
+        "name": "delivery_method_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "departure_date",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "delivery_method_id": 0,
+      "departure_date": "2019-08-24T14:15:22Z"
+    }
+  },
+  {
+    "operation_id": "PostingAPI_SetPostingCutoff",
+    "path": "/v1/posting/cutoff/set",
+    "method": "POST",
+    "title": "确认货件发运日期",
+    "request_fields": [
+      {
+        "name": "new_cutoff_date",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "posting_number": "789456123-0002-3",
+      "new_cutoff_date": "2026-03-16T10:00:00Z"
+    }
+  },
+  {
+    "operation_id": "PostingFbpList",
+    "path": "/v1/posting/fbp/list",
+    "method": "POST",
+    "title": "获取货件列表",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "sort_by",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "cursor": "string",
+      "filter": {
+        "name": "string",
+        "offer_id": "string",
+        "posting_numbers": [
+          "string"
+        ],
+        "since": "2019-08-24T14:15:22Z",
+        "statuses": [
+          "string"
+        ],
+        "to": "2019-08-24T14:15:22Z"
+      },
+      "limit": 1,
+      "sort_by": "string",
+      "sort_dir": "ASC"
+    }
+  },
+  {
+    "operation_id": "PostingAPI_GetPostingFbsCancelReasonV1",
+    "path": "/v1/posting/fbs/cancel-reason",
+    "method": "POST",
+    "title": "货运取消原因",
+    "request_fields": [
+      {
+        "name": "related_posting_numbers",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "related_posting_numbers": [
+        "73837363-0010-3"
+      ]
+    }
+  },
+  {
+    "operation_id": "FbsSplit",
+    "path": "/v1/posting/fbs/split",
+    "method": "POST",
+    "title": "将订单拆分为不带备货的货件",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "postings",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "posting_number": "string",
+      "postings": [
+        {
+          "products": [
+            {
+              "product_id": 0,
+              "quantity": 0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "pricing_competitors",
+    "path": "/v1/pricing-strategy/competitors/list",
+    "method": "POST",
+    "title": "竞争对手名单",
+    "request_fields": [
+      {
+        "name": "page",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "page": 1,
+      "limit": 20
+    }
+  },
+  {
+    "operation_id": "pricing_create",
+    "path": "/v1/pricing-strategy/create",
+    "method": "POST",
+    "title": "创建策略",
+    "request_fields": [
+      {
+        "name": "competitors",
+        "type": "objects",
+        "required": true
+      },
+      {
+        "name": "strategy_name",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "strategy_name": "新策略",
+      "competitors": [
+        {
+          "competitor_id": 1008426,
+          "coefficient": 1
+        },
+        {
+          "competitor_id": 204,
+          "coefficient": 1
+        },
+        {
+          "competitor_id": 91,
+          "coefficient": 1
+        },
+        {
+          "competitor_id": 48,
+          "coefficient": 1
+        }
+      ],
+      "company_id": 7
+    }
+  },
+  {
+    "operation_id": "pricing_delete",
+    "path": "/v1/pricing-strategy/delete",
+    "method": "POST",
+    "title": "删除策略",
+    "request_fields": [
+      {
+        "name": "strategy_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "strategy_id": "b7cd30e6-5667-424d-b105-fbec30a52477"
+    }
+  },
+  {
+    "operation_id": "pricing_info",
+    "path": "/v1/pricing-strategy/info",
+    "method": "POST",
+    "title": "策略信息",
+    "request_fields": [
+      {
+        "name": "strategy_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "strategy_id": "2fb3e6a3-3db5-4bb4-8430-b2de39fc3265"
+    }
+  },
+  {
+    "operation_id": "pricing_list",
+    "path": "/v1/pricing-strategy/list",
+    "method": "POST",
+    "title": "策略列表",
+    "request_fields": [
+      {
+        "name": "page",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "page": 1,
+      "limit": 20
+    }
+  },
+  {
+    "operation_id": "pricing_items-info",
+    "path": "/v1/pricing-strategy/product/info",
+    "method": "POST",
+    "title": "竞争对手&nbsp; 的商品价格",
+    "request_fields": [
+      {
+        "name": "product_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "product_id": 7856197312
+    }
+  },
+  {
+    "operation_id": "pricing_items-add",
+    "path": "/v1/pricing-strategy/products/add",
+    "method": "POST",
+    "title": "将商品添加到策略",
+    "request_fields": [
+      {
+        "name": "product_id",
+        "type": "strings",
+        "required": true
+      },
+      {
+        "name": "strategy_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "product_id": [
+        "29209"
+      ],
+      "strategy_id": "e29114f0-177d-4160-8d06-2bc528470dda"
+    }
+  },
+  {
+    "operation_id": "pricing_items-delete",
+    "path": "/v1/pricing-strategy/products/delete",
+    "method": "POST",
+    "title": "从策略中删除商品",
+    "request_fields": [
+      {
+        "name": "product_id",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "product_id": [
+        "29209"
+      ]
+    }
+  },
+  {
+    "operation_id": "pricing_items-list",
+    "path": "/v1/pricing-strategy/products/list",
+    "method": "POST",
+    "title": "策略中的商品列表",
+    "request_fields": [
+      {
+        "name": "strategy_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "strategy_id": "b7cd30e6-5667-424d-b105-fbec30a52477"
+    }
+  },
+  {
+    "operation_id": "pricing_status",
+    "path": "/v1/pricing-strategy/status",
+    "method": "POST",
+    "title": "更改策略状态",
+    "request_fields": [
+      {
+        "name": "enabled",
+        "type": "boolean",
+        "required": true
+      },
+      {
+        "name": "strategy_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "strategy_id": "c7516438-7124-4e2c-85d3-ccd92b6b9b65",
+      "enabled": true
+    }
+  },
+  {
+    "operation_id": "pricing_ids",
+    "path": "/v1/pricing-strategy/strategy-ids-by-product-ids",
+    "method": "POST",
+    "title": "策略ID列表",
+    "request_fields": [
+      {
+        "name": "product_id",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "product_id": [
+        "29209"
+      ]
+    }
+  },
+  {
+    "operation_id": "pricing_update",
+    "path": "/v1/pricing-strategy/update",
+    "method": "POST",
+    "title": "更新策略",
+    "request_fields": [
+      {
+        "name": "competitors",
+        "type": "objects",
+        "required": true
+      },
+      {
+        "name": "strategy_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "strategy_name",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "strategy_id": "a3de1826-9c54-40f1-bb6d-1a9e2638b058",
+      "strategy_name": "新策略",
+      "competitors": [
+        {
+          "competitor_id": 1008426,
+          "coefficient": 1
+        },
+        {
+          "competitor_id": 204,
+          "coefficient": 1
+        },
+        {
+          "competitor_id": 91,
+          "coefficient": 1
+        },
+        {
+          "competitor_id": 48,
+          "coefficient": 1
+        },
+        {
+          "competitor_id": 45,
+          "coefficient": 1
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ActionTimerStatus",
+    "path": "/v1/product/action/timer/status",
+    "method": "POST",
+    "title": "获取已设置计时器状态",
+    "request_fields": [
+      {
+        "name": "product_ids",
+        "type": "number",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "product_ids": 0
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ActionTimerUpdate",
+    "path": "/v1/product/action/timer/update",
+    "method": "POST",
+    "title": "最低价格时效性计时器更新",
+    "request_fields": [
+      {
+        "name": "product_ids",
+        "type": "strings",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "product_ids": 88787267123
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ProductArchive",
+    "path": "/v1/product/archive",
+    "method": "POST",
+    "title": "将商品归档",
+    "request_fields": [
+      {
+        "name": "product_id",
+        "type": "integers",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "product_id": [
+        "125529926",
+        "987654321"
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ProductUpdateAttributes",
+    "path": "/v1/product/attributes/update",
+    "method": "POST",
+    "title": "更新商品特征",
+    "request_fields": [
+      {
+        "name": "items",
+        "type": "objects",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "items": [
+        {
+          "offer_id": "PROD-2023-001",
+          "attributes": [
+            {
+              "complex_id": 1,
+              "id": 1,
+              "values": [
+                {
+                  "dictionary_value_id": 1001,
+                  "value": "蓝色"
+                }
+              ]
+            },
+            {
+              "complex_id": 2,
+              "id": 2,
+              "values": [
+                {
+                  "dictionary_value_id": 2001,
+                  "value": "42"
+                }
+              ]
+            },
+            {
+              "complex_id": 3,
+              "id": 3,
+              "values": [
+                {
+                  "dictionary_value_id": 3001,
+                  "value": "棉"
+                },
+                {
+                  "dictionary_value_id": 3002,
+                  "value": "聚酯纤维"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ImportProductsBySKU",
+    "path": "/v1/product/import-by-sku",
+    "method": "POST",
+    "title": "通过SKU创建商品",
+    "request_fields": [
+      {
+        "name": "items",
+        "type": "objects",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "items": [
+        {
+          "sku": 298789742,
+          "name": "杯子",
+          "offer_id": "91132",
+          "currency_code": "RUB",
+          "old_price": "2590",
+          "price": "2300",
+          "vat": "0.1"
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_GetImportProductsInfo",
+    "path": "/v1/product/import/info",
+    "method": "POST",
+    "title": "查询商品添加或更新状态",
+    "request_fields": [
+      {
+        "name": "task_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "task_id": "172549793"
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ImportProductsPrices",
+    "path": "/v1/product/import/prices",
+    "method": "POST",
+    "title": "更新价格",
+    "request_fields": [
+      {
+        "name": "prices",
+        "type": "objects",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "prices": [
+        {
+          "auto_action_enabled": "UNKNOWN",
+          "currency_code": "RUB",
+          "manage_elastic_boosting_through_price": true,
+          "min_price": "800",
+          "min_price_for_auto_actions_enabled": true,
+          "net_price": "650",
+          "offer_id": "",
+          "old_price": "0",
+          "price": "1448",
+          "price_strategy_enabled": "UNKNOWN",
+          "product_id": 1386,
+          "vat": "0.1"
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_GetProductInfoDescription",
+    "path": "/v1/product/info/description",
+    "method": "POST",
+    "title": "获取商品详细信息",
+    "request_fields": [
+      {
+        "name": "offer_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "product_id",
+        "type": "integer",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "offer_id": "5",
+      "product_id": 73453843
+    }
+  },
+  {
+    "operation_id": "ProductAPI_GetProductInfoDiscounted",
+    "path": "/v1/product/info/discounted",
+    "method": "POST",
+    "title": "通过减价商品的SKU查找减价商品和主商品的信息",
+    "request_fields": [
+      {
+        "name": "discounted_skus",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "discounted_skus": [
+        "635548518"
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ProductStocksByWarehouseFbs",
+    "path": "/v1/product/info/stocks-by-warehouse/fbs",
+    "method": "POST",
+    "title": "关于卖家库存余额的信息",
+    "request_fields": [
+      {
+        "name": "sku",
+        "type": "strings",
+        "required": true
+      },
+      {
+        "name": "offer_id",
+        "type": "strings",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "sku": [
+        "string"
+      ],
+      "offer_id": [
+        "string"
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_GetProductInfoSubscription",
+    "path": "/v1/product/info/subscription",
+    "method": "POST",
+    "title": "订阅该商品的用户数",
+    "request_fields": [
+      {
+        "name": "skus",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "skus": [
+        "889283932",
+        "123456789",
+        "987654321"
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductInfoWarehouseStocks",
+    "path": "/v1/product/info/warehouse/stocks",
+    "method": "POST",
+    "title": "获取FBS和rFBS仓库库存信息",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "cursor": "",
+      "limit": 10,
+      "warehouse_id": 1020003080073000
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ProductInfoWrongVolume",
+    "path": "/v1/product/info/wrong-volume",
+    "method": "POST",
+    "title": "体积重量特征不正确的商品列表",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "cursor": "",
+      "limit": 1000
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ProductImportPictures",
+    "path": "/v1/product/pictures/import",
+    "method": "POST",
+    "title": "上传或更新商品图片",
+    "request_fields": [
+      {
+        "name": "color_image",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "images",
+        "type": "strings",
+        "required": false
+      },
+      {
+        "name": "images360",
+        "type": "strings",
+        "required": true
+      },
+      {
+        "name": "product_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "color_image": "https://example.com/cloud-storage/color/marketing-color-red.jpg",
+      "images": [
+        "https://example.com/cloud-storage/images/main-image-front.jpg",
+        "https://example.com/cloud-storage/images/secondary-image-side.jpg",
+        "https://example.com/cloud-storage/images/secondary-image-back.jpg",
+        "https://example.com/cloud-storage/images/secondary-image-detail1.jpg",
+        "https://example.com/cloud-storage/images/secondary-image-detail2.jpg"
+      ],
+      "images360": [
+        "https://example.com/cloud-storage/images360/360-view-001.jpg",
+        "https://example.com/cloud-storage/images360/360-view-002.jpg",
+        "https://example.com/cloud-storage/images360/360-view-003.jpg",
+        "https://example.com/cloud-storage/images360/360-view-004.jpg",
+        "https://example.com/cloud-storage/images360/360-view-005.jpg"
+      ],
+      "product_id": 123456789
+    }
+  },
+  {
+    "operation_id": "ProductPricesDetails",
+    "path": "/v1/product/prices/details",
+    "method": "POST",
+    "title": "获取商品价格的详细信息",
+    "request_fields": [
+      {
+        "name": "skus",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "skus": [
+        "string"
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_GetProductRatingBySku",
+    "path": "/v1/product/rating-by-sku",
+    "method": "POST",
+    "title": "按SKU获得商品的内容排名",
+    "request_fields": [
+      {
+        "name": "skus",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "skus": [
+        "179737222"
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ProductGetRelatedSKU",
+    "path": "/v1/product/related-sku/get",
+    "method": "POST",
+    "title": "获取相关SKU",
+    "request_fields": [
+      {
+        "name": "sku",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "sku": [
+        "88997766"
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_GetProductStairwayDiscountByQuantity",
+    "path": "/v1/product/stairway-discount/by-quantity/get",
+    "method": "POST",
+    "title": "获取按数量折扣信息",
+    "request_fields": [
+      {
+        "name": "skus",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "skus": [
+        "string"
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_SetProductStairwayDiscountByQuantity",
+    "path": "/v1/product/stairway-discount/by-quantity/set",
+    "method": "POST",
+    "title": "管理按数量折扣",
+    "request_fields": [
+      {
+        "name": "stairways",
+        "type": "objects",
+        "required": true
+      },
+      {
+        "name": "suppress_warnings",
+        "type": "boolean",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "stairways": [
+        {
+          "enabled": true,
+          "sku": 0,
+          "stairway": {
+            "steps": [
+              {
+                "discount": 0,
+                "quantity": 0,
+                "step": 0
+              }
+            ]
+          }
+        }
+      ],
+      "suppress_warnings": true
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ProductUnarchive",
+    "path": "/v1/product/unarchive",
+    "method": "POST",
+    "title": "从档案中还原商品",
+    "request_fields": [
+      {
+        "name": "product_id",
+        "type": "integers",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "product_id": [
+        "125529926",
+        "987654321"
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ProductUpdateDiscount",
+    "path": "/v1/product/update/discount",
+    "method": "POST",
+    "title": "为打折商品设置折扣",
+    "request_fields": [
+      {
+        "name": "discount",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "product_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "discount": 10,
+      "product_id": 876763232
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ProductUpdateOfferID",
+    "path": "/v1/product/update/offer-id",
+    "method": "POST",
+    "title": "从卖家的系统中改变商品货号",
+    "request_fields": [
+      {
+        "name": "update_offer_id",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "update_offer_id": [
+        {
+          "new_offer_id": "haval",
+          "offer_id": "chery"
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductVisibilityInfo",
+    "path": "/v1/product/visibility/info",
+    "method": "POST",
+    "title": "获取商品可见性信息",
+    "request_fields": [
+      {
+        "name": "skus",
+        "type": "strings",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "skus": [
+        "string"
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductVisibilitySet",
+    "path": "/v1/product/visibility/set",
+    "method": "POST",
+    "title": "新增了用于设置商品在Ozon和Ozon Select橱窗可见性的Beta方法。",
+    "request_fields": [
+      {
+        "name": "item_placement",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "item_placement": [
+        {
+          "placement": "OZON",
+          "sku": 0
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "QuestionAnswer_Create",
+    "path": "/v1/question/answer/create",
+    "method": "POST",
+    "title": "创建对问题的回答",
+    "request_fields": [
+      {
+        "name": "question_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "sku",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "question_id": "string",
+      "sku": 0,
+      "text": "string"
+    }
+  },
+  {
+    "operation_id": "QuestionAnswer_Delete",
+    "path": "/v1/question/answer/delete",
+    "method": "POST",
+    "title": "删除问题回答",
+    "request_fields": [
+      {
+        "name": "answer_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "sku",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "answer_id": "0192e7ce-e12c-7a74-afc7-26e877799204",
+      "sku": 646399170
+    }
+  },
+  {
+    "operation_id": "QuestionAnswer_List",
+    "path": "/v1/question/answer/list",
+    "method": "POST",
+    "title": "问题回答列表",
+    "request_fields": [
+      {
+        "name": "last_id",
+        "type": "unknown",
+        "required": true
+      },
+      {
+        "name": "question_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "sku",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "last_id": "",
+      "question_id": "019228a7-91d8-76af-a73a-e989dfac7ac8",
+      "sku": 646399170
+    }
+  },
+  {
+    "operation_id": "Question_ChangeStatus",
+    "path": "/v1/question/change_status",
+    "method": "POST",
+    "title": "更改问题状态",
+    "request_fields": [
+      {
+        "name": "question_ids",
+        "type": "strings",
+        "required": true
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "question_ids": [
+        "string"
+      ],
+      "status": "VIEWED"
+    }
+  },
+  {
+    "operation_id": "Question_Count",
+    "path": "/v1/question/count",
+    "method": "POST",
+    "title": "按状态统计问题数量",
+    "request_fields": [],
+    "request_example": null
+  },
+  {
+    "operation_id": "Question_Info",
+    "path": "/v1/question/info",
+    "method": "POST",
+    "title": "问题详情",
+    "request_fields": [
+      {
+        "name": "question_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "question_id": "string"
+    }
+  },
+  {
+    "operation_id": "Question_List",
+    "path": "/v1/question/list",
+    "method": "POST",
+    "title": "问题列表",
+    "request_fields": [
+      {
+        "name": "filter",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "last_id",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "filter": {
+        "date_from": "2019-08-24T14:15:22Z",
+        "date_to": "2019-08-24T14:15:22Z",
+        "status": "ALL"
+      },
+      "limit": 100,
+      "last_id": "",
+      "sort_dir": "ASC"
+    }
+  },
+  {
+    "operation_id": "Question_TopSku",
+    "path": "/v1/question/top_sku",
+    "method": "POST",
+    "title": "提问数量最多的商品",
+    "request_fields": [
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "limit": "100"
+    }
+  },
+  {
+    "operation_id": "RatingAPI_GetFBSRatingIndexInfoV1",
+    "path": "/v1/rating/index/fbs/info",
+    "method": "POST",
+    "title": "获取错误指数：FBS 和 rFBS",
+    "request_fields": [],
+    "request_example": null
+  },
+  {
+    "operation_id": "RatingAPI_ListFBSRatingIndexPostingsV1",
+    "path": "/v1/rating/index/fbs/posting/list",
+    "method": "POST",
+    "title": "影响错误指数的货件列表：FBS 和 rFBS",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "cursor": "string",
+      "filter": {
+        "date_from": "2019-08-24T14:15:22Z",
+        "date_to": "2019-08-24T14:15:22Z",
+        "posting_numbers": [
+          "string"
+        ]
+      },
+      "limit": 0
+    }
+  },
+  {
+    "operation_id": "ReportAPI_CreateDiscountedReport",
+    "path": "/v1/report/discounted/create",
+    "method": "POST",
+    "title": "减价商品报告",
+    "request_fields": [],
+    "request_example": {}
+  },
+  {
+    "operation_id": "ReportAPI_ReportInfo",
+    "path": "/v1/report/info",
+    "method": "POST",
+    "title": "报告信息",
+    "request_fields": [
+      {
+        "name": "code",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "code": "REPORT_seller_products_924336_1720170405_a9ea2f27-a473-4b13-99f9-d0cfcb5b1a69"
+    }
+  },
+  {
+    "operation_id": "ReportAPI_ReportList",
+    "path": "/v1/report/list",
+    "method": "POST",
+    "title": "报告清单",
+    "request_fields": [
+      {
+        "name": "page",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "page_size",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "report_type",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "page": 1,
+      "page_size": 1000,
+      "report_type": "ALL"
+    }
+  },
+  {
+    "operation_id": "CreateCompanyMarkedProductsSalesReport",
+    "path": "/v1/report/marked-products-sales/create",
+    "method": "POST",
+    "title": "生成带有标记商品的销售报告",
+    "request_fields": [
+      {
+        "name": "date",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "date": {
+        "from": "string",
+        "to": "string"
+      }
+    }
+  },
+  {
+    "operation_id": "ReportAPI_CreateCompanyPostingsReport",
+    "path": "/v1/report/postings/create",
+    "method": "POST",
+    "title": "发货报告",
+    "request_fields": [
+      {
+        "name": "filter",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "language",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "with",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "filter": {
+        "processed_at_from": "2021-09-02T17:10:54.861Z",
+        "processed_at_to": "2021-11-02T17:10:54.861Z",
+        "delivery_schema": [
+          "fbs"
+        ],
+        "is_express": true,
+        "sku": [],
+        "cancel_reason_id": [],
+        "offer_id": "",
+        "status_alias": [],
+        "statuses": [],
+        "title": ""
+      },
+      "language": "DEFAULT",
+      "with": {
+        "additional_data": false,
+        "analytics_data": false,
+        "customer_data": false,
+        "jewelry_codes": false
+      }
+    }
+  },
+  {
+    "operation_id": "ReportAPI_CreateCompanyProductsReport",
+    "path": "/v1/report/products/create",
+    "method": "POST",
+    "title": "商品报告",
+    "request_fields": [
+      {
+        "name": "language",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "offer_id",
+        "type": "strings",
+        "required": false
+      },
+      {
+        "name": "search",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "sku",
+        "type": "integers",
+        "required": false
+      },
+      {
+        "name": "visibility",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "language": "DEFAULT",
+      "offer_id": [],
+      "search": "",
+      "sku": [],
+      "visibility": "ALL"
+    }
+  },
+  {
+    "operation_id": "ReportAPI_CreateStockByWarehouseReport",
+    "path": "/v1/report/warehouse/stock",
+    "method": "POST",
+    "title": "关于FBS仓库库存报告",
+    "request_fields": [
+      {
+        "name": "language",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "warehouseId",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "language": "DEFAULT",
+      "warehouseId": [
+        "1020002425123000"
+      ]
+    }
+  },
+  {
+    "operation_id": "returnPassCreate",
+    "path": "/v1/return/pass/create",
+    "method": "POST",
+    "title": "创建退货通行证",
+    "request_fields": [
+      {
+        "name": "arrival_passes",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "arrival_passes": [
+        {
+          "arrival_time": "2026-03-17T10:00:00Z",
+          "driver_name": "string",
+          "driver_phone": "+79991234567",
+          "dropoff_point_id": 7000123456,
+          "vehicle_license_plate": "string",
+          "vehicle_model": "string",
+          "warehouse_id": 3000007863
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "returnPassDelete",
+    "path": "/v1/return/pass/delete",
+    "method": "POST",
+    "title": "删除退货通行证",
+    "request_fields": [
+      {
+        "name": "arrival_pass_ids",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "arrival_pass_ids": [
+        6000123456,
+        6000123457
+      ]
+    }
+  },
+  {
+    "operation_id": "returnPassUpdate",
+    "path": "/v1/return/pass/update",
+    "method": "POST",
+    "title": "更新退货通行证",
+    "request_fields": [
+      {
+        "name": "arrival_passes",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "arrival_passes": [
+        {
+          "arrival_pass_id": 6000123456,
+          "arrival_time": "2026-03-17T14:30:00Z",
+          "driver_name": "string",
+          "driver_phone": "+79991234567",
+          "vehicle_license_plate": "А123БВ777",
+          "vehicle_model": "string"
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "returnsCompanyFBSInfo",
+    "path": "/v1/returns/company/fbs/info",
+    "method": "POST",
+    "title": "FBS退货数量",
+    "request_fields": [
+      {
+        "name": "filter",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "pagination",
+        "type": "object",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "filter": {
+        "place_id": 0
+      },
+      "pagination": {
+        "last_id": 0,
+        "limit": 500
+      }
+    }
+  },
+  {
+    "operation_id": "returnsList",
+    "path": "/v1/returns/list",
+    "method": "POST",
+    "title": "FBO和FBS退货信息",
+    "request_fields": [
+      {
+        "name": "filter",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "last_id",
+        "type": "integer",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "filter": {
+        "logistic_return_date": {
+          "time_from": "2026-02-01T00:00:00Z",
+          "time_to": "2026-03-01T23:59:59Z"
+        },
+        "order_id": "7000123456",
+        "posting_numbers": [
+          "789456123-0002-3",
+          "123456789-0001-1"
+        ],
+        "product_name": "string",
+        "offer_id": "test-offer-123456",
+        "visual_status_name": "ArrivedAtReturnPlace",
+        "warehouse_id": "3000007863",
+        "barcode": "test-barcode-123456789",
+        "return_schema": "FBS"
+      },
+      "limit": 500,
+      "last_id": 0
+    }
+  },
+  {
+    "operation_id": "ReturnsAPI_ReturnsRfbsActionSet",
+    "path": "/v1/returns/rfbs/action/set",
+    "method": "POST",
+    "title": "传递 rFBS  退货的可用操作",
+    "request_fields": [
+      {
+        "name": "comment",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "compensation_amount",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "id",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "rejection_reason_id",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "return_for_back_way",
+        "type": "number",
+        "required": true
+      },
+      {
+        "name": "return_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "comment": "string",
+      "compensation_amount": 0,
+      "id": 0,
+      "rejection_reason_id": 0,
+      "return_for_back_way": 0,
+      "return_id": 0
+    }
+  },
+  {
+    "operation_id": "ReviewAPI_ReviewChangeStatus",
+    "path": "/v1/review/change-status",
+    "method": "POST",
+    "title": "更改评价状态",
+    "request_fields": [
+      {
+        "name": "review_ids",
+        "type": "strings",
+        "required": true
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "review_ids": [
+        "string"
+      ],
+      "status": "string"
+    }
+  },
+  {
+    "operation_id": "ReviewAPI_CommentCreate",
+    "path": "/v1/review/comment/create",
+    "method": "POST",
+    "title": "对评价留下评论",
+    "request_fields": [
+      {
+        "name": "mark_review_as_processed",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "parent_comment_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "review_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "mark_review_as_processed": true,
+      "parent_comment_id": "string",
+      "review_id": "string",
+      "text": "string"
+    }
+  },
+  {
+    "operation_id": "ReviewAPI_CommentDelete",
+    "path": "/v1/review/comment/delete",
+    "method": "POST",
+    "title": "删除对评价的评论",
+    "request_fields": [
+      {
+        "name": "comment_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "comment_id": "string"
+    }
+  },
+  {
+    "operation_id": "ReviewAPI_CommentList",
+    "path": "/v1/review/comment/list",
+    "method": "POST",
+    "title": "评价的评论列表",
+    "request_fields": [
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "review_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "limit": 100,
+      "offset": 0,
+      "review_id": "0187310a-97d9-dfcf-3039-82d809f0e233",
+      "sort_dir": "ASC"
+    }
+  },
+  {
+    "operation_id": "ReviewAPI_ReviewCount",
+    "path": "/v1/review/count",
+    "method": "POST",
+    "title": "根据状态统计的评价数量",
+    "request_fields": [],
+    "request_example": {}
+  },
+  {
+    "operation_id": "ReviewAPI_ReviewInfo",
+    "path": "/v1/review/info",
+    "method": "POST",
+    "title": "获取评价信息",
+    "request_fields": [
+      {
+        "name": "review_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "review_id": "string"
+    }
+  },
+  {
+    "operation_id": "ReviewAPI_ReviewList",
+    "path": "/v1/review/list",
+    "method": "POST",
+    "title": "ReviewAPI_ReviewList",
+    "request_fields": [
+      {
+        "name": "last_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "last_id": "",
+      "limit": 100,
+      "sort_dir": "ASC",
+      "status": "ALL"
+    }
+  },
+  {
+    "operation_id": "AccessAPI_RolesByToken",
+    "path": "/v1/roles",
+    "method": "POST",
+    "title": "使用API密钥获取角色和方式列表",
+    "request_fields": [],
+    "request_example": null
+  },
+  {
+    "operation_id": "SearchQueriesAPI_SearchQueriesText",
+    "path": "/v1/search-queries/text",
+    "method": "POST",
+    "title": "获取按文本筛选的搜索查询列表",
+    "request_fields": [
+      {
+        "name": "limit",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "offset",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "sort_by",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "limit": "50",
+      "offset": "0",
+      "sort_by": "CLIENT_COUNT",
+      "sort_dir": "ASC",
+      "text": "string"
+    }
+  },
+  {
+    "operation_id": "SearchQueriesAPI_SearchQueriesTop",
+    "path": "/v1/search-queries/top",
+    "method": "POST",
+    "title": "获取热门搜索查询列表",
+    "request_fields": [
+      {
+        "name": "limit",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "offset",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "limit": "50",
+      "offset": "0"
+    }
+  },
+  {
+    "operation_id": "SellerActionsArchive",
+    "path": "/v1/seller-actions/archive",
+    "method": "POST",
+    "title": "将促销活动归档",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "action_id": 0
+    }
+  },
+  {
+    "operation_id": "SellerActionsChangeActivity",
+    "path": "/v1/seller-actions/change-activity",
+    "method": "POST",
+    "title": "启用或关闭活动",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "is_turn_on",
+        "type": "boolean",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "action_id": 0,
+      "is_turn_on": true
+    }
+  },
+  {
+    "operation_id": "SellerActionsCreateDiscount",
+    "path": "/v1/seller-actions/create/discount",
+    "method": "POST",
+    "title": "创建采用\"折扣\"机制的促销活动",
+    "request_fields": [
+      {
+        "name": "date_end",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "date_start",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "min_action_percent",
+        "type": "number",
+        "required": true
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "date_end": "2019-08-24T14:15:22Z",
+      "date_start": "2019-08-24T14:15:22Z",
+      "min_action_percent": 0,
+      "title": "string"
+    }
+  },
+  {
+    "operation_id": "SellerActionsCreateDiscountWithCondition",
+    "path": "/v1/seller-actions/create/discount-with-condition",
+    "method": "POST",
+    "title": "创建采用\"基于订单总额的折扣\"机制的促销活动",
+    "request_fields": [
+      {
+        "name": "date_end",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "date_start",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "discount_type",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "discount_value",
+        "type": "number",
+        "required": true
+      },
+      {
+        "name": "min_order_amount",
+        "type": "number",
+        "required": true
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "date_end": "2019-08-24T14:15:22Z",
+      "date_start": "2019-08-24T14:15:22Z",
+      "discount_type": "PERCENT",
+      "discount_value": 0,
+      "min_order_amount": 0,
+      "title": "string"
+    }
+  },
+  {
+    "operation_id": "SellerActionsCreateInstallment",
+    "path": "/v1/seller-actions/create/installment",
+    "method": "POST",
+    "title": "创建采用\"免息分期付款\"机制的促销活动",
+    "request_fields": [
+      {
+        "name": "date_start",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "date_start": "2019-08-24T14:15:22Z",
+      "title": "string"
+    }
+  },
+  {
+    "operation_id": "SellerActionsCreateMultiLevelDiscount",
+    "path": "/v1/seller-actions/create/multi-level-discount",
+    "method": "POST",
+    "title": "创建采用\"多级满额折扣\"机制的促销活动",
+    "request_fields": [
+      {
+        "name": "date_end",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "date_start",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "discount_levels",
+        "type": "objects",
+        "required": true
+      },
+      {
+        "name": "discount_type",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "is_legal_entities_segment",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "date_end": "2019-08-24T14:15:22Z",
+      "date_start": "2019-08-24T14:15:22Z",
+      "discount_levels": [
+        {
+          "discount_value": 0,
+          "order_amount": 0
+        },
+        {
+          "discount_value": 0,
+          "order_amount": 0
+        }
+      ],
+      "discount_type": "PERCENT",
+      "is_legal_entities_segment": true,
+      "title": "string"
+    }
+  },
+  {
+    "operation_id": "SellerActionsCreateVoucher",
+    "path": "/v1/seller-actions/create/voucher",
+    "method": "POST",
+    "title": "创建采用\"促销码折扣\"机制的促销活动",
+    "request_fields": [
+      {
+        "name": "budget",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "date_end",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "date_start",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "discount_type",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "discount_value",
+        "type": "number",
+        "required": true
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "user_ids",
+        "type": "strings",
+        "required": false
+      },
+      {
+        "name": "voucher_parameters",
+        "type": "object",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "budget": 0,
+      "date_end": "2019-08-24T14:15:22Z",
+      "date_start": "2019-08-24T14:15:22Z",
+      "discount_type": "PERCENT",
+      "discount_value": 0,
+      "title": "string",
+      "user_ids": [
+        "string"
+      ],
+      "voucher_parameters": {
+        "count_codes": 0,
+        "is_private": true,
+        "type": "ONE"
+      }
+    }
+  },
+  {
+    "operation_id": "SellerActionsList",
+    "path": "/v1/seller-actions/list",
+    "method": "POST",
+    "title": "获取促销活动列表",
+    "request_fields": [
+      {
+        "name": "action_ids",
+        "type": "strings",
+        "required": false
+      },
+      {
+        "name": "action_type",
+        "type": "strings",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "search",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "status",
+        "type": "strings",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "action_ids": [
+        "string"
+      ],
+      "action_type": [
+        "DISCOUNT"
+      ],
+      "limit": 1,
+      "offset": 0,
+      "search": "string",
+      "status": [
+        "ACTIVE"
+      ]
+    }
+  },
+  {
+    "operation_id": "SellerActionsProductsAdd",
+    "path": "/v1/seller-actions/products/add",
+    "method": "POST",
+    "title": "将商品添加到促销活动中",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "products",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "action_id": 0,
+      "products": [
+        {
+          "currency": "RUB",
+          "discount_percent": 0,
+          "sku": 0
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "SellerActionsProductsCandidates",
+    "path": "/v1/seller-actions/products/candidates",
+    "method": "POST",
+    "title": "获取促销活动可用商品列表",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "cursor",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "action_id": 0,
+      "cursor": 0,
+      "limit": 100
+    }
+  },
+  {
+    "operation_id": "SellerActionsProductsDelete",
+    "path": "/v1/seller-actions/products/delete",
+    "method": "POST",
+    "title": "从促销活动中移除商品",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "skus",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "action_id": 0,
+      "skus": [
+        "string"
+      ]
+    }
+  },
+  {
+    "operation_id": "SellerActionsProductsList",
+    "path": "/v1/seller-actions/products/list",
+    "method": "POST",
+    "title": "获取参与活动的商品列表",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "cursor",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "action_id": 0,
+      "cursor": 0,
+      "limit": 100
+    }
+  },
+  {
+    "operation_id": "SellerActionsUpdateDiscount",
+    "path": "/v1/seller-actions/update/discount",
+    "method": "POST",
+    "title": "更新“折扣”机制的促销活动",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "action_parameters",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "action_id": 0,
+      "action_parameters": {
+        "date_end": "2019-08-24T14:15:22Z",
+        "date_start": "2019-08-24T14:15:22Z",
+        "title": "string"
+      }
+    }
+  },
+  {
+    "operation_id": "SellerActionsUpdateDiscountWithCondition",
+    "path": "/v1/seller-actions/update/discount-with-condition",
+    "method": "POST",
+    "title": "更新“基于订单总额的折扣”机制的促销活动",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "action_parameters",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "action_id": 0,
+      "action_parameters": {
+        "date_end": "2019-08-24T14:15:22Z",
+        "date_start": "2019-08-24T14:15:22Z",
+        "discount_value": 0,
+        "min_order_amount": 0,
+        "title": "string"
+      }
+    }
+  },
+  {
+    "operation_id": "SellerActionsUpdateInstallment",
+    "path": "/v1/seller-actions/update/installment",
+    "method": "POST",
+    "title": "更新“免息分期付款”机制的促销活动",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "action_parameters",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "action_id": 0,
+      "action_parameters": {
+        "date_start": "2019-08-24T14:15:22Z",
+        "title": "string"
+      }
+    }
+  },
+  {
+    "operation_id": "SellerActionsUpdateMultiLevelDiscount",
+    "path": "/v1/seller-actions/update/multi-level-discount",
+    "method": "POST",
+    "title": "更新“多级满额折扣”机制的促销活动",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "action_parameters",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "action_id": 0,
+      "action_parameters": {
+        "date_end": "2019-08-24T14:15:22Z",
+        "date_start": "2019-08-24T14:15:22Z",
+        "discount_levels": [
+          {
+            "discount_value": 0,
+            "order_amount": 0
+          },
+          {
+            "discount_value": 0,
+            "order_amount": 0
+          }
+        ],
+        "is_legal_entities_segment": true,
+        "title": "string"
+      }
+    }
+  },
+  {
+    "operation_id": "SellerActionsUpdateVoucher",
+    "path": "/v1/seller-actions/update/voucher",
+    "method": "POST",
+    "title": "更新“促销码折扣”机制的促销活动",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "action_parameters",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "action_id": 0,
+      "action_parameters": {
+        "budget": 0,
+        "date_end": "2019-08-24T14:15:22Z",
+        "date_start": "2019-08-24T14:15:22Z",
+        "discount_value": 0,
+        "title": "string",
+        "user_ids": [
+          "string"
+        ]
+      }
+    }
+  },
+  {
+    "operation_id": "SellerActionsVoucherGet",
+    "path": "/v1/seller-actions/voucher/get",
+    "method": "POST",
+    "title": "获取CSV格式的促销码文件",
+    "request_fields": [
+      {
+        "name": "action_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "action_id": 0
+    }
+  },
+  {
+    "operation_id": "SellerAPI_SellerInfo",
+    "path": "/v1/seller/info",
+    "method": "POST",
+    "title": "卖家个人中心信息",
+    "request_fields": [],
+    "request_example": null
+  },
+  {
+    "operation_id": "SellerAPI_SellerOzonLogisticsInfo",
+    "path": "/v1/seller/ozon-logistics/info",
+    "method": "POST",
+    "title": "Ozon配送开通信息",
+    "request_fields": [],
+    "request_example": null
+  },
+  {
+    "operation_id": "SupplyOrderBundle",
+    "path": "/v1/supply-order/bundle",
+    "method": "POST",
+    "title": "交货或交货申请的商品组成",
+    "request_fields": [
+      {
+        "name": "bundle_ids",
+        "type": "strings",
+        "required": true
+      },
+      {
+        "name": "is_asc",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "item_tags_calculation",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "last_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "query",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "sort_field",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "bundle_ids": [
+        "string"
+      ],
+      "is_asc": true,
+      "item_tags_calculation": {
+        "dropoff_warehouse_id": 0,
+        "storage_warehouse_ids": [
+          "string"
+        ]
+      },
+      "last_id": "string",
+      "limit": 100,
+      "query": "string",
+      "sort_field": "NAME"
+    }
+  },
+  {
+    "operation_id": "ArchiveWarehouseFBS",
+    "path": "/v1/warehouse/archive",
+    "method": "POST",
+    "title": "将仓库归档",
+    "request_fields": [
+      {
+        "name": "reason",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "reason": "Тестовая причина",
+      "warehouse_id": 1020002929332000
+    }
+  },
+  {
+    "operation_id": "WarehouseAPI_CreateWarehouseFBS",
+    "path": "/v1/warehouse/fbs/create",
+    "method": "POST",
+    "title": "创建仓库",
+    "request_fields": [
+      {
+        "name": "address_coordinates",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "cut_in_time",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "drop_off_point_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "first_mile_type",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "is_kgt",
+        "type": "boolean",
+        "required": true
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "options",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "phone",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "timeslot_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "working_days",
+        "type": "strings",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "address_coordinates": {
+        "latitude": 55.69626,
+        "longitude": 37.42686
+      },
+      "first_mile_type": "DROP_OFF",
+      "drop_off_point_id": 1020002487458000,
+      "cut_in_time": 0,
+      "timeslot_id": 0,
+      "is_kgt": false,
+      "name": "Warehouse",
+      "options": {
+        "comment": "Comment",
+        "courier_phones": [
+          "+7(999)999-99-99"
+        ],
+        "is_auto_assembly": true,
+        "is_waybill_enabled": true
+      },
+      "phone": "+7(999)999-99-99",
+      "working_days": [
+        "MONDAY",
+        "TUESDAY",
+        "WEDNESDAY",
+        "THURSDAY",
+        "FRIDAY"
+      ]
+    }
+  },
+  {
+    "operation_id": "WarehouseAPI_ListDropOffPointsForCreateFBSWarehouse",
+    "path": "/v1/warehouse/fbs/create/drop-off/list",
+    "method": "POST",
+    "title": "获取用于创建仓库的揽收点列表",
+    "request_fields": [
+      {
+        "name": "coordinates",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "country_code",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "is_kgt",
+        "type": "boolean",
+        "required": true
+      },
+      {
+        "name": "search",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "country_code": "RU",
+      "is_kgt": false,
+      "coordinates": {
+        "latitude": 55,
+        "longitude": 37
+      },
+      "search": {
+        "address": "москва",
+        "types": [
+          "PPZ"
+        ]
+      }
+    }
+  },
+  {
+    "operation_id": "WarehouseFbsCreateDropOffTimeslotList",
+    "path": "/v1/warehouse/fbs/create/drop-off/timeslot/list",
+    "method": "POST",
+    "title": "获取用于创建drop-off发运仓库的时间段列表",
+    "request_fields": [
+      {
+        "name": "drop_off_point_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "drop_off_point_id": 0
+    }
+  },
+  {
+    "operation_id": "WarehouseFbsCreatePickUpTimeslotList",
+    "path": "/v1/warehouse/fbs/create/pick-up/timeslot/list",
+    "method": "POST",
+    "title": "获取用于创建pick-up发运仓库的时间段列表",
+    "request_fields": [
+      {
+        "name": "address_coordinates",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "is_kgt",
+        "type": "boolean",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "is_kgt": true,
+      "address_coordinates": {
+        "latitude": 55.7558,
+        "longitude": 37.6173
+      }
+    }
+  },
+  {
+    "operation_id": "UpdateWarehouseFBSFirstMile",
+    "path": "/v1/warehouse/fbs/first-mile/update",
+    "method": "POST",
+    "title": "更新头程物流",
+    "request_fields": [
+      {
+        "name": "cut_in_time",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "drop_off_point_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "first_mile_type",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "timeslot_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "first_mile_type": "DROP_OFF",
+      "drop_off_point_id": 0,
+      "cut_in_time": 0,
+      "timeslot_id": 0,
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "UpdateWarehouseFBS",
+    "path": "/v1/warehouse/fbs/update",
+    "method": "POST",
+    "title": "更新仓库",
+    "request_fields": [
+      {
+        "name": "address_coordinates",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "options",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "phone",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "working_days",
+        "type": "strings",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "address_coordinates": {
+        "latitude": 55.69626,
+        "longitude": 37.42686
+      },
+      "name": "Склад Балашиха",
+      "options": {
+        "comment": "Заезд на склад через главные ворота",
+        "courier_phones": [
+          "+7(999)999-99-99"
+        ],
+        "is_auto_assembly": true,
+        "is_waybill_enabled": true
+      },
+      "phone": "+7(XXX)XXX-XX-XX",
+      "warehouse_id": 1020002929332000,
+      "working_days": [
+        "MONDAY",
+        "TUESDAY",
+        "WEDNESDAY",
+        "THURSDAY",
+        "FRIDAY"
+      ]
+    }
+  },
+  {
+    "operation_id": "WarehouseAPI_ListDropOffPointsForUpdateFBSWarehouse",
+    "path": "/v1/warehouse/fbs/update/drop-off/list",
+    "method": "POST",
+    "title": "获取用于修改仓库信息的揽收点列表",
+    "request_fields": [
+      {
+        "name": "search",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "search": {
+        "address": "москва",
+        "types": [
+          "PPZ"
+        ]
+      },
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "WarehouseFbsUpdateDropOffTimeslotList",
+    "path": "/v1/warehouse/fbs/update/drop-off/timeslot/list",
+    "method": "POST",
+    "title": "获取用于更新drop-off发运仓库的时间段列表",
+    "request_fields": [
+      {
+        "name": "drop_off_point_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "drop_off_point_id": 0,
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "WarehouseFbsUpdatePickUpTimeslotList",
+    "path": "/v1/warehouse/fbs/update/pick-up/timeslot/list",
+    "method": "POST",
+    "title": "获取用于更新pick-up发运仓库的时间段列表",
+    "request_fields": [
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "warehouse_id": 987654321
+    }
+  },
+  {
+    "operation_id": "WarehouseInvalidProductsGet",
+    "path": "/v1/warehouse/invalid-products/get",
+    "method": "POST",
+    "title": "获取配送受限商品列表",
+    "request_fields": [
+      {
+        "name": "last_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "last_id": 0,
+      "warehouse_id": 0
+    }
+  },
+  {
+    "operation_id": "WarehouseAPI_WarehouseList",
+    "path": "/v1/warehouse/list",
+    "method": "POST",
+    "title": "仓库清单",
+    "request_fields": [
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "with",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "limit": 1,
+      "offset": 1,
+      "with": {
+        "able_to_set_price": true
+      }
+    }
+  },
+  {
+    "operation_id": "GetWarehouseFBSOperationStatus",
+    "path": "/v1/warehouse/operation/status",
+    "method": "POST",
+    "title": "获取操作状态",
+    "request_fields": [
+      {
+        "name": "operation_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "operation_id": "a0cfefee-9a5a-4580-bc32-2f9a6c7973e3"
+    }
+  },
+  {
+    "operation_id": "UnarchiveWarehouseFBS",
+    "path": "/v1/warehouse/unarchive",
+    "method": "POST",
+    "title": "将仓库解除归档",
+    "request_fields": [
+      {
+        "name": "warehouse_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "warehouse_id": 1020002929332000
+    }
+  },
+  {
+    "operation_id": "WarehouseWithInvalidProducts",
+    "path": "/v1/warehouse/warehouses-with-invalid-products",
+    "method": "POST",
+    "title": "获取含有配送受限商品的仓库列表",
+    "request_fields": [],
+    "request_example": null
+  },
+  {
+    "operation_id": "GetDiscountTaskListV2",
+    "path": "/v2/actions/discounts-task/list",
+    "method": "POST",
+    "title": "获取折扣申请列表",
+    "request_fields": [
+      {
+        "name": "last_id",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "last_id": 0,
+      "limit": 50,
+      "status": "ALL"
+    }
+  },
+  {
+    "operation_id": "ChatAPI_ChatReadV2",
+    "path": "/v2/chat/read",
+    "method": "POST",
+    "title": "将信息标记为已读",
+    "request_fields": [
+      {
+        "name": "chat_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "from_message_id",
+        "type": "integer",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "chat_id": "99feb3fc-a474-469f-95d5-268b470cc607",
+      "from_message_id": 3000000000118032000
+    }
+  },
+  {
+    "operation_id": "CancellationAPI_ConditionalCancellationApproveV2",
+    "path": "/v2/conditional-cancellation/approve",
+    "method": "POST",
+    "title": "确认 rFBS 取消申请",
+    "request_fields": [
+      {
+        "name": "cancellation_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "comment",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "cancellation_id": 0,
+      "comment": "string"
+    }
+  },
+  {
+    "operation_id": "CancellationAPI_GetConditionalCancellationListV2",
+    "path": "/v2/conditional-cancellation/list",
+    "method": "POST",
+    "title": "获取 rFBS 取消申请列表",
+    "request_fields": [
+      {
+        "name": "filters",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "last_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "with",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "filters": {
+        "cancellation_initiator": [
+          "CLIENT"
+        ],
+        "posting_number": [
+          "34009011-0094-1"
+        ],
+        "state": "ALL"
+      },
+      "limit": 500,
+      "last_id": 0,
+      "with": {
+        "counter": true
+      }
+    }
+  },
+  {
+    "operation_id": "CancellationAPI_ConditionalCancellationRejectV2",
+    "path": "/v2/conditional-cancellation/reject",
+    "method": "POST",
+    "title": "拒绝 rFBS 取消申请",
+    "request_fields": [
+      {
+        "name": "cancellation_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "comment",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "cancellation_id": 0,
+      "comment": "string"
+    }
+  },
+  {
+    "operation_id": "WarehouseAPI_DeliveryMethodListV2",
+    "path": "/v2/delivery-method/list",
+    "method": "POST",
+    "title": "realFBS仓库的配送方式列表",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "cursor": "string",
+      "filter": {
+        "delivery_method_ids": [
+          "string"
+        ],
+        "provider_ids": [
+          "string"
+        ],
+        "status": [
+          "NEW"
+        ],
+        "warehouse_ids": [
+          "string"
+        ]
+      },
+      "limit": 1,
+      "sort_dir": "ASC"
+    }
+  },
+  {
+    "operation_id": "PostingAPI_FbsPostingDelivered",
+    "path": "/v2/fbs/posting/delivered",
+    "method": "POST",
+    "title": "将状态改成“已送达”",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "posting_number": [
+        "48173252-0033-2"
+      ]
+    }
+  },
+  {
+    "operation_id": "PostingAPI_FbsPostingDelivering",
+    "path": "/v2/fbs/posting/delivering",
+    "method": "POST",
+    "title": "将状态改成“运输中”",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "posting_number": [
+        "33920157-0018-1"
+      ]
+    }
+  },
+  {
+    "operation_id": "PostingAPI_FbsPostingLastMile",
+    "path": "/v2/fbs/posting/last-mile",
+    "method": "POST",
+    "title": "状态改为“最后一英里”",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "posting_number": [
+        "48173252-0033-2"
+      ]
+    }
+  },
+  {
+    "operation_id": "PostingAPI_FbsPostingTrackingNumberSet",
+    "path": "/v2/fbs/posting/tracking-number/set",
+    "method": "POST",
+    "title": "添加跟踪号",
+    "request_fields": [
+      {
+        "name": "tracking_numbers",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "tracking_numbers": [
+        {
+          "posting_number": "48173252-0033-2",
+          "tracking_number": "123123123"
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "FinanceAPI_GetRealizationReportV2",
+    "path": "/v2/finance/realization",
+    "method": "POST",
+    "title": "商品销售报告 （第2版）",
+    "request_fields": [
+      {
+        "name": "month",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "year",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "month": 0,
+      "year": 0
+    }
+  },
+  {
+    "operation_id": "PostingAPI_PostingFBSActGetContainerLabels",
+    "path": "/v2/posting/fbs/act/get-container-labels",
+    "method": "POST",
+    "title": "货位标签",
+    "request_fields": [
+      {
+        "name": "id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "id": 295662811
+    }
+  },
+  {
+    "operation_id": "PostingAPI_ActPostingList",
+    "path": "/v2/posting/fbs/act/get-postings",
+    "method": "POST",
+    "title": "单据中的货件列表",
+    "request_fields": [
+      {
+        "name": "id",
+        "type": "int",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "id": 900000250859000
+    }
+  },
+  {
+    "operation_id": "PostingAPI_MoveFbsPostingToAwaitingDelivery",
+    "path": "/v2/posting/fbs/awaiting-delivery",
+    "method": "POST",
+    "title": "货件装运",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "posting_number": [
+        "33920143-1195-1"
+      ]
+    }
+  },
+  {
+    "operation_id": "PostingAPI_CancelFbsPosting",
+    "path": "/v2/posting/fbs/cancel",
+    "method": "POST",
+    "title": "取消货运",
+    "request_fields": [
+      {
+        "name": "cancel_reason_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "cancel_reason_message",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "cancel_reason_id": 352,
+      "cancel_reason_message": "Product is out of stock",
+      "posting_number": "33920113-1231-1"
+    }
+  },
+  {
+    "operation_id": "PostingAPI_GetPostingFbsCancelReasonList",
+    "path": "/v2/posting/fbs/cancel-reason/list",
+    "method": "POST",
+    "title": "货件取消原因",
+    "request_fields": [],
+    "request_example": null
+  },
+  {
+    "operation_id": "PostingAPI_GetFbsPostingByBarcode",
+    "path": "/v2/posting/fbs/get-by-barcode",
+    "method": "POST",
+    "title": "按条形码获取有关货件的信息",
+    "request_fields": [
+      {
+        "name": "barcode",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "barcode": "20325804886000"
+    }
+  },
+  {
+    "operation_id": "PostingAPI_PostingFBSPackageLabel",
+    "path": "/v2/posting/fbs/package-label",
+    "method": "POST",
+    "title": "打印标签",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "posting_number": [
+        "48173252-0034-4"
+      ]
+    }
+  },
+  {
+    "operation_id": "PostingAPI_CancelFbsPostingProduct",
+    "path": "/v2/posting/fbs/product/cancel",
+    "method": "POST",
+    "title": "取消某些商品发货",
+    "request_fields": [
+      {
+        "name": "cancel_reason_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "cancel_reason_message",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "items",
+        "type": "objects",
+        "required": true
+      },
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "cancel_reason_id": 352,
+      "cancel_reason_message": "Product is out of stock",
+      "items": [
+        {
+          "quantity": 5,
+          "sku": 150587396
+        }
+      ],
+      "posting_number": "33920113-1231-1"
+    }
+  },
+  {
+    "operation_id": "PostingAPI_ListCountryProductFbsPostingV2",
+    "path": "/v2/posting/fbs/product/country/list",
+    "method": "POST",
+    "title": "可用产地名单",
+    "request_fields": [
+      {
+        "name": "name_search",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "name_search": ""
+    }
+  },
+  {
+    "operation_id": "PostingAPI_SetCountryProductFbsPostingV2",
+    "path": "/v2/posting/fbs/product/country/set",
+    "method": "POST",
+    "title": "添加商品产地信息",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "product_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "country_iso_code",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "country_iso_code": "NO",
+      "posting_number": "57195475-0050-3",
+      "product_id": 180550365
+    }
+  },
+  {
+    "operation_id": "GetProductInfoStocksByWarehouseFbsV2",
+    "path": "/v2/product/info/stocks-by-warehouse/fbs",
+    "method": "POST",
+    "title": "获取卖家仓库库存信息",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "offer_id",
+        "type": "strings",
+        "required": true
+      },
+      {
+        "name": "sku",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "cursor": "string",
+      "limit": 0,
+      "offer_id": [
+        "string"
+      ],
+      "sku": [
+        "string"
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ProductInfoPicturesV2",
+    "path": "/v2/product/pictures/info",
+    "method": "POST",
+    "title": "获取商品图片",
+    "request_fields": [
+      {
+        "name": "product_id",
+        "type": "strings",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "product_id": [
+        "89898989"
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_DeleteProducts",
+    "path": "/v2/products/delete",
+    "method": "POST",
+    "title": "从存档删除没有SKU的商品",
+    "request_fields": [
+      {
+        "name": "products",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "products": [
+        {
+          "offer_id": "033"
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ProductsStocksV2",
+    "path": "/v2/products/stocks",
+    "method": "POST",
+    "title": "更新库存商品的数量",
+    "request_fields": [
+      {
+        "name": "stocks",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "stocks": [
+        {
+          "offer_id": "PH11042",
+          "product_id": 313455276,
+          "stock": 100,
+          "warehouse_id": 22142605386000
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "RFBSReturnsAPI_ReturnsRfbsCompensateV2",
+    "path": "/v2/returns/rfbs/compensate",
+    "method": "POST",
+    "title": "退还部分商品金额",
+    "request_fields": [
+      {
+        "name": "compensation_amount",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "return_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "compensation_amount": "string",
+      "return_id": 0
+    }
+  },
+  {
+    "operation_id": "RFBSReturnsAPI_ReturnsRfbsGetV2",
+    "path": "/v2/returns/rfbs/get",
+    "method": "POST",
+    "title": "退货申请信息",
+    "request_fields": [
+      {
+        "name": "return_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "return_id": 0
+    }
+  },
+  {
+    "operation_id": "RFBSReturnsAPI_ReturnsRfbsListV2",
+    "path": "/v2/returns/rfbs/list",
+    "method": "POST",
+    "title": "退货申请列表",
+    "request_fields": [
+      {
+        "name": "filter",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "last_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "filter": {
+        "offer_id": "test-offer-123456",
+        "posting_number": "789456123-0002-3",
+        "group_state": [
+          "New",
+          "Approved"
+        ],
+        "created_at": {
+          "from": "2026-02-01T00:00:00Z",
+          "to": "2026-03-01T23:59:59Z"
+        }
+      },
+      "last_id": 0,
+      "limit": 1000
+    }
+  },
+  {
+    "operation_id": "RFBSReturnsAPI_ReturnsRfbsReceiveReturnV2",
+    "path": "/v2/returns/rfbs/receive-return",
+    "method": "POST",
+    "title": "确认收到待检查商品",
+    "request_fields": [
+      {
+        "name": "return_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "return_id": 0
+    }
+  },
+  {
+    "operation_id": "RFBSReturnsAPI_ReturnsRfbsRejectV2",
+    "path": "/v2/returns/rfbs/reject",
+    "method": "POST",
+    "title": "拒绝退货申请",
+    "request_fields": [
+      {
+        "name": "return_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "comment",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "rejection_reason_id",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "return_id": 0,
+      "comment": "string",
+      "rejection_reason_id": 0
+    }
+  },
+  {
+    "operation_id": "RFBSReturnsAPI_ReturnsRfbsReturnMoneyV2",
+    "path": "/v2/returns/rfbs/return-money",
+    "method": "POST",
+    "title": "向买家退款",
+    "request_fields": [
+      {
+        "name": "return_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "return_for_back_way",
+        "type": "integer",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "return_id": 0,
+      "return_for_back_way": 0
+    }
+  },
+  {
+    "operation_id": "RFBSReturnsAPI_ReturnsRfbsVerifyV2",
+    "path": "/v2/returns/rfbs/verify",
+    "method": "POST",
+    "title": "批准退货申请",
+    "request_fields": [
+      {
+        "name": "return_id",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "return_method_description",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "return_id": 0,
+      "return_method_description": "string"
+    }
+  },
+  {
+    "operation_id": "ReviewListV2",
+    "path": "/v2/review/list",
+    "method": "POST",
+    "title": "获取评价列表",
+    "request_fields": [
+      {
+        "name": "filters",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "last_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "filters": {
+        "sku": [
+          0
+        ],
+        "order_status": "NEW",
+        "status": "DELIVERED",
+        "published_from": "2026-03-10T14:08:00.257Z",
+        "published_to": "2026-03-10T14:08:00.257Z"
+      },
+      "last_id": "string",
+      "limit": 0,
+      "sort_dir": "ASC"
+    }
+  },
+  {
+    "operation_id": "WarehouseListV2",
+    "path": "/v2/warehouse/list",
+    "method": "POST",
+    "title": "仓库列表",
+    "request_fields": [
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "warehouse_ids",
+        "type": "strings",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "cursor": "string",
+      "limit": 0,
+      "warehouse_ids": [
+        20605650762000
+      ]
+    }
+  },
+  {
+    "operation_id": "ChatAPI_ChatHistoryV3",
+    "path": "/v3/chat/history",
+    "method": "POST",
+    "title": "聊天历史记录",
+    "request_fields": [
+      {
+        "name": "chat_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "direction",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "from_message_id",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "chat_id": "18b8e1f9-4ae7-461c-84ea-8e1f54d1a45e",
+      "direction": "Forward",
+      "filter": {
+        "message_ids": [
+          "3000000300211559667"
+        ]
+      },
+      "from_message_id": 3000000000118032000,
+      "limit": 1
+    }
+  },
+  {
+    "operation_id": "ChatAPI_ChatListV3",
+    "path": "/v3/chat/list",
+    "method": "POST",
+    "title": "聊天清单",
+    "request_fields": [
+      {
+        "name": "filter",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "filter": {
+        "chat_status": "OPENED",
+        "unread_only": true
+      },
+      "limit": 1,
+      "cursor": "304000402034"
+    }
+  },
+  {
+    "operation_id": "FinanceAPI_FinanceTransactionListV3",
+    "path": "/v3/finance/transaction/list",
+    "method": "POST",
+    "title": "交易清单",
+    "request_fields": [
+      {
+        "name": "filter",
+        "type": "posting_number (object) or date (object)",
+        "required": false
+      },
+      {
+        "name": "page",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "page_size",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "filter": {
+        "date": {
+          "from": "2021-11-01T00:00:00.000Z",
+          "to": "2021-11-02T00:00:00.000Z"
+        },
+        "operation_type": [],
+        "posting_number": "",
+        "transaction_type": "all"
+      },
+      "page": 1,
+      "page_size": 1000
+    }
+  },
+  {
+    "operation_id": "FinanceAPI_FinanceTransactionTotalV3",
+    "path": "/v3/finance/transaction/totals",
+    "method": "POST",
+    "title": "清单数目",
+    "request_fields": [
+      {
+        "name": "date",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "transaction_type",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "date": {
+        "from": "2021-11-01T00:00:00.000Z",
+        "to": "2021-11-02T00:00:00.000Z"
+      },
+      "posting_number": "",
+      "transaction_type": "all"
+    }
+  },
+  {
+    "operation_id": "PostingAPI_GetFbsPostingV3",
+    "path": "/v3/posting/fbs/get",
+    "method": "POST",
+    "title": "按照ID获取货件信息",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "with",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "posting_number": "57195475-0050-3",
+      "with": {
+        "analytics_data": false,
+        "barcodes": false,
+        "financial_data": false,
+        "legal_info": false,
+        "product_exemplars": false,
+        "related_postings": true,
+        "translit": false
+      }
+    }
+  },
+  {
+    "operation_id": "PostingAPI_GetFbsPostingListV3",
+    "path": "/v3/posting/fbs/list",
+    "method": "POST",
+    "title": "PostingAPI_GetFbsPostingListV3",
+    "request_fields": [
+      {
+        "name": "dir",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "with",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "dir": "ASC",
+      "filter": {
+        "delivery_method_id": [
+          "21321684811000"
+        ],
+        "fbpFilter": "string",
+        "last_changed_status_date": {
+          "from": "2023-11-03T11:47:39.878Z",
+          "to": "2023-11-03T11:47:39.878Z"
+        },
+        "order_id": 0,
+        "provider_id": [
+          "24"
+        ],
+        "since": "2023-11-03T11:47:39.878Z",
+        "status": "awaiting_packaging",
+        "to": "2023-11-03T11:47:39.878Z",
+        "warehouse_id": [
+          "21321684811000"
+        ]
+      },
+      "limit": 100,
+      "offset": 0,
+      "with": {
+        "analytics_data": true,
+        "barcodes": true,
+        "financial_data": true,
+        "translit": true
+      }
+    }
+  },
+  {
+    "operation_id": "PostingAPI_GetFbsPostingUnfulfilledList",
+    "path": "/v3/posting/fbs/unfulfilled/list",
+    "method": "POST",
+    "title": "PostingAPI_GetFbsPostingUnfulfilledList",
+    "request_fields": [
+      {
+        "name": "dir",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "offset",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "with",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "dir": "ASC",
+      "filter": {
+        "cutoff_from": "2021-08-24T14:15:22Z",
+        "cutoff_to": "2021-08-31T14:15:22Z",
+        "delivery_method_id": [],
+        "provider_id": [],
+        "status": "awaiting_packaging",
+        "warehouse_id": []
+      },
+      "limit": 100,
+      "offset": 0,
+      "with": {
+        "analytics_data": true,
+        "barcodes": true,
+        "financial_data": true,
+        "legal_info": false,
+        "translit": true
+      }
+    }
+  },
+  {
+    "operation_id": "ProductAPI_ImportProductsV3",
+    "path": "/v3/product/import",
+    "method": "POST",
+    "title": "创建或更新商品",
+    "request_fields": [
+      {
+        "name": "items",
+        "type": "objects",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "items": [
+        {
+          "attributes": [
+            {
+              "complex_id": 0,
+              "id": 5076,
+              "values": [
+                {
+                  "dictionary_value_id": 971082156,
+                  "value": "麦克风架"
+                }
+              ]
+            },
+            {
+              "complex_id": 0,
+              "id": 9048,
+              "values": [
+                {
+                  "value": "一套X3NFC保护膜。 深色棉质"
+                }
+              ]
+            },
+            {
+              "complex_id": 0,
+              "id": 8229,
+              "values": [
+                {
+                  "dictionary_value_id": 95911,
+                  "value": "一套X3NFC保护膜。深色棉质"
+                }
+              ]
+            },
+            {
+              "complex_id": 0,
+              "id": 85,
+              "values": [
+                {
+                  "dictionary_value_id": 5060050,
+                  "value": "Samsung"
+                }
+              ]
+            },
+            {
+              "complex_id": 0,
+              "id": 10096,
+              "values": [
+                {
+                  "dictionary_value_id": 61576,
+                  "value": "灰色的"
+                }
+              ]
+            }
+          ],
+          "barcode": "112772873170",
+          "description_category_id": 17028922,
+          "new_description_category_id": 0,
+          "color_image": "",
+          "complex_attributes": [],
+          "currency_code": "RUB",
+          "depth": 10,
+          "dimension_unit": "mm",
+          "height": 250,
+          "images": [],
+          "images360": [],
+          "name": "一套X3NFC的保护膜。深色棉质",
+          "offer_id": "143210608",
+          "old_price": "1100",
+          "pdf_list": [],
+          "price": "1000",
+          "primary_image": "",
+          "promotions": [
+            {
+              "operation": "UNKNOWN",
+              "type": "REVIEWS_PROMO"
+            }
+          ],
+          "type_id": 91565,
+          "vat": "0.1",
+          "weight": 100,
+          "weight_unit": "g",
+          "width": 150
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_GetProductInfoList",
+    "path": "/v3/product/info/list",
+    "method": "POST",
+    "title": "根据标识符获取商品信息",
+    "request_fields": [
+      {
+        "name": "offer_id",
+        "type": "strings",
+        "required": false
+      },
+      {
+        "name": "product_id",
+        "type": "strings",
+        "required": false
+      },
+      {
+        "name": "sku",
+        "type": "strings",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "offer_id": [
+        "2026113PDF"
+      ],
+      "product_id": [
+        "3339791176800"
+      ],
+      "sku": [
+        "33373353831"
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_GetProductList",
+    "path": "/v3/product/list",
+    "method": "POST",
+    "title": "品列表的",
+    "request_fields": [
+      {
+        "name": "filter",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "last_id",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "filter": {
+        "offer_id": [
+          "136748"
+        ],
+        "product_id": [
+          "223681945"
+        ],
+        "visibility": "ALL"
+      },
+      "last_id": "",
+      "limit": 100
+    }
+  },
+  {
+    "operation_id": "ProductAPI_GetProductAttributesV3",
+    "path": "/v3/products/info/attributes",
+    "method": "POST",
+    "title": "获取商品特征描述",
+    "request_fields": [
+      {
+        "name": "filter",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "last_id",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "sort_by",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "filter": {
+        "product_id": [
+          "213761435"
+        ],
+        "visibility": "ALL"
+      },
+      "limit": 100,
+      "last_id": "okVsfA==«",
+      "sort_dir": "ASC"
+    }
+  },
+  {
+    "operation_id": "PostingFbsList",
+    "path": "/v4/posting/fbs/list",
+    "method": "POST",
+    "title": "获取货件列表",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "translit",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "with",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "sort_dir": "asc",
+      "filter": {
+        "order_numbers": [
+          "12345-1"
+        ],
+        "delivery_method_ids": [
+          123456789
+        ],
+        "is_blr_traceable": false,
+        "last_changed_status_date": {
+          "from": "2026-04-01T19:47:39.878Z",
+          "to": "2026-04-02T11:47:39.878Z"
+        },
+        "order_id": 123456,
+        "since": "2026-04-01T19:47:39.878Z",
+        "to": "2026-04-02T11:47:39.878Z",
+        "statuses": [
+          "awaiting_packaging",
+          "awaiting_deliver",
+          "delivering",
+          "delivered"
+        ],
+        "provider_ids": [
+          123
+        ],
+        "warehouse_ids": [
+          3092889984
+        ]
+      },
+      "limit": 100,
+      "cursor": "",
+      "with": {
+        "analytics_data": true,
+        "barcodes": true,
+        "financial_data": true,
+        "legal_info": true,
+        "translit": true
+      }
+    }
+  },
+  {
+    "operation_id": "PostingAPI_ShipFbsPostingV4",
+    "path": "/v4/posting/fbs/ship",
+    "method": "POST",
+    "title": "搜集订单 (第4方案)",
+    "request_fields": [
+      {
+        "name": "packages",
+        "type": "objects",
+        "required": true
+      },
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "with",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "packages": [
+        {
+          "products": [
+            {
+              "product_id": 185479045,
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "posting_number": "89491381-0072-1",
+      "with": {
+        "additional_data": true
+      }
+    }
+  },
+  {
+    "operation_id": "PostingAPI_ShipFbsPostingPackage",
+    "path": "/v4/posting/fbs/ship/package",
+    "method": "POST",
+    "title": "货件的部分装配 (第4方案)",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "products",
+        "type": "objects",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "posting_number": "string",
+      "products": [
+        {
+          "exemplarsIds": [
+            "string"
+          ],
+          "product_id": 0,
+          "quantity": 0
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "PostingFbsUnfulfilledList",
+    "path": "/v4/posting/fbs/unfulfilled/list",
+    "method": "POST",
+    "title": "获取未处理货件列表",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "translit",
+        "type": "boolean",
+        "required": false
+      },
+      {
+        "name": "with",
+        "type": "object",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "sort_dir": "asc",
+      "limit": 100,
+      "filter": {
+        "cutoff_from": "2026-01-21T07:13:56.042Z",
+        "cutoff_to": "2026-01-21T07:13:56.042Z",
+        "delivery_method_ids": [
+          123456
+        ],
+        "statuses": [
+          "awaiting_packaging",
+          "awaiting_deliver",
+          "delivering"
+        ],
+        "warehouse_ids": [
+          3092889984
+        ],
+        "provider_ids": [
+          57
+        ],
+        "last_change_status_date": {
+          "from": "2026-01-21T07:13:56.042Z",
+          "to": "2026-01-21T07:13:56.042Z"
+        }
+      },
+      "cursor": "",
+      "with": {
+        "barcodes": true,
+        "analytics_data": true,
+        "financial_data": true,
+        "legal_info": true
+      }
+    }
+  },
+  {
+    "operation_id": "ProductAPI_GetProductAttributesV4",
+    "path": "/v4/product/info/attributes",
+    "method": "POST",
+    "title": "获取商品特征描述",
+    "request_fields": [
+      {
+        "name": "filter",
+        "type": "object",
+        "required": false
+      },
+      {
+        "name": "last_id",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": false
+      },
+      {
+        "name": "sort_by",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "sort_dir",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "request_example": {
+      "filter": {
+        "product_id": [
+          "0"
+        ],
+        "offer_id": [
+          "string"
+        ],
+        "sku": [
+          "0"
+        ],
+        "visibility": "ALL"
+      },
+      "limit": 100,
+      "sort_dir": "ASC"
+    }
+  },
+  {
+    "operation_id": "ProductAPI_GetUploadQuota",
+    "path": "/v4/product/info/limit",
+    "method": "POST",
+    "title": "品类限制、商品的创建和更新",
+    "request_fields": [],
+    "request_example": null
+  },
+  {
+    "operation_id": "ProductAPI_GetProductInfoStocks",
+    "path": "/v4/product/info/stocks",
+    "method": "POST",
+    "title": "关于商品数量的信息",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "cursor": "",
+      "filter": {
+        "offer_id": [
+          "1233213232"
+        ],
+        "product_id": [
+          "313455276"
+        ],
+        "visibility": "ALL",
+        "with_quant": {
+          "created": true,
+          "exists": true
+        }
+      },
+      "limit": 100
+    }
+  },
+  {
+    "operation_id": "PostingAPI_FbsPostingProductExemplarStatusV5",
+    "path": "/v5/fbs/posting/product/exemplar/status",
+    "method": "POST",
+    "title": "获取样件添加状态",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "posting_number": "string"
+    }
+  },
+  {
+    "operation_id": "PostingAPI_FbsPostingProductExemplarValidateV5",
+    "path": "/v5/fbs/posting/product/exemplar/validate",
+    "method": "POST",
+    "title": "标志代码验证",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "products",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "posting_number": "string",
+      "products": [
+        {
+          "exemplars": [
+            {
+              "gtd": "string",
+              "marks": [
+                {
+                  "mark": "string",
+                  "mark_type": "string"
+                }
+              ],
+              "rnpt": "string"
+            }
+          ],
+          "product_id": 0
+        }
+      ]
+    }
+  },
+  {
+    "operation_id": "ProductAPI_GetProductInfoPrices",
+    "path": "/v5/product/info/prices",
+    "method": "POST",
+    "title": "获取商品价格信息",
+    "request_fields": [
+      {
+        "name": "cursor",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "object",
+        "required": true
+      },
+      {
+        "name": "limit",
+        "type": "integer",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "cursor": "",
+      "filter": {
+        "offer_id": [
+          "356792"
+        ],
+        "product_id": [
+          "243686911"
+        ],
+        "visibility": "ALL"
+      },
+      "limit": 100
+    }
+  },
+  {
+    "operation_id": "PostingAPI_FbsPostingProductExemplarCreateOrGetV6",
+    "path": "/v6/fbs/posting/product/exemplar/create-or-get",
+    "method": "POST",
+    "title": "获取已创建样件数据",
+    "request_fields": [
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "posting_number": "string"
+    }
+  },
+  {
+    "operation_id": "PostingAPI_FbsPostingProductExemplarSetV6",
+    "path": "/v6/fbs/posting/product/exemplar/set",
+    "method": "POST",
+    "title": "检查并保存份数数据",
+    "request_fields": [
+      {
+        "name": "multi_box_qty",
+        "type": "integer",
+        "required": true
+      },
+      {
+        "name": "posting_number",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "products",
+        "type": "objects",
+        "required": true
+      }
+    ],
+    "request_example": {
+      "multi_box_qty": 0,
+      "posting_number": "string",
+      "products": [
+        {
+          "exemplars": [
+            {
+              "exemplar_id": 0,
+              "gtd": "string",
+              "is_gtd_absent": true,
+              "is_rnpt_absent": true,
+              "marks": [
+                {
+                  "mark": "string",
+                  "mark_type": "string"
+                }
+              ],
+              "rnpt": "string"
+            }
+          ],
+          "product_id": 0
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "ozon-seller": {
+      "command": "python3",
+      "args": ["-m", "ozon_mcp.server"],
+      "cwd": "/Users/huangsenda/Project/code/ozonhelper/ozon-mcp",
+      "env": {
+        "OZON_CLIENT_ID": "4290942",
+        "OZON_API_KEY": "e147dd6c-6b4f-4b5f-bb35-b8b78979a149",
+        "PYTHONPATH": "src"
+      }
+    }
+  }
+}
