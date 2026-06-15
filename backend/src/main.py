@@ -9,6 +9,7 @@ from src.api.error_handler import AppException, app_exception_handler, general_e
 from src.api.exceptions import AppException
 from src.api.logging_middleware import LoggingMiddleware
 from src.bootstrap.admin_user import bootstrap_admin_user
+from src.bootstrap.default_store import bootstrap_default_store
 
 
 @asynccontextmanager
@@ -17,6 +18,7 @@ async def lifespan(app: FastAPI):
     # 启动时
     print('🚀 OzonHelper API 启动中...')
     await bootstrap_admin_user()
+    await bootstrap_default_store()
     yield
     # 关闭时
     from src.services.ozon.client import close_ozon_client
@@ -65,9 +67,11 @@ from src.api.selection_pool import router as selection_pool_router
 from src.api.ai_endpoints import router as ai_router
 from src.api.products import router as products_router
 from src.api.exchange_rate import router as exchange_rate_router
+from src.api.stores import router as stores_router
 from src.api.tracking import router as tracking_router
 
 app.include_router(auth_router, tags=['认证'])
+app.include_router(stores_router, tags=['店铺管理'])
 app.include_router(rankings_router, tags=['榜单发现'])
 app.include_router(selection_pool_router, tags=['选品池'])
 app.include_router(ai_router, tags=['AI 处理'])

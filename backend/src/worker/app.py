@@ -14,8 +14,16 @@ celery_app = Celery(
     include=[
         'src.worker.scraper_tasks',
         'src.worker.ai_tasks',
+        'src.worker.sync_tasks',
     ],
 )
+
+celery_app.conf.beat_schedule = {
+    'sync-all-stores-every-15-min': {
+        'task': 'sync_all_active_stores',
+        'schedule': 900.0,
+    },
+}
 
 celery_app.conf.update(
     task_serializer='json',

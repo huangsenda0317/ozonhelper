@@ -7,4 +7,13 @@ from src.models.ranked_product import RankedProduct  # noqa: F401
 from src.models.selected_product import SelectedProduct  # noqa: F401
 from src.models.sourcing import ProfitCalculation, SupplySource  # noqa: F401
 from src.models.store import Store  # noqa: F401
+from src.models.tracking_sync import (  # noqa: F401
+    Alert,
+    AnalyticsDaily,
+    InventoryAlertConfig,
+    InventorySnapshot,
+    SyncJob,
+    SyncedOrder,
+    SyncedProduct,
+)
 from src.models.user import User  # noqa: F401

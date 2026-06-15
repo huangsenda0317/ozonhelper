@@ -23,7 +23,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      router.push("/rankings");
+      router.push("/tracking");
     } catch (err: any) {
       setError(err.message || "登录失败，请检查账号和密码");
     } finally {

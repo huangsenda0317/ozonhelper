@@ -14,6 +14,11 @@ class TrackingProductSummary(BaseModel):
     status_name: str | None = None
     primary_image_url: str | None = None
     updated_at: str | None = None
+    ordered_units: int = 0
+    hits_view: int = 0
+    conversion_rate: float | None = None
+    synced_at: str | None = None
+    is_exception: bool = False
 
 
 class TrackingProductDetail(BaseModel):
@@ -38,6 +43,12 @@ class TrackingProductDetail(BaseModel):
     created_at: str | None = None
     updated_at: str | None = None
     ozon_url: str | None = None
+    ordered_units: int = 0
+    hits_view: int = 0
+    conversion_rate: float | None = None
+    is_exception: bool = False
+    exception_reason: str | None = None
+    synced_at: str | None = None
 
 
 class TrackingProductListParams(BaseModel):
@@ -45,7 +56,13 @@ class TrackingProductListParams(BaseModel):
     visibility: str = 'ALL'
     status: str | None = None
     has_stock: bool | None = None
+    is_exception: bool | None = None
     sort_by: str = 'updated_at'
     sort_order: str = 'desc'
     page: int = 1
     limit: int = 20
+
+
+class BatchVisibilityRequest(BaseModel):
+    product_ids: list[str] = Field(min_length=1)
+    action: str = Field(pattern='^(archive|unarchive)$')

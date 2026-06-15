@@ -27,6 +27,13 @@ const TOOLBOX_ITEMS: {
   bento?: "wide";
 }[] = [
   {
+    href: "/tracking",
+    label: "店铺跟踪",
+    desc: "ERP 工作台：商品、库存、订单、预警",
+    icon: TrendingUp,
+    bento: "wide",
+  },
+  {
     href: "/rankings",
     label: "榜单发现",
     desc: "浏览 Ozon 排行榜，锁定潜力商品",
@@ -67,13 +74,6 @@ const TOOLBOX_ITEMS: {
     label: "批量上架",
     desc: "预填刊登，一键提交",
     icon: Upload,
-  },
-  {
-    href: "/tracking",
-    label: "店铺跟踪",
-    desc: "销售仪表盘，预警通知",
-    icon: TrendingUp,
-    bento: "wide",
   },
 ];
 

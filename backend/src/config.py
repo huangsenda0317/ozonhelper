@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     # 加密密钥 (Fernet)
     encryption_key: str = ''
 
+    # 为 true 时在 API 进程内后台执行同步（无需单独启动 Celery Worker，适合本地开发）
+    sync_inline: bool = True
+
     class Config:
         env_file = '.env'
         env_file_encoding = 'utf-8'

@@ -10,6 +10,7 @@ import { useTheme } from "@/lib/theme-context";
 import { Button } from "@/components/ui/Button";
 
 const NAV_ITEMS = [
+  { href: "/tracking", label: "店铺跟踪" },
   { href: "/rankings", label: "榜单发现" },
   { href: "/selection-pool", label: "选品池" },
   { href: "/products", label: "已采集商品" },
@@ -17,7 +18,6 @@ const NAV_ITEMS = [
   { href: "/ai-edit", label: "AI 改图", exact: true },
   { href: "/ai-edit/translate", label: "AI 翻译" },
   { href: "/listing", label: "批量上架" },
-  { href: "/tracking", label: "店铺跟踪" },
 ];
 
 export function GlobalNav() {

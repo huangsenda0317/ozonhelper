@@ -25,7 +25,7 @@ export default function RegisterPage() {
     try {
       await register(email, password, name);
       await login(email, password);
-      router.push("/rankings");
+      router.push("/tracking");
     } catch (err: any) {
       setError(err.message || "注册失败，请重试");
     } finally {
