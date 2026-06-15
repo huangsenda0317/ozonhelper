@@ -1,73 +1,204 @@
+@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* SF Pro Font Family */
-@font-face {
-  font-family: 'SF Pro Display';
-  src: local('SF Pro Display');
-  font-weight: 400 700;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'SF Pro Text';
-  src: local('SF Pro Text');
-  font-weight: 400 600;
-  font-style: normal;
-}
-
-/* Apple Design CSS Variables */
+/* ── Sentry Light canvas (:root) ── */
 :root {
-  --color-primary: #0066cc;
-  --color-primary-focus: #0071e3;
-  --color-primary-on-dark: #2997ff;
-  --color-ink: #1d1d1f;
-  --color-ink-muted-80: #333333;
-  --color-ink-muted-48: #7a7a7a;
   --color-canvas: #ffffff;
-  --color-canvas-parchment: #f5f5f7;
-  --color-surface-tile-1: #272729;
-  --color-surface-tile-2: #2a2a2c;
-  --color-surface-black: #000000;
-
-  --font-display: 'SF Pro Display', system-ui, -apple-system, sans-serif;
-  --font-text: 'SF Pro Text', system-ui, -apple-system, sans-serif;
-  --font-mono: 'SF Mono', Menlo, Monaco, monospace;
+  --color-surface-card: #ffffff;
+  --color-surface-elevated: #f0f0f0;
+  --color-ink: #1f1633;
+  --color-body: #4a4458;
+  --color-muted: #6b6578;
+  --color-hairline: #e5e7eb;
+  --color-btn-primary-bg: #150f23;
+  --color-btn-primary-text: #ffffff;
+  --color-btn-primary-pressed-bg: #efefef;
+  --color-btn-primary-pressed-text: #1a1a1a;
+  --color-btn-ghost-bg: transparent;
+  --color-btn-ghost-text: #1f1633;
+  --color-focus-ring: #9dc1f5;
+  /* Light cards: Sentry elevation level-2 */
+  --shadow-card: rgba(0, 0, 0, 0.1) 0 10px 15px -3px,
+    rgba(0, 0, 0, 0.1) 0 4px 6px -4px;
 }
 
-/* Base Styles */
+/* ── Sentry Dark canvas (.dark) ── */
+.dark {
+  --color-canvas: #1f1633;
+  --color-surface-card: #1f1633;
+  --color-surface-elevated: #422082;
+  --color-ink: #ffffff;
+  --color-body: #bdb8c0;
+  --color-muted: #3f3849;
+  --color-hairline: #362d59;
+  /* button-inverted polarity flip */
+  --color-btn-primary-bg: #ffffff;
+  --color-btn-primary-text: #1f1633;
+  --color-btn-primary-pressed-bg: #f0f0f0;
+  --color-btn-primary-pressed-text: #1a1a1a;
+  --color-btn-ghost-bg: rgba(255, 255, 255, 0.18);
+  --color-btn-ghost-text: #ffffff;
+  /* Dark cards: no drop shadow (sentry/DESIGN.md) */
+  --shadow-card: none;
+}
+
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  font-family: var(--font-text);
+  font-family: Rubik, system-ui, -apple-system, sans-serif;
   color: var(--color-ink);
   background-color: var(--color-canvas);
+  transition: background-color 200ms ease-out, color 200ms ease-out;
 }
 
-/* Focus ring - Apple style */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 *:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
-  border-radius: 5px;
+  border-radius: 4px;
 }
 
-/* Pill button base */
-.btn-pill {
-  border-radius: 9999px;
-  font-size: 17px;
-  line-height: 1.47;
-  letter-spacing: -0.374px;
-  padding: 12px 24px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
+@layer components {
+  /* ── Buttons (sentry: rounded.md = 8px, button-cap uppercase) ── */
+  .btn-cap {
+    @apply font-text text-button-cap uppercase tracking-[0.2px] rounded-md
+      transition-colors duration-200 cursor-pointer
+      disabled:opacity-50 disabled:cursor-not-allowed;
+  }
 
-/* Subtle frosted background */
-.bg-frosted {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  .btn-primary {
+    @apply btn-cap bg-btn-primary-bg text-btn-primary-text
+      hover:bg-btn-primary-pressed-bg hover:text-btn-primary-pressed-text
+      active:bg-btn-primary-pressed-bg active:text-btn-primary-pressed-text
+      disabled:bg-hairline-cloud disabled:text-on-dark-muted disabled:opacity-100;
+  }
+
+  .btn-ghost {
+    @apply btn-cap bg-btn-ghost-bg text-btn-ghost-text
+      border border-hairline hover:bg-surface-elevated
+      disabled:bg-hairline-cloud disabled:text-on-dark-muted disabled:opacity-100;
+  }
+
+  .btn-ghost-on-dark {
+    @apply btn-cap bg-on-dark-faint text-on-primary rounded-xl
+      hover:bg-hairline-violet
+      disabled:bg-hairline-cloud disabled:text-on-dark-muted disabled:opacity-100;
+  }
+
+  /* ── Cards ── */
+  .card-pricing {
+    @apply bg-surface-card text-ink border border-hairline rounded-xl shadow-card;
+  }
+
+  .card-feature-dark {
+    @apply bg-ink-deep text-on-primary rounded-xl shadow-none;
+  }
+
+  .card-pricing-featured {
+    @apply bg-surface-night text-on-primary border border-hairline-violet rounded-xl shadow-none;
+  }
+
+  .card-spotlight-violet {
+    @apply bg-accent-violet-deep text-on-primary rounded-xxl shadow-none;
+  }
+
+  /* ── Navigation (nav-bar-light / nav-bar-dark) ── */
+  .nav-bar {
+    @apply fixed top-0 left-0 right-0 z-50 h-12 border-b
+      transition-colors duration-200;
+  }
+
+  .nav-bar-light {
+    @apply nav-bar bg-surface-canvas-light text-ink-deep border-hairline-cloud;
+  }
+
+  .nav-bar-dark {
+    @apply nav-bar bg-surface-canvas-dark text-on-primary border-hairline-violet;
+  }
+
+  /* ── Inputs (text-input / text-input-focused) ── */
+  .input-sentry {
+    @apply w-full font-text text-body bg-surface-canvas-light text-ink-deep
+      border border-hairline-cool rounded-sm px-md py-sm
+      focus:outline-none focus:ring-2 focus:ring-ring-focus focus:border-transparent
+      transition-colors duration-200 cursor-text;
+    box-shadow: none;
+  }
+
+  .input-sentry:focus {
+    box-shadow: rgba(0, 0, 0, 0.15) 0 2px 10px inset;
+  }
+
+  .dark .input-sentry {
+    @apply bg-surface-night text-on-primary border-hairline-violet;
+  }
+
+  .dark .input-sentry:focus {
+    box-shadow: rgba(0, 0, 0, 0.35) 0 2px 10px inset;
+  }
+
+  .eyebrow-cap {
+    @apply font-text text-eyebrow uppercase tracking-[0.2px] text-muted;
+  }
+
+  .bento-grid {
+    @apply grid gap-lg grid-cols-1 md:grid-cols-2 xl:grid-cols-3;
+  }
+
+  /* ── Rankings category / rank tabs ── */
+  .category-tab {
+    @apply px-lg py-sm rounded-md text-body whitespace-nowrap cursor-pointer
+      transition-colors duration-200 border border-transparent
+      bg-surface-elevated text-body
+      hover:border-hairline-cool dark:hover:border-hairline-violet;
+  }
+
+  .category-tab-active {
+    @apply bg-primary text-on-primary border-primary
+      dark:bg-on-primary dark:text-ink-deep dark:border-on-primary;
+  }
+
+  .rank-tab-active {
+    @apply bg-accent-violet-mid text-on-primary border-accent-violet-mid;
+  }
+
+  /* ── AI Edit image upload grid ── */
+  .ai-edit-upload .ant-upload-list.ant-upload-list-picture-card {
+    @apply !grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-md !m-0;
+  }
+
+  .ai-edit-upload .ant-upload-list-item-container,
+  .ai-edit-upload .ant-upload.ant-upload-select {
+    @apply !w-full !h-auto !m-0;
+    aspect-ratio: 1;
+  }
+
+  .ai-edit-upload .ant-upload-list-item-container::before,
+  .ai-edit-upload .ant-upload.ant-upload-select::before {
+    padding-top: 0 !important;
+  }
+
+  .ai-edit-upload--empty .ant-upload-list.ant-upload-list-picture-card {
+    @apply !grid-cols-1;
+  }
+
+  .ai-edit-upload--empty .ant-upload.ant-upload-select {
+    aspect-ratio: auto;
+    min-height: 128px;
+  }
 }

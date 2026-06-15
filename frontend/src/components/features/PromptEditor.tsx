@@ -17,8 +17,8 @@ interface PromptInputProps {
 
 export function PromptInput({ prompt, onPromptChange }: PromptInputProps) {
   return (
-    <div className="relative w-full h-full min-h-[280px] rounded-lg border border-gray-200 bg-canvas focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent">
-      <span className="absolute top-md left-md z-10 text-body-sm font-medium text-ink-muted-48 pointer-events-none select-none">
+    <div className="relative w-full h-full min-h-[280px] rounded-xl border border-hairline bg-canvas focus-within:ring-2 focus-within:ring-ring-focus focus-within:border-transparent transition-colors duration-200">
+      <span className="absolute top-md left-md z-10 text-caption font-medium text-muted pointer-events-none select-none">
         编辑提示词
       </span>
       <textarea
@@ -26,9 +26,9 @@ export function PromptInput({ prompt, onPromptChange }: PromptInputProps) {
         onChange={(e) => onPromptChange(e.target.value)}
         maxLength={800}
         placeholder="描述你想要对图片做什么修改..."
-        className="absolute inset-0 w-full h-full resize-none rounded-lg bg-transparent text-body text-ink placeholder:text-ink-muted-48 focus:outline-none px-xl pt-12 pb-10"
+        className="absolute inset-0 w-full h-full resize-none rounded-lg bg-transparent text-body text-ink placeholder:text-muted focus:outline-none px-xl pt-12 pb-10"
       />
-      <span className="absolute bottom-md right-md z-10 text-caption text-ink-muted-48 pointer-events-none select-none">
+      <span className="absolute bottom-md right-md z-10 text-caption text-muted pointer-events-none select-none">
         {prompt.length}/800 字符
       </span>
     </div>
@@ -66,10 +66,10 @@ export function EditOptionsCollapse({
                   key={p}
                   type="button"
                   onClick={() => onPromptChange(p)}
-                  className={`px-md py-xs text-caption rounded-pill transition-all text-left ${
+                  className={`px-md py-xs text-caption rounded-md transition-colors duration-200 text-left cursor-pointer ${
                     prompt === p
-                      ? "bg-primary text-white"
-                      : "bg-canvas text-ink-muted-48 border border-gray-200 hover:border-primary"
+                      ? "bg-primary text-on-primary"
+                      : "bg-canvas text-muted border border-hairline hover:border-hairline-cool"
                   }`}
                 >
                   {p}
@@ -84,7 +84,7 @@ export function EditOptionsCollapse({
           children: (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-lg">
               <div>
-                <label className="block text-body-sm font-medium text-ink-muted-80 mb-xs">
+                <label className="block text-caption font-medium text-body mb-xs">
                   随机种子 (seed): {seed}
                 </label>
                 <input
@@ -95,12 +95,12 @@ export function EditOptionsCollapse({
                   onChange={(e) => onSeedChange(parseInt(e.target.value, 10))}
                   className="w-full accent-primary"
                 />
-                <span className="text-caption text-ink-muted-48">
+                <span className="text-caption text-muted">
                   -1 = 随机
                 </span>
               </div>
               <div>
-                <label className="block text-body-sm font-medium text-ink-muted-80 mb-xs">
+                <label className="block text-caption font-medium text-body mb-xs">
                   编辑强度 (scale): {scale}
                 </label>
                 <input
@@ -112,7 +112,7 @@ export function EditOptionsCollapse({
                   onChange={(e) => onScaleChange(parseFloat(e.target.value))}
                   className="w-full accent-primary"
                 />
-                <span className="text-caption text-ink-muted-48">
+                <span className="text-caption text-muted">
                   越大指令越强，原图影响越小
                 </span>
               </div>

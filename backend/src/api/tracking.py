@@ -21,6 +21,7 @@ async def list_tracking_products(
     sort_order: str = Query(default='desc'),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
+    refresh: bool = Query(default=False, description='为 true 时跳过缓存，强制从 Ozon 重新拉取'),
     current_user: User = Depends(get_current_user),
 ):
     """获取 Ozon 店铺在线商品列表。"""
@@ -34,11 +35,11 @@ async def list_tracking_products(
         page=page,
         limit=limit,
     )
-    items, total = await tracking_product_service.list_products(params)
+    items, total, cached_at = await tracking_product_service.list_products(params, refresh=refresh)
     return ApiResponse(
         success=True,
         data=items,
-        meta=PaginationMeta(total=total, page=page, limit=limit),
+        meta=PaginationMeta(total=total, page=page, limit=limit, cached_at=cached_at),
     )
 
 

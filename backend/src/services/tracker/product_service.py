@@ -1,11 +1,21 @@
-"""店铺在线商品聚合服务 — Ozon list + info 两阶段拉取"""
+"""店铺在线商品聚合服务 — Ozon list + info 两阶段拉取，Redis 缓存加速"""
+
+import hashlib
+import json
+import logging
+from datetime import datetime, timezone
 
 from src.api.exceptions import NotFoundException
+from src.cache import cache_delete, cache_get, cache_set
+from src.config import get_settings
 from src.schemas.tracking import TrackingProductDetail, TrackingProductListParams, TrackingProductSummary
 from src.services.ozon.client import OzonSellerClient, get_ozon_client
 
+logger = logging.getLogger(__name__)
+
 MAX_SCAN_PAGES = 10
 OZON_LIST_PAGE_SIZE = 100
+CACHE_PREFIX = 'ozon:tracking:summaries'
 
 
 def _parse_float(value: str | int | float | None) -> float | None:
@@ -176,6 +186,11 @@ def _sort_key(item: TrackingProductSummary, sort_by: str):
     return item.updated_at or ''
 
 
+def _cache_key(client: OzonSellerClient, visibility: str) -> str:
+    digest = hashlib.sha256(f'{client.client_id}:{client.api_key}'.encode()).hexdigest()[:16]
+    return f'{CACHE_PREFIX}:{digest}:{visibility}'
+
+
 async def _collect_product_ids(client: OzonSellerClient, visibility: str) -> list[str]:
     ids: list[str] = []
     last_id = ''
@@ -209,13 +224,73 @@ async def _fetch_summaries(client: OzonSellerClient, product_ids: list[str]) -> 
     return summaries
 
 
+async def _load_summaries_from_ozon(
+    client: OzonSellerClient,
+    visibility: str,
+) -> tuple[list[TrackingProductSummary], str]:
+    product_ids = await _collect_product_ids(client, visibility)
+    summaries = await _fetch_summaries(client, product_ids)
+    cached_at = datetime.now(timezone.utc).isoformat()
+    return summaries, cached_at
+
+
+async def _get_all_summaries(
+    client: OzonSellerClient,
+    visibility: str,
+    *,
+    refresh: bool = False,
+) -> tuple[list[TrackingProductSummary], str | None]:
+    settings = get_settings()
+    key = _cache_key(client, visibility)
+
+    if refresh:
+        try:
+            await cache_delete(key)
+        except Exception:
+            logger.warning('Redis 删除缓存失败，将继续从 Ozon 拉取', exc_info=True)
+
+    if not refresh:
+        try:
+            cached = await cache_get(key)
+            if cached:
+                payload = json.loads(cached)
+                items = [TrackingProductSummary.model_validate(x) for x in payload.get('items') or []]
+                cached_at = payload.get('cached_at')
+                return items, cached_at
+        except Exception:
+            logger.warning('Redis 读取缓存失败，降级为直接请求 Ozon', exc_info=True)
+
+    summaries, cached_at = await _load_summaries_from_ozon(client, visibility)
+    try:
+        await cache_set(
+            key,
+            {
+                'items': [item.model_dump() for item in summaries],
+                'cached_at': cached_at,
+            },
+            settings.ozon_tracking_cache_ttl,
+        )
+    except Exception:
+        logger.warning('Redis 写入缓存失败，结果仍正常返回', exc_info=True)
+
+    return summaries, cached_at
+
+
 class TrackingProductService:
     def __init__(self, client: OzonSellerClient | None = None):
         self.client = client or get_ozon_client()
 
-    async def list_products(self, params: TrackingProductListParams) -> tuple[list[TrackingProductSummary], int]:
-        product_ids = await _collect_product_ids(self.client, params.visibility)
-        all_items = await _fetch_summaries(self.client, product_ids)
+    async def list_products(
+        self,
+        params: TrackingProductListParams,
+        *,
+        refresh: bool = False,
+    ) -> tuple[list[TrackingProductSummary], int, str | None]:
+        all_items, cached_at = await _get_all_summaries(
+            self.client,
+            params.visibility,
+            refresh=refresh,
+        )
 
         filtered = [
             item
@@ -231,7 +306,7 @@ class TrackingProductService:
         total = len(filtered)
         start = (params.page - 1) * params.limit
         page_items = filtered[start : start + params.limit]
-        return page_items, total
+        return page_items, total, cached_at
 
     async def get_product_detail(self, product_id: str) -> TrackingProductDetail:
         raw = await self.client.product_info_list(product_ids=[product_id])

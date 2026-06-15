@@ -2,12 +2,13 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ImagePlus, Sparkles, Wand2 } from "lucide-react";
 
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
+import { useTheme } from "@/lib/theme-context";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   EditOptionsCollapse,
   PromptInput,
@@ -17,7 +18,7 @@ import {
   ImageUploader,
   UploadedImage,
 } from "@/components/features/ImageUploader";
-import { Modal, Popconfirm } from "antd";
+import { AITaskList, type AITask } from "@/components/features/AITaskList";
 
 interface ImagePreviewState {
   images: string[];
@@ -26,29 +27,44 @@ interface ImagePreviewState {
   initialIndex?: number;
 }
 
-interface AITask {
-  id: string;
-  task_type: string;
-  status: "pending" | "running" | "success" | "failed" | "cancelled";
-  input_data: {
-    prompt: string;
-    seed: number;
-    scale: number;
-    image_urls?: string[];
-    object_names?: string[];
-    items_total?: number;
-    items_completed?: number;
-    items_in_progress?: number;
-  } | null;
-  output_data: {
-    processed_images: string[];
-    items_total?: number;
-    items_completed?: number;
-  } | null;
-  seededit_status: string | null;
-  error_message: string | null;
-  retry_count: number;
-  created_at: string;
+function TaskStats({ tasks }: { tasks: AITask[] }) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const running = tasks.filter(
+    (t) => t.status === "pending" || t.status === "running",
+  ).length;
+  const success = tasks.filter((t) => t.status === "success").length;
+  const failed = tasks.filter((t) => t.status === "failed").length;
+
+  const statClass = isDark
+    ? "font-display text-heading-lg text-on-primary"
+    : "font-display text-heading-lg text-ink-deep";
+  const highlightClass = isDark
+    ? "font-display text-heading-lg text-accent-lime"
+    : "font-display text-heading-lg text-ink-deep";
+
+  return (
+    <dl className="flex flex-wrap gap-xl">
+      <div>
+        <dt className="text-micro-cap uppercase tracking-[0.25px] text-muted">
+          进行中
+        </dt>
+        <dd className={running > 0 ? highlightClass : statClass}>{running}</dd>
+      </div>
+      <div>
+        <dt className="text-micro-cap uppercase tracking-[0.25px] text-muted">
+          已完成
+        </dt>
+        <dd className={statClass}>{success}</dd>
+      </div>
+      <div>
+        <dt className="text-micro-cap uppercase tracking-[0.25px] text-muted">
+          失败
+        </dt>
+        <dd className={statClass}>{failed}</dd>
+      </div>
+    </dl>
+  );
 }
 
 export default function AIEditPage() {
@@ -56,16 +72,18 @@ export default function AIEditPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [tasks, setTasks] = useState<AITask[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [prompt, setPrompt] = useState(
-    "去除图片中的所有中文水印和文字，把背景换成白色纯色背景"
+    "去除图片中的所有中文水印和文字，把背景换成白色纯色背景",
   );
   const [seed, setSeed] = useState(-1);
   const [scale, setScale] = useState(0.5);
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState<ImagePreviewState | null>(
-    null
+    null,
   );
 
   const revokeUploadedPreviews = useCallback((images: UploadedImage[]) => {
@@ -84,20 +102,27 @@ export default function AIEditPage() {
     });
   }, [revokeUploadedPreviews]);
 
-  const fetchTasks = useCallback(async () => {
-    try {
-      const response = await apiClient.get<AITask[]>(
-        "/ai/tasks?task_type=image_edit&limit=50"
-      );
-      if (response.success && response.data) {
-        setTasks(response.data);
+  const fetchTasks = useCallback(
+    async (options?: { keepLoading?: boolean }) => {
+      try {
+        const response = await apiClient.get<AITask[]>(
+          "/ai/tasks?task_type=image_edit&limit=50",
+        );
+        if (response.success && response.data) {
+          setTasks(response.data);
+          setLastRefreshedAt(new Date());
+        }
+      } catch (err) {
+        console.error("Failed to fetch AI tasks:", err);
+      } finally {
+        if (!options?.keepLoading) {
+          setLoading(false);
+        }
+        setRefreshing(false);
       }
-    } catch (err) {
-      console.error("Failed to fetch AI tasks:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (authLoading) return;
@@ -109,13 +134,13 @@ export default function AIEditPage() {
   }, [authLoading, isAuthenticated, fetchTasks, router]);
 
   const hasActiveTasks = tasks.some(
-    (t) => t.status === "pending" || t.status === "running"
+    (t) => t.status === "pending" || t.status === "running",
   );
 
   useEffect(() => {
     if (authLoading || !isAuthenticated || !hasActiveTasks) return;
 
-    const interval = setInterval(fetchTasks, 2000);
+    const interval = setInterval(() => fetchTasks({ keepLoading: true }), 2000);
     return () => clearInterval(interval);
   }, [authLoading, isAuthenticated, hasActiveTasks, fetchTasks]);
 
@@ -157,7 +182,7 @@ export default function AIEditPage() {
   const hasViewableResults = (task: AITask) =>
     Boolean(
       task.output_data?.processed_images &&
-        task.output_data.processed_images.length > 0
+      task.output_data.processed_images.length > 0,
     );
 
   const handleSubmit = async () => {
@@ -172,7 +197,7 @@ export default function AIEditPage() {
           scale,
           image_urls: uploadedImages.map((img) => img.url),
           object_names: uploadedImages.map((img) => img.object_name),
-        }
+        },
       );
       if (response.success) {
         fetchTasks();
@@ -229,251 +254,124 @@ export default function AIEditPage() {
     });
   };
 
+  const scrollToForm = () => {
+    document
+      .getElementById("ai-edit-form")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const canSubmit = uploadedImages.length > 0 && !submitting;
 
-  const formatTime = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleString("zh-CN", {
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const handleManualRefresh = () => {
+    setRefreshing(true);
+    fetchTasks({ keepLoading: true });
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-lg py-xxl">
-      <div className="flex items-center justify-between gap-md mb-lg">
-        <h2 className="text-title font-medium">改图任务</h2>
-        <Button variant="primary" onClick={() => setSubmitModalOpen(true)}>
-          发起 AI 改图
-        </Button>
-      </div>
+    <div className="max-w-7xl mx-auto px-xxl py-xxl">
+      {/* Page header */}
+      <header className="mb-xl">
+        <div className="flex flex-col gap-lg sm:flex-row sm:items-end sm:justify-between">
+          <h1 className="font-display font-bold text-heading-md text-ink">
+            AI{" "}
+            <span className="bg-accent-lime text-ink-deep px-sm rounded-xs">
+              改图
+            </span>{" "}
+            工作台
+          </h1>
+          {!loading && tasks.length > 0 && <TaskStats tasks={tasks} />}
+        </div>
+      </header>
 
-      <Modal
-        title="发起 AI 改图"
-        open={submitModalOpen}
-        onCancel={closeSubmitModal}
-        width={880}
-        destroyOnClose
-        footer={
-          <div className="flex justify-end gap-sm">
-            <Button variant="secondary" onClick={closeSubmitModal}>
-              取消
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleSubmit}
-              disabled={!canSubmit}
-              loading={submitting}
-              title={uploadedImages.length === 0 ? "请先上传图片" : undefined}
-            >
-              确认发起
-            </Button>
-          </div>
-        }
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-lg mb-lg md:items-stretch">
-          <div className="md:col-span-1 min-h-0">
-            <ImageUploader
-              images={uploadedImages}
-              onChange={setUploadedImages}
+      {/* Bento dual-column */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-xl">
+        {/* Left: upload + prompt */}
+        <div id="ai-edit-form">
+          <Card variant="default" padding="lg" className="space-y-xl">
+            <div>
+              <h2 className="text-heading-sm font-display text-ink mb-xs flex items-center gap-sm">
+                <ImagePlus
+                  className="h-5 w-5 text-accent-violet-mid shrink-0"
+                  aria-hidden="true"
+                />
+                上传与提示词
+              </h2>
+              <p className="text-caption text-body">
+                支持 JPG / PNG / WebP，单文件 ≤10MB，最多 10 张
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-lg w-full">
+              <ImageUploader
+                images={uploadedImages}
+                onChange={setUploadedImages}
+              />
+              <div className="min-h-[220px] w-full flex">
+                <PromptInput prompt={prompt} onPromptChange={setPrompt} />
+              </div>
+            </div>
+
+            <EditOptionsCollapse
+              prompt={prompt}
+              seed={seed}
+              scale={scale}
+              onPromptChange={setPrompt}
+              onSeedChange={setSeed}
+              onScaleChange={setScale}
             />
-          </div>
-          <div className="md:col-span-2 min-h-[280px] md:min-h-0 flex">
-            <PromptInput prompt={prompt} onPromptChange={setPrompt} />
-          </div>
+
+            {uploadedImages.length === 0 && (
+              <p className="text-caption text-muted flex items-center gap-xs">
+                <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                请先上传至少一张图片
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-sm pt-xs border-t border-hairline">
+              <Button
+                variant="primary"
+                onClick={handleSubmit}
+                disabled={!canSubmit}
+                loading={submitting}
+                title={uploadedImages.length === 0 ? "请先上传图片" : undefined}
+                className="gap-sm"
+              >
+                <Wand2 className="h-4 w-4" aria-hidden="true" />
+                确认发起
+              </Button>
+              {uploadedImages.length > 0 && (
+                <Button variant="ghost" onClick={closeSubmitModal}>
+                  清空图片
+                </Button>
+              )}
+            </div>
+          </Card>
         </div>
 
-        <EditOptionsCollapse
-          prompt={prompt}
-          seed={seed}
-          scale={scale}
-          onPromptChange={setPrompt}
-          onSeedChange={setSeed}
-          onScaleChange={setScale}
-        />
-
-        {uploadedImages.length === 0 && (
-          <p className="text-caption text-ink-muted-48 mt-md">
-            请先上传至少一张图片
-          </p>
-        )}
-      </Modal>
-
-      {loading ? (
-        <div className="text-center py-xl text-ink-muted-48">加载中...</div>
-      ) : tasks.length === 0 ? (
-        <div className="text-center py-xl text-ink-muted-48">暂无改图任务</div>
-      ) : (
-        <Card variant="light" padding="none" className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-gray-100 bg-canvas-parchment">
-                  <th className="px-lg py-md text-caption font-medium text-ink-muted-48 whitespace-nowrap">
-                    输入图
-                  </th>
-                  <th className="px-lg py-md text-caption font-medium text-ink-muted-48 min-w-[200px]">
-                    提示词
-                  </th>
-                  <th className="px-lg py-md text-caption font-medium text-ink-muted-48 whitespace-nowrap">
-                    状态
-                  </th>
-                  <th className="px-lg py-md text-caption font-medium text-ink-muted-48 whitespace-nowrap">
-                    次数
-                  </th>
-                  <th className="px-lg py-md text-caption font-medium text-ink-muted-48 whitespace-nowrap">
-                    创建时间
-                  </th>
-                  <th className="px-lg py-md text-caption font-medium text-ink-muted-48 whitespace-nowrap text-right">
-                    操作
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map((task) => {
-                  const inputUrls = task.input_data?.image_urls || [];
-                  const visibleUrls = inputUrls.slice(0, 2);
-                  const extraCount = inputUrls.length - 2;
-
-                  return (
-                    <tr
-                      key={task.id}
-                      className="border-b border-gray-100 last:border-b-0 hover:bg-canvas-parchment/50"
-                    >
-                      <td className="px-lg py-md align-middle">
-                        {inputUrls.length > 0 ? (
-                          <div className="flex items-center gap-xs">
-                            {visibleUrls.map((url, i) => (
-                              <button
-                                key={i}
-                                type="button"
-                                onClick={() => openInputPreview(inputUrls, i)}
-                                className="shrink-0 rounded border border-gray-200 overflow-hidden hover:ring-2 hover:ring-primary transition-shadow cursor-pointer"
-                                title={`预览输入图 ${i + 1}`}
-                              >
-                                <img
-                                  src={url}
-                                  alt={`输入图 ${i + 1}`}
-                                  className="w-10 h-10 object-cover block"
-                                />
-                              </button>
-                            ))}
-                            {extraCount > 0 && (
-                              <button
-                                type="button"
-                                onClick={() => openInputPreview(inputUrls, 2)}
-                                className="text-caption text-primary hover:underline px-xs"
-                                title="预览全部输入图"
-                              >
-                                +{extraCount}
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-caption text-ink-muted-48">
-                            -
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-lg py-md align-middle max-w-xs">
-                        <p
-                          className="text-body-sm text-ink truncate"
-                          title={task.input_data?.prompt || undefined}
-                        >
-                          {task.input_data?.prompt || "-"}
-                        </p>
-                        {task.error_message && (
-                          <p
-                            className="text-caption text-red mt-xs truncate"
-                            title={task.error_message}
-                          >
-                            {task.error_message}
-                          </p>
-                        )}
-                      </td>
-                      <td className="px-lg py-md align-middle whitespace-nowrap">
-                        <StatusBadge
-                          status={task.status}
-                          label={getStatusLabel(task)}
-                        />
-                      </td>
-                      <td className="px-lg py-md align-middle text-body-sm text-ink-muted-48 whitespace-nowrap">
-                        第 {task.retry_count + 1} 次
-                      </td>
-                      <td className="px-lg py-md align-middle text-body-sm text-ink-muted-48 whitespace-nowrap">
-                        {formatTime(task.created_at)}
-                      </td>
-                      <td className="px-lg py-md align-middle whitespace-nowrap text-right">
-                        <div className="flex justify-end gap-xs">
-                          {(task.status === "pending" ||
-                            task.status === "running") && (
-                            <Popconfirm
-                              title="确定终止该改图任务？"
-                              description={
-                                task.status === "running"
-                                  ? "已完成的图片将保留，其余不再处理。"
-                                  : "任务尚未开始，终止后无结果。"
-                              }
-                              okText="终止"
-                              cancelText="取消"
-                              okButtonProps={{ danger: true }}
-                              onConfirm={() => handleCancel(task.id)}
-                            >
-                              <span>
-                                <Button variant="ghost" size="sm">
-                                  终止
-                                </Button>
-                              </span>
-                            </Popconfirm>
-                          )}
-                          {hasViewableResults(task) && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openResultPreview(task)}
-                            >
-                              查看结果
-                            </Button>
-                          )}
-                          {task.status === "failed" && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRetry(task)}
-                            >
-                              重试
-                            </Button>
-                          )}
-                          <Popconfirm
-                            title="确定删除该改图任务？"
-                            description="此操作不可恢复。"
-                            okText="删除"
-                            cancelText="取消"
-                            okButtonProps={{ danger: true }}
-                            onConfirm={() => deleteTask(task)}
-                          >
-                            <span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-red hover:bg-red/10"
-                              >
-                                删除
-                              </Button>
-                            </span>
-                          </Popconfirm>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+        {/* Right: task list */}
+        <Card
+          variant="default"
+          padding="lg"
+          className="flex flex-col min-h-[480px]"
+        >
+          <AITaskList
+            tasks={tasks}
+            loading={loading}
+            refreshing={refreshing}
+            hasActiveTasks={hasActiveTasks}
+            lastRefreshedAt={lastRefreshedAt}
+            onRefresh={handleManualRefresh}
+            getStatusLabel={getStatusLabel}
+            hasViewableResults={hasViewableResults}
+            onInputPreview={openInputPreview}
+            onResultPreview={openResultPreview}
+            onCancel={handleCancel}
+            onRetry={handleRetry}
+            onDelete={deleteTask}
+            onStartEmpty={scrollToForm}
+          />
         </Card>
-      )}
+      </div>
 
       {imagePreview && (
         <ImagePreview

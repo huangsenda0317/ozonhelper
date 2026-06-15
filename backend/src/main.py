@@ -19,6 +19,9 @@ async def lifespan(app: FastAPI):
     await bootstrap_admin_user()
     yield
     # 关闭时
+    from src.services.ozon.client import close_ozon_client
+
+    await close_ozon_client()
     print('👋 OzonHelper API 关闭')
 
 

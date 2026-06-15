@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import type { Swiper as SwiperType } from 'swiper';
-import { FreeMode, Thumbs } from 'swiper/modules';
-import { Swiper, SwiperSlide } from 'swiper/react';
+import React, { useEffect, useState } from "react";
+import type { Swiper as SwiperType } from "swiper";
+import { FreeMode, Thumbs } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 
-import { Button } from '@/components/ui/Button';
+import { Button } from "@/components/ui/Button";
 
-import 'swiper/css';
-import 'swiper/css/free-mode';
-import 'swiper/css/thumbs';
+import "swiper/css";
+import "swiper/css/free-mode";
+import "swiper/css/thumbs";
 
 export interface ImagePreviewProps {
   images: string[];
@@ -28,7 +28,7 @@ export interface ImageCompareProps {
 
 export function ImagePreview({
   images,
-  title = '图片预览',
+  title = "图片预览",
   compareImages,
   initialIndex = 0,
   onClose,
@@ -66,14 +66,22 @@ export function ImagePreview({
         aria-label={title}
       >
         <div className="flex items-center justify-between px-xl py-lg border-b shrink-0">
-          <h3 className="text-title font-medium">
+          <h3 className="text-heading-sm font-medium">
             {title} ({activeIndex + 1}/{total})
           </h3>
           <div className="flex gap-md">
-            <Button variant="ghost" size="sm" onClick={() => setZoomLevel((z) => Math.min(z + 0.5, 3))}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setZoomLevel((z) => Math.min(z + 0.5, 3))}
+            >
               放大
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setZoomLevel((z) => Math.max(z - 0.5, 0.5))}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setZoomLevel((z) => Math.max(z - 0.5, 0.5))}
+            >
               缩小
             </Button>
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -102,7 +110,7 @@ export function ImagePreview({
                   <img
                     src={url}
                     alt={`缩略图 ${index + 1}`}
-                    className="w-full h-full object-cover rounded-md border-2 border-gray-200 opacity-70 transition-all"
+                    className="w-full h-full object-cover rounded-md border-2 border-hairline opacity-70 transition-all"
                   />
                 </SwiperSlide>
               ))}
@@ -114,18 +122,24 @@ export function ImagePreview({
               onSwiper={setMainSwiper}
               initialSlide={initialIndex}
               modules={[Thumbs]}
-              thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
+              thumbs={{
+                swiper:
+                  thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null,
+              }}
               onSlideChange={(swiper) => {
                 setActiveIndex(swiper.activeIndex);
                 setZoomLevel(1);
               }}
-              className="flex-1 w-full rounded-lg bg-canvas-parchment"
+              className="flex-1 w-full rounded-lg bg-surface-elevated"
             >
               {images.map((url, index) => (
                 <SwiperSlide key={`${url}-${index}`}>
                   <div className="flex items-center justify-center h-[min(60vh,520px)] overflow-auto p-md">
                     <div
-                      style={{ transform: `scale(${zoomLevel})`, transition: 'transform 0.2s' }}
+                      style={{
+                        transform: `scale(${zoomLevel})`,
+                        transition: "transform 0.2s",
+                      }}
                       className="origin-center"
                     >
                       <img
@@ -141,14 +155,16 @@ export function ImagePreview({
 
             {currentCompare && (
               <div className="shrink-0 border-t pt-md">
-                <p className="text-caption text-ink-muted-48 mb-xs">原图对比</p>
+                <p className="text-caption text-muted mb-xs">原图对比</p>
                 <div className="flex items-center gap-md">
                   <img
                     src={currentCompare}
                     alt={`原图 ${activeIndex + 1}`}
-                    className="w-16 h-16 object-cover rounded-md border border-gray-200"
+                    className="w-16 h-16 object-cover rounded-md border border-hairline"
                   />
-                  <span className="text-caption text-ink-muted-48">← 当前选中图的原图</span>
+                  <span className="text-caption text-muted">
+                    ← 当前选中图的原图
+                  </span>
                 </div>
               </div>
             )}
@@ -159,7 +175,11 @@ export function ImagePreview({
   );
 }
 
-export function ImageCompare({ processedImages, inputImages, onClose }: ImageCompareProps) {
+export function ImageCompare({
+  processedImages,
+  inputImages,
+  onClose,
+}: ImageCompareProps) {
   return (
     <ImagePreview
       images={processedImages}

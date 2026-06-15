@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     ozon_api_base_url: str = 'https://api-seller.ozon.ru'
     ozon_client_id: str = ''
     ozon_api_key: str = ''
+    ozon_tracking_cache_ttl: int = 600  # 店铺商品列表 Redis 缓存秒数，默认 10 分钟
 
     # 火山引擎 SeedEdit 3.0 (AI 改图)
     volcengine_access_key_id: str = ''

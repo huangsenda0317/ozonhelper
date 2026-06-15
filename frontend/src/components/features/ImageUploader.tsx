@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import React, { useRef } from 'react';
-import { Upload, message } from 'antd';
-import type { UploadFile, UploadProps } from 'antd';
+import React, { useRef } from "react";
+import { ImagePlus } from "lucide-react";
+import { Upload, message } from "antd";
+import type { UploadFile, UploadProps } from "antd";
 
-import { apiClient, ApiError } from '@/lib/api-client';
+import { apiClient, ApiError } from "@/lib/api-client";
 
 export interface UploadedImage {
   object_name: string;
@@ -18,26 +19,31 @@ interface ImageUploaderProps {
   maxCount?: number;
 }
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 function toFileList(images: UploadedImage[]): UploadFile[] {
   return images.map((img) => ({
     uid: img.object_name,
-    name: img.object_name.split('/').pop() || img.object_name,
-    status: 'done' as const,
+    name: img.object_name.split("/").pop() || img.object_name,
+    status: "done" as const,
     url: img.preview,
     thumbUrl: img.preview,
   }));
 }
 
-export function ImageUploader({ images, onChange, maxCount = 10 }: ImageUploaderProps) {
+export function ImageUploader({
+  images,
+  onChange,
+  maxCount = 10,
+}: ImageUploaderProps) {
   const imagesRef = useRef(images);
   imagesRef.current = images;
   const uploadingCountRef = useRef(0);
   const uploadQueueRef = useRef(Promise.resolve());
 
   const fileList = toFileList(images);
+  const isEmpty = fileList.length === 0;
 
   const appendImage = (newImage: UploadedImage) => {
     const updated = [...imagesRef.current, newImage];
@@ -45,13 +51,13 @@ export function ImageUploader({ images, onChange, maxCount = 10 }: ImageUploader
     onChange(updated);
   };
 
-  const beforeUpload: UploadProps['beforeUpload'] = (file) => {
+  const beforeUpload: UploadProps["beforeUpload"] = (file) => {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      message.error('仅支持 JPG、PNG、WebP 格式');
+      message.error("仅支持 JPG、PNG、WebP 格式");
       return Upload.LIST_IGNORE;
     }
     if (file.size > MAX_FILE_SIZE) {
-      message.error('单文件不超过 10MB');
+      message.error("单文件不超过 10MB");
       return Upload.LIST_IGNORE;
     }
     if (imagesRef.current.length + uploadingCountRef.current >= maxCount) {
@@ -62,17 +68,17 @@ export function ImageUploader({ images, onChange, maxCount = 10 }: ImageUploader
     return true;
   };
 
-  const customRequest: UploadProps['customRequest'] = (options) => {
+  const customRequest: UploadProps["customRequest"] = (options) => {
     const { file, onSuccess, onError } = options;
     const uploadFile = file as File;
 
     uploadQueueRef.current = uploadQueueRef.current
       .then(async () => {
         const preview = URL.createObjectURL(uploadFile);
-        const response = await apiClient.upload<{ object_name: string; url: string }>(
-          '/ai/upload-image',
-          uploadFile,
-        );
+        const response = await apiClient.upload<{
+          object_name: string;
+          url: string;
+        }>("/ai/upload-image", uploadFile);
 
         if (response.success && response.data) {
           appendImage({
@@ -82,11 +88,12 @@ export function ImageUploader({ images, onChange, maxCount = 10 }: ImageUploader
           });
           onSuccess?.(response.data);
         } else {
-          throw new Error('上传失败');
+          throw new Error("上传失败");
         }
       })
       .catch((err) => {
-        const msg = err instanceof ApiError ? err.message : '上传失败，请稍后重试';
+        const msg =
+          err instanceof ApiError ? err.message : "上传失败，请稍后重试";
         message.error(msg);
         onError?.(err as Error);
       })
@@ -95,9 +102,11 @@ export function ImageUploader({ images, onChange, maxCount = 10 }: ImageUploader
       });
   };
 
-  const handleRemove: UploadProps['onRemove'] = (file) => {
-    const removed = imagesRef.current.find((img) => img.object_name === file.uid);
-    if (removed?.preview.startsWith('blob:')) {
+  const handleRemove: UploadProps["onRemove"] = (file) => {
+    const removed = imagesRef.current.find(
+      (img) => img.object_name === file.uid,
+    );
+    if (removed?.preview.startsWith("blob:")) {
       URL.revokeObjectURL(removed.preview);
     }
     onChange(imagesRef.current.filter((img) => img.object_name !== file.uid));
@@ -105,27 +114,30 @@ export function ImageUploader({ images, onChange, maxCount = 10 }: ImageUploader
   };
 
   return (
-    <div className="aspect-square w-full overflow-y-auto border border-gray-200 rounded-lg p-sm bg-canvas">
-      <Upload
-        listType="picture-card"
-        fileList={fileList}
-        multiple
-        customRequest={customRequest}
-        beforeUpload={beforeUpload}
-        onRemove={handleRemove}
-        maxCount={maxCount}
-        accept=".jpg,.jpeg,.png,.webp"
-        className="ai-edit-upload [&_.ant-upload-list]:flex-wrap [&_.ant-upload-select]:!m-0"
-      >
-        {fileList.length >= maxCount ? null : (
-          <button type="button" className="border-0 bg-transparent cursor-pointer text-ink-muted-48">
-            <svg className="w-6 h-6 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            <div className="mt-xs text-caption">上传</div>
-          </button>
-        )}
-      </Upload>
-    </div>
+    <Upload
+      listType="picture-card"
+      fileList={fileList}
+      multiple
+      customRequest={customRequest}
+      beforeUpload={beforeUpload}
+      onRemove={handleRemove}
+      maxCount={maxCount}
+      accept=".jpg,.jpeg,.png,.webp"
+      className={`ai-edit-upload w-full block ${
+        isEmpty ? "ai-edit-upload--empty" : ""
+      } [&_.ant-upload-list-item]:!p-0 [&_.ant-upload-list-item-thumbnail_img]:!object-cover`}
+    >
+      {fileList.length >= maxCount ? null : (
+        <button
+          type="button"
+          className="flex flex-col items-center justify-center gap-xs w-full h-full border-0 bg-transparent cursor-pointer text-muted hover:text-ink transition-colors duration-200"
+        >
+          <ImagePlus className="h-6 w-6" aria-hidden="true" />
+          <span className="text-caption">
+            {isEmpty ? "点击上传图片" : "添加"}
+          </span>
+        </button>
+      )}
+    </Upload>
   );
 }

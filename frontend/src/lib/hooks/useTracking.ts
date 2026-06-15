@@ -48,6 +48,7 @@ export interface TrackingListParams {
   sort_order?: string;
   page?: number;
   limit?: number;
+  refresh?: boolean;
 }
 
 export interface TrackingListResult {
@@ -55,6 +56,7 @@ export interface TrackingListResult {
   total: number;
   page: number;
   limit: number;
+  cachedAt: string | null;
 }
 
 function buildQuery(params: TrackingListParams): string {
@@ -65,6 +67,7 @@ function buildQuery(params: TrackingListParams): string {
   if (params.has_stock !== undefined) qs.set('has_stock', String(params.has_stock));
   if (params.sort_by) qs.set('sort_by', params.sort_by);
   if (params.sort_order) qs.set('sort_order', params.sort_order);
+  if (params.refresh) qs.set('refresh', 'true');
   qs.set('page', String(params.page ?? 1));
   qs.set('limit', String(params.limit ?? 20));
   return qs.toString();
@@ -81,6 +84,7 @@ export async function fetchTrackingProducts(
     total: response.meta?.total ?? 0,
     page: response.meta?.page ?? params.page ?? 1,
     limit: response.meta?.limit ?? params.limit ?? 20,
+    cachedAt: response.meta?.cached_at ?? null,
   };
 }
 

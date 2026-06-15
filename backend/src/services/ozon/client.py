@@ -15,6 +15,20 @@ class OzonSellerClient:
         self.base_url = settings.ozon_api_base_url.rstrip('/')
         self.client_id = settings.ozon_client_id
         self.api_key = settings.ozon_api_key
+        self._http: httpx.AsyncClient | None = None
+
+    def _get_http(self) -> httpx.AsyncClient:
+        if self._http is None or self._http.is_closed:
+            self._http = httpx.AsyncClient(
+                timeout=httpx.Timeout(30.0),
+                limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+            )
+        return self._http
+
+    async def close(self) -> None:
+        if self._http is not None and not self._http.is_closed:
+            await self._http.aclose()
+        self._http = None
 
     def _ensure_configured(self) -> None:
         if not self.client_id or not self.api_key:
@@ -33,8 +47,7 @@ class OzonSellerClient:
             'Content-Type': 'application/json',
         }
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(url, json=body, headers=headers)
+            response = await self._get_http().post(url, json=body, headers=headers)
         except httpx.TimeoutException as exc:
             raise AppException(
                 code='OZON_API_ERROR',
@@ -107,3 +120,7 @@ class OzonSellerClient:
 @lru_cache()
 def get_ozon_client() -> OzonSellerClient:
     return OzonSellerClient(get_settings())
+
+
+async def close_ozon_client() -> None:
+    await get_ozon_client().close()

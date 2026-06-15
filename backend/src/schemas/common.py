@@ -26,6 +26,7 @@ class PaginationMeta(BaseModel):
     total: int
     page: int
     limit: int
+    cached_at: str | None = None
 
 
 class PaginationParams(BaseModel):

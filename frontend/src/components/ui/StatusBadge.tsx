@@ -1,8 +1,16 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
+import { Loader2 } from "lucide-react";
 
-type StatusType = 'pending' | 'running' | 'success' | 'failed' | 'cancelled' | 'draft' | 'submitting';
+type StatusType =
+  | "pending"
+  | "running"
+  | "success"
+  | "failed"
+  | "cancelled"
+  | "draft"
+  | "submitting";
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -10,29 +18,64 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-const statusConfig: Record<StatusType, { bg: string; text: string; defaultLabel: string }> = {
-  pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', defaultLabel: '待处理' },
-  running: { bg: 'bg-blue-100', text: 'text-blue-800', defaultLabel: '处理中' },
-  success: { bg: 'bg-green-100', text: 'text-green-800', defaultLabel: '已完成' },
-  failed: { bg: 'bg-red-100', text: 'text-red-800', defaultLabel: '失败' },
-  cancelled: { bg: 'bg-gray-100', text: 'text-gray-500', defaultLabel: '已取消' },
-  draft: { bg: 'bg-gray-100', text: 'text-gray-700', defaultLabel: '草稿' },
-  submitting: { bg: 'bg-teal-100', text: 'text-teal-800', defaultLabel: '提交中' },
+const statusConfig: Record<
+  StatusType,
+  { bg: string; text: string; defaultLabel: string }
+> = {
+  pending: {
+    bg: "bg-surface-night dark:bg-surface-night",
+    text: "text-on-primary",
+    defaultLabel: "待处理",
+  },
+  running: {
+    bg: "bg-accent-violet-mid/25",
+    text: "text-accent-violet-mid dark:text-on-primary",
+    defaultLabel: "处理中",
+  },
+  success: {
+    bg: "bg-accent-lime/25",
+    text: "text-ink-deep dark:text-accent-lime",
+    defaultLabel: "已完成",
+  },
+  failed: {
+    bg: "bg-accent-pink/25",
+    text: "text-ink-deep dark:text-accent-pink",
+    defaultLabel: "失败",
+  },
+  cancelled: {
+    bg: "bg-surface-elevated",
+    text: "text-muted dark:text-on-dark-muted",
+    defaultLabel: "已取消",
+  },
+  draft: {
+    bg: "bg-surface-night/10 dark:bg-surface-night",
+    text: "text-body dark:text-on-dark-muted",
+    defaultLabel: "草稿",
+  },
+  submitting: {
+    bg: "bg-accent-violet-deep/30",
+    text: "text-accent-violet-mid dark:text-on-primary",
+    defaultLabel: "提交中",
+  },
 };
 
-export function StatusBadge({ status, label, className = '' }: StatusBadgeProps) {
+export function StatusBadge({
+  status,
+  label,
+  className = "",
+}: StatusBadgeProps) {
   const config = statusConfig[status];
   const displayLabel = label || config.defaultLabel;
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-pill text-caption font-medium ${config.bg} ${config.text} ${className}`}
+      className={`inline-flex items-center min-h-[22px] px-sm py-xxs rounded-xs font-text text-micro-cap uppercase tracking-[0.25px] ${config.bg} ${config.text} ${className}`}
     >
-      {status === 'running' && (
-        <svg className="animate-spin -ml-0.5 mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
+      {status === "running" && (
+        <Loader2
+          className="animate-spin -ml-0.5 mr-1 h-3 w-3 shrink-0"
+          aria-hidden="true"
+        />
       )}
       {displayLabel}
     </span>

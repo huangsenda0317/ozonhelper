@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 
-import { Card } from '@/components/ui/Card';
+import { Card } from "@/components/ui/Card";
 
 interface ProductCardProps {
   id: string;
@@ -30,25 +30,31 @@ export function ProductCard({
   onSelect,
 }: ProductCardProps) {
   const trendColor: Record<string, string> = {
-    '上升': 'text-green',
-    '稳定': 'text-ink-muted-48',
-    '下降': 'text-red',
+    上升: "text-success",
+    稳定: "text-muted",
+    下降: "text-error",
   };
 
   return (
-    <Card variant="light" padding="md" className="relative group">
+    <Card variant="default" padding="md" className="relative group">
       <div className="flex gap-lg">
         {/* 排名 */}
         <div className="flex-shrink-0 w-8 text-center">
-          <span className="text-title font-display text-ink-muted-48">{rank_position}</span>
+          <span className="text-heading-sm font-display text-muted">
+            {rank_position}
+          </span>
         </div>
 
         {/* 图片 */}
-        <div className="flex-shrink-0 w-20 h-20 bg-canvas-parchment rounded-md overflow-hidden">
+        <div className="flex-shrink-0 w-20 h-20 bg-surface-elevated rounded-md overflow-hidden">
           {image_url ? (
-            <img src={image_url} alt={title} className="w-full h-full object-cover" />
+            <img
+              src={image_url}
+              alt={title}
+              className="w-full h-full object-cover"
+            />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-ink-muted-48 text-caption-sm">
+            <div className="w-full h-full flex items-center justify-center text-muted text-micro-cap">
               无图
             </div>
           )}
@@ -58,13 +64,19 @@ export function ProductCard({
         <div className="flex-1 min-w-0">
           <h3 className="text-body font-medium truncate">{title}</h3>
           <div className="flex items-center gap-md mt-xs">
-            <span className="text-title font-display">₽{price_rub.toLocaleString()}</span>
+            <span className="text-heading-sm font-display">
+              ₽{price_rub.toLocaleString()}
+            </span>
             {rating && (
-              <span className="text-body-sm text-ink-muted-48">★ {rating}</span>
+              <span className="text-caption text-muted">★ {rating}</span>
             )}
-            <span className="text-caption text-ink-muted-48">{review_count} 评价</span>
+            <span className="text-caption text-muted">
+              {review_count} 评价
+            </span>
             {sales_trend && (
-              <span className={`text-caption font-medium ${trendColor[sales_trend] || 'text-ink-muted-48'}`}>
+              <span
+                className={`text-caption font-medium ${trendColor[sales_trend] || "text-muted"}`}
+              >
                 {sales_trend}
               </span>
             )}
@@ -74,14 +86,15 @@ export function ProductCard({
         {/* 操作 */}
         <div className="flex-shrink-0 flex items-center">
           <button
+            type="button"
             onClick={() => onSelect(id)}
-            className={`px-lg py-sm rounded-pill text-body-sm font-medium transition-all ${
+            className={`px-lg py-sm rounded-md text-button-cap uppercase tracking-[0.2px] font-medium transition-colors duration-200 cursor-pointer ${
               is_selected
-                ? 'bg-green text-white'
-                : 'bg-primary text-white hover:bg-primary-focus'
+                ? "bg-accent-lime text-ink-deep"
+                : "btn-primary"
             }`}
           >
-            {is_selected ? '已选 ✓' : '加入选品池'}
+            {is_selected ? "已选 ✓" : "加入选品池"}
           </button>
         </div>
       </div>

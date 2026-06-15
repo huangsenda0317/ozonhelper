@@ -13,7 +13,7 @@ interface ApiResponse<T> {
   success: boolean;
   data: T | null;
   error: { code: string; message: string } | null;
-  meta: { total: number; page: number; limit: number } | null;
+  meta: { total: number; page: number; limit: number; cached_at?: string | null } | null;
 }
 
 class ApiClient {
