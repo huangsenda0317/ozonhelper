@@ -1,0 +1,18 @@
+[Unit]
+Description=OzonHelper Next.js Frontend
+After=network.target ozonhelper-api.service
+# npm start 需要事先执行 scripts/rebuild-frontend-production.sh 生成 .next
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+WorkingDirectory=/home/admin/ozonhelper/frontend
+Environment="NODE_ENV=production"
+Environment="PATH=/usr/bin:/usr/local/bin:/home/admin/.nvm/versions/node/current/bin"
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

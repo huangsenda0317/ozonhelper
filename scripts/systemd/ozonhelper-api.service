@@ -1,0 +1,17 @@
+[Unit]
+Description=OzonHelper FastAPI Backend
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+WorkingDirectory=/home/admin/ozonhelper/backend
+Environment="PATH=/home/admin/ozonhelper/backend/.venv/bin"
+ExecStart=/home/admin/ozonhelper/backend/.venv/bin/uvicorn src.main:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

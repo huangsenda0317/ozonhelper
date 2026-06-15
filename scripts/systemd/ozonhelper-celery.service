@@ -1,0 +1,17 @@
+[Unit]
+Description=OzonHelper Celery Worker
+After=network.target ozonhelper-api.service docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+WorkingDirectory=/home/admin/ozonhelper/backend
+Environment="PATH=/home/admin/ozonhelper/backend/.venv/bin"
+ExecStart=/home/admin/ozonhelper/backend/.venv/bin/celery -A src.worker.app worker --loglevel=info
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
