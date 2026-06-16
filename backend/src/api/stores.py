@@ -16,6 +16,7 @@ from src.schemas.common import ApiResponse
 from src.schemas.stores import StoreCreateRequest, StoreSummary, StoreVerifyResponse
 from src.services.ozon.client import OzonSellerClient
 from src.services.stores.credentials import encrypt_store_credentials, ozon_client_for_store
+from src.services.stores.lifecycle import delete_store_with_data
 from src.services.sync.dispatch import dispatch_sync_job
 
 router = APIRouter(prefix='/api/v1/stores', tags=['店铺管理'])
@@ -85,7 +86,7 @@ async def delete_store(
     store = (await db.execute(stmt)).scalar_one_or_none()
     if not store:
         raise AppException(code='STORE_NOT_FOUND', message='店铺不存在', http_status=404)
-    await db.delete(store)
+    await delete_store_with_data(db, store)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

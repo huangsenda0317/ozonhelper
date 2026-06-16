@@ -1,11 +1,18 @@
 """应用配置管理 - 环境变量加载与 Pydantic Settings"""
 
-from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """应用配置。所有值从环境变量或 .env 文件加载。"""
+
+    model_config = SettingsConfigDict(
+        env_file='.env',
+        env_file_encoding='utf-8',
+        extra='ignore',  # 忽略 .env 中已废弃的 OZON_CLIENT_ID / OZON_API_KEY 等
+    )
 
     # development 强制本地 MinIO；留空或 production 时，有 MINIO_PUBLIC_ENDPOINT 则用公网域名
     app_env: str = ''
@@ -21,10 +28,8 @@ class Settings(BaseSettings):
     jwt_algorithm: str = 'HS256'
     jwt_expire_seconds: int = 86400
 
-    # Ozon Seller API
+    # Ozon Seller API（凭证仅通过店铺管理页面绑定，不再从环境变量读取）
     ozon_api_base_url: str = 'https://api-seller.ozon.ru'
-    ozon_client_id: str = ''
-    ozon_api_key: str = ''
     ozon_tracking_cache_ttl: int = 600  # 店铺商品列表 Redis 缓存秒数，默认 10 分钟
 
     # 火山引擎 SeedEdit 3.0 (AI 改图)
@@ -56,10 +61,6 @@ class Settings(BaseSettings):
 
     # 为 true 时在 API 进程内后台执行同步（无需单独启动 Celery Worker，适合本地开发）
     sync_inline: bool = True
-
-    class Config:
-        env_file = '.env'
-        env_file_encoding = 'utf-8'
 
 
 @lru_cache()

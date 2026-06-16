@@ -9,15 +9,17 @@ import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
 import { Button } from "@/components/ui/Button";
 
+//! todo: 暂时隐藏榜单发现、选品池、已采集商品、1688 比价、批量上架
 const NAV_ITEMS = [
   { href: "/tracking", label: "店铺跟踪" },
-  { href: "/rankings", label: "榜单发现" },
-  { href: "/selection-pool", label: "选品池" },
-  { href: "/products", label: "已采集商品" },
-  { href: "/sourcing", label: "1688 比价" },
+  // { href: "/rankings", label: "榜单发现" },
+  // { href: "/selection-pool", label: "选品池" },
+  // { href: "/products", label: "已采集商品" },
+  // { href: "/sourcing", label: "1688 比价" },
   { href: "/ai-edit", label: "AI 改图", exact: true },
+  { href: "/ai-qa", label: "AI 问答" },
   { href: "/ai-edit/translate", label: "AI 翻译" },
-  { href: "/listing", label: "批量上架" },
+  // { href: "/listing", label: "批量上架" },
 ];
 
 export function GlobalNav() {
@@ -105,10 +107,7 @@ export function GlobalNav() {
             ) : (
               <>
                 <Link href="/login" className="cursor-pointer">
-                  <Button
-                    variant={isDark ? "ghost-dark" : "ghost"}
-                    size="sm"
-                  >
+                  <Button variant={isDark ? "ghost-dark" : "ghost"} size="sm">
                     登录
                   </Button>
                 </Link>

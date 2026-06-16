@@ -50,10 +50,8 @@ JWT_SECRET_KEY=your-secret-key-change-in-production
 JWT_ALGORITHM=HS256
 JWT_EXPIRE_SECONDS=86400
 
-# Ozon Seller API (用于测试)
+# Ozon Seller API（凭证在 Web 端「设置 → Ozon 店铺管理」绑定）
 OZON_API_BASE_URL=https://api-seller.ozon.ru
-OZON_CLIENT_ID=your-client-id
-OZON_API_KEY=your-api-key
 
 # 火山引擎 SeedEdit 3.0 (AI 改图)
 VOLCENGINE_ACCESS_KEY_ID=AKLT...

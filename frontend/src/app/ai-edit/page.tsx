@@ -271,13 +271,13 @@ export default function AIEditPage() {
     <div className="max-w-7xl mx-auto px-xxl py-xxl">
       {/* Page header */}
       <header className="mb-xl">
+        <p className="eyebrow-cap">AI IMAGES</p>
         <div className="flex flex-col gap-lg sm:flex-row sm:items-end sm:justify-between">
           <h1 className="font-display font-bold text-heading-md text-ink">
             AI{" "}
             <span className="bg-accent-lime text-ink-deep px-sm rounded-xs">
               改图
-            </span>{" "}
-            工作台
+            </span>
           </h1>
           {!loading && tasks.length > 0 && <TaskStats tasks={tasks} />}
         </div>

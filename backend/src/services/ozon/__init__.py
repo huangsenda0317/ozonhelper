@@ -1,3 +1,3 @@
-from src.services.ozon.client import OzonSellerClient, close_ozon_client, get_ozon_client
+from src.services.ozon.client import OzonSellerClient
 
-__all__ = ['OzonSellerClient', 'close_ozon_client', 'get_ozon_client']
+__all__ = ['OzonSellerClient']

@@ -12,6 +12,7 @@ import {
   StoreSummary,
   verifyStore,
 } from "@/lib/hooks/useOrders";
+import { ACTIVE_STORE_STORAGE_KEY } from "@/lib/store-context";
 
 export default function StoresSettingsPage() {
   const [stores, setStores] = useState<StoreSummary[]>([]);
@@ -32,11 +33,14 @@ export default function StoresSettingsPage() {
     setLoading(true);
     setMessage("");
     try {
-      await createStore({ name, client_id: clientId, api_key: apiKey });
+      const created = await createStore({ name, client_id: clientId, api_key: apiKey });
       setName("");
       setClientId("");
       setApiKey("");
       setMessage("店铺绑定成功");
+      if (created?.id) {
+        localStorage.setItem(ACTIVE_STORE_STORAGE_KEY, created.id);
+      }
       await reload();
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "绑定失败");
@@ -50,6 +54,9 @@ export default function StoresSettingsPage() {
       <div>
         <p className="eyebrow-cap mb-sm">Settings</p>
         <h1 className="font-display text-heading-md text-ink">Ozon 店铺管理</h1>
+        <p className="text-body text-muted mt-xs">
+          在 Ozon 卖家后台获取 Client-Id 与 Api-Key，在此绑定后用于店铺跟踪与同步
+        </p>
       </div>
 
       <Card variant="default" padding="lg">
@@ -81,8 +88,24 @@ export default function StoresSettingsPage() {
                   variant="ghost"
                   size="sm"
                   onClick={async () => {
-                    await deleteStore(s.id);
-                    await reload();
+                    if (
+                      !window.confirm(
+                        `确定删除店铺「${s.name}」？将同时清除该店铺的所有同步商品、订单与预警数据，且不可恢复。`,
+                      )
+                    ) {
+                      return;
+                    }
+                    setMessage("");
+                    try {
+                      await deleteStore(s.id);
+                      if (localStorage.getItem(ACTIVE_STORE_STORAGE_KEY) === s.id) {
+                        localStorage.removeItem(ACTIVE_STORE_STORAGE_KEY);
+                      }
+                      setMessage("店铺已删除");
+                      await reload();
+                    } catch (err) {
+                      setMessage(err instanceof Error ? err.message : "删除失败");
+                    }
                   }}
                 >
                   <Trash2 className="h-4 w-4" />

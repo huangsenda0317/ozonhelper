@@ -9,13 +9,13 @@ from datetime import datetime, timezone
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.exceptions import NotFoundException
+from src.api.exceptions import AppException, NotFoundException
 from src.cache import cache_delete, cache_get, cache_set
 from src.config import get_settings
 from src.models.store import Store
 from src.models.tracking_sync import SyncedProduct
 from src.schemas.tracking import TrackingProductDetail, TrackingProductListParams, TrackingProductSummary
-from src.services.ozon.client import OzonSellerClient, get_ozon_client
+from src.services.ozon.client import OzonSellerClient
 from src.services.stores.credentials import ozon_client_for_store
 
 logger = logging.getLogger(__name__)
@@ -362,10 +362,21 @@ def _row_to_detail(row: SyncedProduct) -> TrackingProductDetail:
 
 class TrackingProductService:
     def __init__(self, client: OzonSellerClient | None = None):
-        self.client = client or get_ozon_client()
+        self._test_client = client
 
     def _client_for_store(self, store: Store) -> OzonSellerClient:
+        if self._test_client is not None:
+            return self._test_client
         return ozon_client_for_store(store)
+
+    def _require_store(self, store: Store | None) -> Store:
+        if store is None:
+            raise AppException(
+                code='STORE_NOT_BOUND',
+                message='尚未绑定 Ozon 店铺，请前往设置页添加',
+                http_status=404,
+            )
+        return store
 
     async def list_products_from_db(
         self,
@@ -444,7 +455,8 @@ class TrackingProductService:
             if count > 0:
                 return await self.list_products_from_db(db, store, params)
 
-        client = self._client_for_store(store) if store else self.client
+        store = self._require_store(store)
+        client = self._client_for_store(store)
         all_items, cached_at = await _get_all_summaries(
             client,
             params.visibility,
@@ -482,7 +494,8 @@ class TrackingProductService:
             except NotFoundException:
                 pass
 
-        client = self._client_for_store(store) if store else self.client
+        store = self._require_store(store)
+        client = self._client_for_store(store)
         raw = await client.product_info_list(product_ids=[product_id])
         items = raw.get('items') or []
         if not items:

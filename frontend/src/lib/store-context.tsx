@@ -6,6 +6,8 @@ import { apiClient } from "@/lib/api-client";
 
 const STORAGE_KEY = "ozon_active_store_id";
 
+export { STORAGE_KEY as ACTIVE_STORE_STORAGE_KEY };
+
 export interface StoreSummary {
   id: string;
   name: string;

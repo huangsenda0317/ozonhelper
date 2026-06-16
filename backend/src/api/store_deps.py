@@ -2,11 +2,12 @@
 
 import uuid
 
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.deps import get_current_user
+from src.api.exceptions import AppException, NotFoundException
 from src.database import get_db
 from src.models.store import Store
 from src.models.user import User
@@ -22,7 +23,7 @@ async def get_user_store(
         stmt = select(Store).where(Store.id == store_id, Store.user_id == current_user.id, Store.is_active == True)
         store = (await db.execute(stmt)).scalar_one_or_none()
         if not store:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='店铺不存在')
+            raise NotFoundException('store', str(store_id))
         return store
 
     stmt = (
@@ -33,9 +34,10 @@ async def get_user_store(
     )
     store = (await db.execute(stmt)).scalar_one_or_none()
     if not store:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='尚未绑定 Ozon 店铺，请前往设置页添加',
+        raise AppException(
+            code='STORE_NOT_BOUND',
+            message='尚未绑定 Ozon 店铺，请前往设置页添加',
+            http_status=404,
         )
     return store
 
@@ -47,5 +49,5 @@ async def get_user_store_optional(
 ) -> Store | None:
     try:
         return await get_user_store(store_id=store_id, current_user=current_user, db=db)
-    except HTTPException:
+    except AppException:
         return None

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from functools import lru_cache
 
 import httpx
 
@@ -19,12 +18,12 @@ class OzonSellerClient:
         self,
         settings: Settings,
         *,
-        client_id: str | None = None,
-        api_key: str | None = None,
+        client_id: str,
+        api_key: str,
     ):
         self.base_url = settings.ozon_api_base_url.rstrip('/')
-        self.client_id = client_id if client_id is not None else settings.ozon_client_id
-        self.api_key = api_key if api_key is not None else settings.ozon_api_key
+        self.client_id = client_id
+        self.api_key = api_key
         self._http: httpx.AsyncClient | None = None
         self._rate_limiter = get_ozon_rate_limiter()
 
@@ -58,7 +57,7 @@ class OzonSellerClient:
         if not self.client_id or not self.api_key:
             raise AppException(
                 code='OZON_NOT_CONFIGURED',
-                message='请绑定 Ozon 店铺或在后端 .env 中配置 OZON_CLIENT_ID 与 OZON_API_KEY',
+                message='尚未绑定 Ozon 店铺，请前往设置页添加店铺 Client-Id 与 Api-Key',
                 http_status=503,
             )
 
@@ -228,12 +227,3 @@ class OzonSellerClient:
 
     async def seller_info(self) -> dict:
         return await self._post('/v1/seller/info', {})
-
-
-@lru_cache()
-def get_ozon_client() -> OzonSellerClient:
-    return OzonSellerClient(get_settings())
-
-
-async def close_ozon_client() -> None:
-    await get_ozon_client().close()

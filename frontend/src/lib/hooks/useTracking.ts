@@ -138,7 +138,7 @@ export async function batchProductVisibility(
 
 export function getTrackingErrorMessage(err: unknown): string {
   if (err instanceof ApiError) {
-    if (err.code === 'OZON_NOT_CONFIGURED') {
+    if (err.code === 'STORE_NOT_BOUND' || err.code === 'OZON_NOT_CONFIGURED') {
       return '尚未绑定 Ozon 店铺，请前往设置页添加店铺';
     }
     if (err.code === 'OZON_AUTH_FAILED') {

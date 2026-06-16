@@ -125,7 +125,7 @@ export function ImageUploader({
       accept=".jpg,.jpeg,.png,.webp"
       className={`ai-edit-upload w-full block ${
         isEmpty ? "ai-edit-upload--empty" : ""
-      } [&_.ant-upload-list-item]:!p-0 [&_.ant-upload-list-item-thumbnail_img]:!object-cover`}
+      }`}
     >
       {fileList.length >= maxCount ? null : (
         <button
