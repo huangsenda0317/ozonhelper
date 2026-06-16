@@ -40,6 +40,22 @@ fi
 echo "   安装/更新依赖 (npm install)..."
 npm install
 
+# Next.js 会向上查找 package-lock.json；仓库根目录另有无关 lockfile，需跳过自动修补。
+# 同时显式安装当前平台的 @next/swc 二进制，避免 build 时直连 registry.npmjs.org 超时。
+export NEXT_IGNORE_INCORRECT_LOCKFILE=1
+NEXT_VER=$(node -p "require('next/package.json').version")
+case "$(uname -s)-$(uname -m)" in
+  Linux-x86_64)       SWC_PKG="@next/swc-linux-x64-gnu" ;;
+  Linux-aarch64|Linux-arm64) SWC_PKG="@next/swc-linux-arm64-gnu" ;;
+  Darwin-arm64)       SWC_PKG="@next/swc-darwin-arm64" ;;
+  Darwin-x86_64)      SWC_PKG="@next/swc-darwin-x64" ;;
+  *)                  SWC_PKG="" ;;
+esac
+if [ -n "$SWC_PKG" ]; then
+  echo "   确保 SWC 原生包: ${SWC_PKG}@${NEXT_VER}"
+  npm install "${SWC_PKG}@${NEXT_VER}" --no-audit --no-fund
+fi
+
 export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=1024}"
 npm run build
 
