@@ -37,10 +37,8 @@ if [ ! -f .env.local ]; then
   cp .env.production.example .env.local
 fi
 
-if [ ! -d node_modules ]; then
-  echo "   安装依赖..."
-  npm install
-fi
+echo "   安装/更新依赖 (npm install)..."
+npm install
 
 export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=1024}"
 npm run build
