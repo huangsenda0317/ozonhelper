@@ -245,6 +245,7 @@ sleep 3
 
 echo ""
 echo "▶️  [5/5] 启动应用服务..."
+bash "$ROOT/scripts/validate-backend-env.sh"
 sudo systemctl start ozonhelper-api
 sleep 2
 sudo systemctl start ozonhelper-celery

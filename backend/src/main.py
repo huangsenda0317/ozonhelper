@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.error_handler import AppException, app_exception_handler, general_exception_handler
+from src.api.error_handler import app_exception_handler, general_exception_handler
 from src.api.exceptions import AppException
 from src.api.logging_middleware import LoggingMiddleware
 from src.bootstrap.admin_user import bootstrap_admin_user

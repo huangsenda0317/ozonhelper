@@ -10,6 +10,7 @@ docker compose up -d postgres redis minio
 sleep 3
 
 echo "▶️  启动 systemd 服务..."
+bash "$ROOT/scripts/validate-backend-env.sh"
 sudo systemctl start ozonhelper-api
 sleep 2
 sudo systemctl start ozonhelper-celery
