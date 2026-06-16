@@ -56,6 +56,10 @@ next-env.d.ts
 # Docker
 .docker/
 
+# Celery Beat 本地调度状态（运行 celery beat 时自动生成）
+backend/celerybeat-schedule
+backend/celerybeat-schedule-*
+
 # Alembic
 backend/alembic/versions/*.pyc
 
