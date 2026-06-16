@@ -16,10 +16,23 @@ const nextConfig = {
       },
     ],
   },
+  eslint: {
+    ignoreDuringBuilds: process.env.LOW_MEMORY_BUILD === '1',
+  },
   experimental: {
     typedRoutes: false,
-    // 低内存 ECS 构建：单线程编译，降低峰值内存
-    ...(process.env.LOW_MEMORY_BUILD === '1' ? { cpus: 1, workerThreads: false } : {}),
+    optimizePackageImports: ['antd', '@ant-design/x', 'lucide-react', 'echarts'],
+    // 低内存 ECS 构建：单线程编译 + webpack 独立 worker，降低峰值内存
+    ...(process.env.LOW_MEMORY_BUILD === '1'
+      ? { cpus: 1, workerThreads: false, webpackBuildWorker: true }
+      : {}),
+  },
+  webpack: (config, { dev }) => {
+    if (process.env.LOW_MEMORY_BUILD === '1' && !dev) {
+      // 内存型 cache，构建结束后释放，避免持久 cache 撑爆小内存机器
+      config.cache = { type: 'memory' };
+    }
+    return config;
   },
   async rewrites() {
     return [

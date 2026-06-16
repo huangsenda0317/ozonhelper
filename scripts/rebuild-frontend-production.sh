@@ -5,30 +5,103 @@
 # 用法（在项目根目录）:
 #   bash scripts/rebuild-frontend-production.sh
 #
+# 若 ECS 内存仍不足，可在本地构建后上传产物:
+#   cd frontend && npm run build
+#   rsync -avz --delete frontend/.next/ admin@<host>:~/ozonhelper/frontend/.next/
+#   rsync -avz frontend/public/ admin@<host>:~/ozonhelper/frontend/public/
+#   ssh admin@<host> 'sudo systemctl restart ozonhelper-web'
+#
 set -e
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+BUILD_SUCCEEDED=0
+STOPPED_DOCKER=0
+
+print_memory_status() {
+  echo "   ── 内存状态 ──"
+  free -h | awk 'NR==1 || /^Mem:/ || /^Swap:/ {print "   "$0}'
+}
+
+free_page_cache() {
+  if [ -w /proc/sys/vm/drop_caches ] 2>/dev/null; then
+    sync
+    echo 3 > /proc/sys/vm/drop_caches 2>/dev/null && echo "   ✓ 已释放 page cache" && return 0
+  fi
+  if command -v sudo >/dev/null 2>&1; then
+    sync
+    sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches' 2>/dev/null && echo "   ✓ 已释放 page cache" && return 0
+  fi
+  echo "   ⚠ 无法释放 page cache（需 root），跳过"
+}
+
 ensure_build_swap() {
-  local swap_mb
+  local ram_mb swap_mb target_mb extra_file=/swapfile-build
+  ram_mb=$(free -m | awk '/^Mem:/ {print $2}')
   swap_mb=$(free -m | awk '/^Swap:/ {print $2}')
-  if [ "${swap_mb:-0}" -ge 1024 ]; then
-    echo "   Swap 已就绪: ${swap_mb}MB"
+
+  # ≤2G 物理内存的机器目标 4G swap；≤4G 目标 3G；其余保持 ≥2G
+  if [ "${ram_mb:-0}" -le 2048 ]; then
+    target_mb=4096
+  elif [ "${ram_mb:-0}" -le 4096 ]; then
+    target_mb=3072
+  else
+    target_mb=2048
+  fi
+
+  if [ "${swap_mb:-0}" -ge "$target_mb" ]; then
+    echo "   Swap 已就绪: ${swap_mb}MB (目标 ≥${target_mb}MB)"
     return 0
   fi
-  echo "   可用内存偏低，尝试启用 2G swap（缓解 next build OOM）..."
+
+  echo "   当前 Swap ${swap_mb:-0}MB 不足，目标 ${target_mb}MB（物理内存 ${ram_mb}MB）..."
+
   if [ -f /swapfile ] && ! swapon --show 2>/dev/null | grep -q '/swapfile'; then
-    sudo swapon /swapfile 2>/dev/null && return 0
+    sudo swapon /swapfile 2>/dev/null || true
+    swap_mb=$(free -m | awk '/^Swap:/ {print $2}')
+    if [ "${swap_mb:-0}" -ge "$target_mb" ]; then
+      echo "   ✓ 已启用 /swapfile"
+      return 0
+    fi
   fi
+
   if [ ! -f /swapfile ]; then
+    echo "   创建 /swapfile (2G)..."
     sudo fallocate -l 2G /swapfile 2>/dev/null || \
       sudo dd if=/dev/zero of=/swapfile bs=1M count=2048 status=none
     sudo chmod 600 /swapfile
     sudo mkswap /swapfile
     sudo swapon /swapfile
-    echo "   ✓ swap 已启用"
+    swap_mb=$(free -m | awk '/^Swap:/ {print $2}')
   fi
+
+  if [ "${swap_mb:-0}" -lt "$target_mb" ] && [ ! -f "$extra_file" ]; then
+    local need_mb=$((target_mb - swap_mb))
+    echo "   追加 ${need_mb}MB swap → ${extra_file}..."
+    sudo fallocate -l "${need_mb}M" "$extra_file" 2>/dev/null || \
+      sudo dd if=/dev/zero of="$extra_file" bs=1M count="$need_mb" status=none
+    sudo chmod 600 "$extra_file"
+    sudo mkswap "$extra_file"
+    sudo swapon "$extra_file"
+  elif [ -f "$extra_file" ] && ! swapon --show 2>/dev/null | grep -q "$extra_file"; then
+    sudo swapon "$extra_file" 2>/dev/null || true
+  fi
+
+  swap_mb=$(free -m | awk '/^Swap:/ {print $2}')
+  echo "   ✓ Swap 现为 ${swap_mb}MB"
+}
+
+prepare_build_memory() {
+  print_memory_status
+  free_page_cache
+  # 构建期间更积极使用 swap
+  if [ -w /proc/sys/vm/swappiness ] 2>/dev/null; then
+    echo 80 > /proc/sys/vm/swappiness 2>/dev/null || \
+      sudo sh -c 'echo 80 > /proc/sys/vm/swappiness' 2>/dev/null || true
+  fi
+  ensure_build_swap
+  print_memory_status
 }
 
 resolve_swc_version() {
@@ -40,6 +113,34 @@ resolve_swc_version() {
     process.stdout.write(ver);
   "
 }
+
+restore_services() {
+  cd "$ROOT"
+  if [ "$STOPPED_DOCKER" = "1" ]; then
+    docker compose up -d postgres redis minio 2>/dev/null || true
+    sleep 3
+  fi
+  sudo systemctl start ozonhelper-api 2>/dev/null || true
+  sleep 2
+  sudo systemctl start ozonhelper-celery 2>/dev/null || true
+  if systemctl list-unit-files ozonhelper-celery-beat.service &>/dev/null; then
+    sudo systemctl start ozonhelper-celery-beat 2>/dev/null || true
+  fi
+  sudo systemctl start ozonhelper-web 2>/dev/null || true
+}
+
+on_exit() {
+  local code=$?
+  if [ "$BUILD_SUCCEEDED" = "1" ]; then
+    return 0
+  fi
+  if [ "$code" -ne 0 ]; then
+    echo ""
+    echo "⚠️  构建失败 (exit $code)，正在尝试恢复 Docker 与应用服务..."
+    restore_services || true
+  fi
+}
+trap on_exit EXIT
 
 echo "══════════════════════════════════════════════"
 echo "  OzonHelper 生产前端构建（低内存模式）"
@@ -57,6 +158,7 @@ done
 echo ""
 echo "🛑 [2/5] 停止 Docker (PostgreSQL / Redis / MinIO)..."
 docker compose stop
+STOPPED_DOCKER=1
 echo "   Docker 已停止"
 
 echo ""
@@ -92,18 +194,34 @@ if [ -n "$SWC_PKG" ]; then
   fi
 fi
 
-ensure_build_swap
+echo ""
+echo "   准备构建内存环境..."
+prepare_build_memory
 
-# 低内存 ECS：单线程编译，降低峰值内存
+if [ -d .next ]; then
+  echo "   清理旧构建 (.next)..."
+  rm -rf .next
+fi
+
+# 低内存 ECS：单线程编译，限制 Node 堆并减少 libuv 线程池
 export LOW_MEMORY_BUILD=1
-export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=768}"
-npm run build
+export UV_THREADPOOL_SIZE=1
+export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--max-old-space-size=768"
+
+echo "   NODE_OPTIONS=${NODE_OPTIONS}"
+npm run build -- --no-lint
 
 if [ ! -f .next/BUILD_ID ]; then
   echo "❌ 构建失败：未找到 .next/BUILD_ID"
+  echo ""
+  echo "若仍出现 SIGKILL / OOM，请检查:"
+  echo "  sudo dmesg | tail -20          # 确认 OOM killer"
+  echo "  free -h                        # 内存与 swap"
+  echo "或在本地构建后 rsync .next/ 到服务器（见脚本头部注释）"
   exit 1
 fi
 echo "   ✓ 构建成功"
+BUILD_SUCCEEDED=1
 
 echo ""
 echo "🐳 [4/5] 重启 Docker..."
