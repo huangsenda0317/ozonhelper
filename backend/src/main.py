@@ -9,6 +9,8 @@ from src.api.error_handler import AppException, app_exception_handler, general_e
 from src.api.exceptions import AppException
 from src.api.logging_middleware import LoggingMiddleware
 from src.bootstrap.admin_user import bootstrap_admin_user
+from src.services.crypto import validate_encryption_key
+from src.config import get_settings
 
 
 @asynccontextmanager
@@ -16,6 +18,11 @@ async def lifespan(app: FastAPI):
     """应用生命周期管理。"""
     # 启动时
     print('🚀 OzonHelper API 启动中...')
+    try:
+        validate_encryption_key(get_settings().encryption_key)
+    except AppException as exc:
+        print(f'❌ 启动失败: {exc.message}')
+        raise
     await bootstrap_admin_user()
     yield
     # 关闭时

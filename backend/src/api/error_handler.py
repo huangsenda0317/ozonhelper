@@ -1,10 +1,15 @@
 """全局异常处理中间件 — 统一 ApiResponse 格式"""
 
+import logging
+import traceback
+
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 
 from src.api.exceptions import AppException
 from src.schemas.common import ApiError, ApiResponse
+
+logger = logging.getLogger(__name__)
 
 
 async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
@@ -20,6 +25,13 @@ async def app_exception_handler(request: Request, exc: AppException) -> JSONResp
 
 async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """处理未预期的通用异常。"""
+    logger.error(
+        'Unhandled exception on %s %s: %s\n%s',
+        request.method,
+        request.url.path,
+        exc,
+        traceback.format_exc(),
+    )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=ApiResponse(

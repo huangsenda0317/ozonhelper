@@ -57,7 +57,11 @@ async def create_store(
     finally:
         await client.close()
 
-    enc_client_id, enc_api_key = encrypt_store_credentials(body.client_id, body.api_key)
+    try:
+        enc_client_id, enc_api_key = encrypt_store_credentials(body.client_id, body.api_key)
+    except AppException:
+        raise
+
     store = Store(
         user_id=current_user.id,
         name=body.name,
@@ -71,7 +75,7 @@ async def create_store(
     db.add(job)
     await db.flush()
     job_id = str(job.id)
-    await db.commit()
+    await db.refresh(store)
     dispatch_sync_job(job_id, background_tasks)
     return ApiResponse(success=True, data=_to_summary(store))
 
