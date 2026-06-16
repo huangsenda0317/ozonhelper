@@ -1,8 +1,44 @@
-"""AI 改图/翻译相关 Pydantic Schemas"""
+"""AI 改图/翻译/问答相关 Pydantic Schemas"""
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
+
+# SSE 事件类型（POST /ai/chat 流式响应）:
+# - delta: {"content": "部分文本"}
+# - think_delta: {"content": "思考片段"}
+# - think_done: {}
+# - tool_start: {"name": "...", "label": "...", "args": {...}}
+# - tool_end: {"name": "...", "label": "...", "result_preview": "...", "status": "success|error"}
+# - done: {}
+# - error: {"message": "..."}
+
+DEEPSEEK_MODELS = frozenset({'deepseek-v4-flash', 'deepseek-v4-pro'})
+GLM_MODELS = frozenset({'glm-4.7-flash'})
+ALLOWED_CHAT_MODELS = DEEPSEEK_MODELS | GLM_MODELS
+DEFAULT_CHAT_MODEL = 'deepseek-v4-flash'
+
+
+class ChatMessage(BaseModel):
+    """对话消息。"""
+
+    role: Literal['user', 'assistant', 'system']
+    content: str = Field(..., min_length=1)
+
+
+class ChatRequest(BaseModel):
+    """AI 问答请求。"""
+
+    store_id: str = Field(..., description='Ozon 店铺 ID')
+    model: str = Field(default=DEFAULT_CHAT_MODEL, description='对话模型')
+    messages: list[ChatMessage] = Field(..., min_length=1)
+
+    @model_validator(mode='after')
+    def validate_model(self):
+        if self.model not in ALLOWED_CHAT_MODELS:
+            raise ValueError(f'model 须为 {", ".join(sorted(ALLOWED_CHAT_MODELS))} 之一')
+        return self
 
 
 class ImageEditRequest(BaseModel):

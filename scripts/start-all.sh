@@ -47,9 +47,11 @@ echo "🌐 启动 FastAPI 后端 (http://localhost:8000)..."
 uvicorn src.main:app --reload --port 8000 &
 BACKEND_PID=$!
 
-# 6. 启动 Celery Worker (另一个终端可手动启动)
+# 6. 启动 Celery Worker / Beat (另一个终端可手动启动)
 echo "📦 Celery Worker 启动命令 (在新终端中运行):"
 echo "   cd backend && source .venv/bin/activate && celery -A src.worker.app worker --loglevel=info"
+echo "📦 Celery Beat 启动命令 (在新终端中运行):"
+echo "   cd backend && source .venv/bin/activate && celery -A src.worker.app beat --loglevel=info"
 
 # 7. 前端: 安装依赖 & 启动
 echo ""

@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     volcengine_seededit_req_key: str = 'seededit_v3.0'
     volcengine_seededit_concurrency: int = 1
 
+    # 智谱 GLM (AI 问答，可选)
+    glm_api_key: str = ''
+
+    # DeepSeek (AI 问答)
+    deepseek_api_key: str = ''
+
     # 腾讯云机器翻译 TMT (AI 翻译)
     tencent_secret_id: str = ''
     tencent_secret_key: str = ''

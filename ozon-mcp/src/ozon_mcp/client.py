@@ -16,6 +16,22 @@ class OzonApiClient:
         self._http: httpx.AsyncClient | None = None
         self._limiter = TokenBucketRateLimiter()
 
+    @classmethod
+    def from_credentials(
+        cls,
+        *,
+        client_id: str,
+        api_key: str,
+        base_url: str = 'https://api-seller.ozon.ru',
+    ) -> OzonApiClient:
+        """按店铺凭证构造客户端（非环境变量）。"""
+        settings = Settings(
+            ozon_client_id=client_id,
+            ozon_api_key=api_key,
+            ozon_api_base_url=base_url,
+        )
+        return cls(settings=settings)
+
     def _get_http(self) -> httpx.AsyncClient:
         if self._http is None or self._http.is_closed:
             self._http = httpx.AsyncClient(timeout=httpx.Timeout(30.0))

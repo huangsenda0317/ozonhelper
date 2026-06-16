@@ -11,6 +11,7 @@ import {
   Languages,
   Upload,
   TrendingUp,
+  Bot,
   type LucideIcon,
 } from "lucide-react";
 
@@ -62,6 +63,12 @@ const TOOLBOX_ITEMS: {
     label: "AI 改图",
     desc: "SeedEdit 3.0 图片本地化",
     icon: Wand2,
+  },
+  {
+    href: "/ai-qa",
+    label: "AI 问答",
+    desc: "DeepSeek 查询店铺订单与库存",
+    icon: Bot,
   },
   {
     href: "/ai-edit/translate",

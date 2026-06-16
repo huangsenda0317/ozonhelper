@@ -5,6 +5,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +21,7 @@ from src.database import get_db
 from src.models.processing_task import ProcessingTask
 from src.models.user import User
 from src.schemas.ai import (
+    ChatRequest,
     ImageEditRequest,
     OutputOverrideRequest,
     RetryRequest,
@@ -31,6 +33,7 @@ from src.schemas.ai import (
     UploadImageResponse,
 )
 from src.schemas.common import ApiResponse
+from src.services.ai_processor.chat_service import stream_chat
 from src.services.ai_processor.tmt_translator import TMTError, tmt_translator
 from src.storage import storage
 from src.worker.ai_tasks import process_image_edit_task, process_translate_task
@@ -81,6 +84,24 @@ def _to_task_response(task: ProcessingTask) -> TaskResponse:
         cost_amount=float(task.cost_amount),
         created_at=task.created_at,
         completed_at=task.completed_at,
+    )
+
+
+@router.post('/chat')
+async def chat(
+    request: ChatRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """AI 问答（DeepSeek / GLM + Ozon 工具，SSE 流式）。"""
+    return StreamingResponse(
+        stream_chat(db=db, user=current_user, request=request),
+        media_type='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
+        },
     )
 
 
