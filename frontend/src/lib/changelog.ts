@@ -26,6 +26,41 @@ export function formatChangelogDate(isoDate: string): string {
 
 export const CHANGELOG: ChangelogDay[] = [
   {
+    date: "2026-06-17",
+    items: [
+      {
+        tag: "改进",
+        title: "AI 问答思考过程体验",
+        description:
+          "处理过程区限制最大高度并可滚动；工具调用默认折叠详情；SSE 完成后自动收起思考过程；优化布局防跳动并移除边框。",
+      },
+      {
+        tag: "改进",
+        title: "AI 问答工具调用优化",
+        description:
+          "同一会话内相同工具参数去重缓存，避免重复请求 Ozon；ozon_api_call 与语义化工具对齐；提升工具轮次上限，触顶后基于已有结果生成总结。",
+      },
+      {
+        tag: "修复",
+        title: "AI 问答 SSE 流式响应",
+        description:
+          "修复回答内容一次性返回的问题：后端改用纯 ASGI 日志中间件；前端增加 SSE 流式代理 Route，避免 Next.js rewrite 缓冲。",
+      },
+      {
+        tag: "新功能",
+        title: "更新日志页面",
+        description:
+          "Header 用户菜单新增「更新日志」入口，按日期倒序展示产品迭代记录。",
+      },
+      {
+        tag: "改进",
+        title: "店铺管理与导航",
+        description:
+          "店铺绑定弹窗与全局店铺选择器；用户菜单支持店铺管理与登出跳转首页；删除店铺后立即刷新列表。",
+      },
+    ],
+  },
+  {
     date: "2026-06-16",
     items: [
       {

@@ -21,6 +21,7 @@ export type ChatSSEEvent =
       name: string;
       label: string;
       args: Record<string, unknown>;
+      cached?: boolean;
     }
   | {
       type: "tool_end";
@@ -28,6 +29,7 @@ export type ChatSSEEvent =
       label: string;
       result_preview: string;
       status: "success" | "error";
+      cached?: boolean;
     }
   | { type: "done" }
   | { type: "error"; message: string; code?: string };
@@ -68,6 +70,7 @@ function parseSSEBlock(block: string): ChatSSEEvent | null {
         name: String(data.name ?? ""),
         label: String(data.label ?? data.name ?? ""),
         args: (data.args as Record<string, unknown>) ?? {},
+        cached: data.cached === true,
       };
     }
     if (eventType === "tool_end") {
@@ -77,6 +80,7 @@ function parseSSEBlock(block: string): ChatSSEEvent | null {
         label: String(data.label ?? data.name ?? ""),
         result_preview: String(data.result_preview ?? ""),
         status: data.status === "error" ? "error" : "success",
+        cached: data.cached === true,
       };
     }
     if (eventType === "done") {

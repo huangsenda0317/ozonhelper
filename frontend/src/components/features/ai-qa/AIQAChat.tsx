@@ -2,8 +2,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Loader2, MessageCircle, Store, Wrench } from "lucide-react";
-import { Bubble, Sender, Think, XProvider } from "@ant-design/x";
+import { ChevronDown, Loader2, MessageCircle, Store, Wrench } from "lucide-react";
+import { Bubble, Sender, XProvider } from "@ant-design/x";
 import { XMarkdown } from "@ant-design/x-markdown";
 import { theme } from "antd";
 
@@ -46,6 +46,7 @@ interface ToolStep {
   title: string;
   content: string;
   status: ThinkStepStatus;
+  cached?: boolean;
 }
 
 interface ChatItem {
@@ -188,47 +189,65 @@ function ChatWelcome({
   );
 }
 
-function ToolStepThink({ step }: { step: ToolStep }) {
+function ToolStepRow({ step }: { step: ToolStep }) {
   const isLoading = step.status === "loading";
   const isError = step.status === "error";
-  const [userExpanded, setUserExpanded] = useState<boolean | null>(null);
-  const expanded = userExpanded ?? isLoading;
-
-  React.useEffect(() => {
-    if (!isLoading) {
-      setUserExpanded(null);
-    }
-  }, [isLoading]);
-
-  const title = isLoading
-    ? `${step.title}…`
-    : isError
-      ? `${step.title}失败`
-      : step.title;
+  const hasDetail = Boolean(step.content) && !isLoading;
+  const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="rounded-lg border border-hairline overflow-hidden">
-      <Think
-        title={title}
-        icon={<Wrench className="h-3.5 w-3.5" aria-hidden />}
-        loading={isLoading}
-        blink={isLoading}
-        expanded={expanded}
-        defaultExpanded={false}
-        onExpand={setUserExpanded}
+    <li className="py-xxs min-h-[1.5rem]">
+      <button
+        type="button"
+        aria-expanded={hasDetail ? expanded : false}
+        aria-label={hasDetail ? `${expanded ? "收起" : "展开"}${step.title}` : step.title}
+        disabled={!hasDetail}
+        onClick={() => {
+          if (hasDetail) setExpanded((prev) => !prev);
+        }}
+        className={`w-full flex items-center gap-xs text-left rounded-xs transition-colors duration-200 ${
+          hasDetail
+            ? "cursor-pointer hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40"
+            : "cursor-default"
+        }`}
       >
-        {step.content ? (
-          <pre className="text-caption whitespace-pre-wrap break-words m-0 font-text text-muted">
-            {step.content}
-          </pre>
-        ) : isLoading ? (
-          <span className="text-caption text-muted inline-flex items-center gap-xs">
-            <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
-            调用中…
-          </span>
-        ) : null}
-      </Think>
-    </div>
+        <ChevronDown
+          className={`h-3 w-3 shrink-0 text-muted transition-transform duration-200 ${
+            !hasDetail ? "opacity-0" : expanded ? "rotate-0" : "-rotate-90"
+          }`}
+          aria-hidden="true"
+        />
+        <Wrench
+          className={`h-3 w-3 shrink-0 ${
+            isError
+              ? "text-accent-pink"
+              : isLoading
+                ? "text-accent-violet-mid"
+                : "text-muted"
+          }`}
+          aria-hidden="true"
+        />
+        <span className="min-w-0 flex-1 text-caption text-ink leading-snug truncate">
+          {step.title}
+          {isLoading ? "…" : isError ? "（失败）" : ""}
+        </span>
+        {isLoading && (
+          <Loader2
+            className="h-3 w-3 shrink-0 animate-spin text-accent-violet-mid"
+            aria-hidden="true"
+          />
+        )}
+      </button>
+      {hasDetail && expanded && (
+        <pre
+          className={`text-micro-cap whitespace-pre-wrap break-words m-0 mt-xxs pl-[1.375rem] font-text leading-relaxed ${
+            step.cached ? "text-muted/80 italic" : "text-muted"
+          }`}
+        >
+          {step.content}
+        </pre>
+      )}
+    </li>
   );
 }
 
@@ -256,68 +275,111 @@ function AssistantThinkPanel({
   const showPending =
     streaming && !showProcess && !content;
 
-  const [userExpanded, setUserExpanded] = useState<boolean | null>(null);
-  const expanded = userExpanded ?? isProcessActive;
+  const [collapsed, setCollapsed] = useState(true);
+  const userToggledRef = useRef(false);
+  const processBodyRef = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
-    if (!isProcessActive) {
-      setUserExpanded(null);
+  useEffect(() => {
+    if (streaming && showProcess) {
+      if (!userToggledRef.current) {
+        setCollapsed(false);
+      }
+      return;
     }
-  }, [isProcessActive]);
+    if (!streaming && showProcess) {
+      setCollapsed(true);
+      userToggledRef.current = false;
+    }
+  }, [streaming, showProcess]);
+
+  // 流式输出时仅在用户已贴底时自动滚到底部，避免抢走手动滚动
+  useEffect(() => {
+    const el = processBodyRef.current;
+    if (collapsed || !isProcessActive || !el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distanceFromBottom < 48) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [thinkingContent, toolSteps.length, collapsed, isProcessActive]);
 
   const processTitle = isProcessActive
     ? hasLoadingTool
-      ? "工具调用中…"
+      ? "工具调用中"
       : thinkingLoading
-        ? "深度思考中"
-        : "处理中…"
+        ? "思考中"
+        : "处理中"
     : thinkingError
-      ? "思考过程（异常）"
-      : "思考过程";
+      ? "处理过程（异常）"
+      : "处理过程";
 
   return (
     <div className="flex flex-col gap-md min-w-0 max-w-full">
       {showPending && (
-        <div className="rounded-lg border border-hairline overflow-hidden">
-          <Think title="正在准备回答…" loading blink defaultExpanded={false} />
-        </div>
+        <p className="text-caption text-muted inline-flex items-center gap-xs py-xs min-h-[1.75rem]">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+          正在准备回答…
+        </p>
       )}
 
       {showProcess && (
-        <div className="rounded-lg border border-hairline overflow-hidden max-w-full">
-          <Think
-            title={processTitle}
-            loading={isProcessActive}
-            blink={isProcessActive}
-            expanded={expanded}
-            defaultExpanded={false}
-            onExpand={setUserExpanded}
+        <div className="ai-qa-process min-w-0 max-w-full">
+          <button
+            type="button"
+            aria-expanded={!collapsed}
+            onClick={() => {
+              userToggledRef.current = true;
+              setCollapsed((prev) => !prev);
+            }}
+            className="inline-flex items-center gap-xs text-caption text-muted hover:text-ink transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40 rounded-xs"
           >
-            <div className="flex flex-col gap-xs">
-              {toolSteps.map((step) => (
-                <ToolStepThink key={step.id} step={step} />
-              ))}
+            <ChevronDown
+              className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
+                collapsed ? "-rotate-90" : "rotate-0"
+              }`}
+              aria-hidden="true"
+            />
+            <span>{processTitle}</span>
+            {isProcessActive && (
+              <Loader2
+                className="h-3 w-3 animate-spin text-accent-violet-mid"
+                aria-hidden="true"
+              />
+            )}
+          </button>
+
+          {!collapsed && (
+            <div
+              ref={processBodyRef}
+              className="ai-qa-process-body mt-sm space-y-sm pl-[1.125rem]"
+            >
+              {toolSteps.length > 0 && (
+                <ul className="space-y-0 m-0 p-0 list-none">
+                  {toolSteps.map((step) => (
+                    <ToolStepRow key={step.id} step={step} />
+                  ))}
+                </ul>
+              )}
 
               {(thinkingContent || thinkingLoading) && (
                 <div
                   className={
-                    toolSteps.length > 0 ? "pt-sm border-t border-hairline" : ""
+                    toolSteps.length > 0 ? "pt-xs" : undefined
                   }
                 >
                   {thinkingContent ? (
-                    <pre className="text-caption whitespace-pre-wrap break-words m-0 font-text">
+                    <pre className="text-caption whitespace-pre-wrap break-words m-0 font-text text-muted leading-relaxed">
                       {thinkingContent}
                     </pre>
                   ) : (
-                    <span className="text-caption text-muted inline-flex items-center gap-xs">
-                      <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+                    <p className="text-caption text-muted inline-flex items-center gap-xs m-0 min-h-[1.75rem]">
+                      <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
                       推理中…
-                    </span>
+                    </p>
                   )}
                 </div>
               )}
             </div>
-          </Think>
+          )}
         </div>
       )}
 
@@ -463,8 +525,11 @@ export function AIQAChat({
                   {
                     id: nextThinkKey(),
                     title: event.label,
-                    content: formatToolArgs(event.args),
-                    status: "loading",
+                    content: event.cached
+                      ? "复用本次对话已有结果，未重复请求"
+                      : formatToolArgs(event.args),
+                    status: event.cached ? "done" : "loading",
+                    cached: event.cached,
                   },
                 ],
               }));
@@ -475,12 +540,16 @@ export function AIQAChat({
                 const toolSteps = [...prev.toolSteps];
                 for (let i = toolSteps.length - 1; i >= 0; i -= 1) {
                   const step = toolSteps[i];
-                  if (step.status === "loading") {
+                  if (step.status === "loading" || (event.cached && step.cached)) {
                     toolSteps[i] = {
                       ...step,
                       title: event.label,
-                      content: event.result_preview || step.content,
+                      content:
+                        event.result_preview ||
+                        step.content ||
+                        (event.cached ? "复用本次对话已有结果，未重复请求" : ""),
                       status: event.status === "error" ? "error" : "done",
+                      cached: event.cached ?? step.cached,
                     };
                     break;
                   }

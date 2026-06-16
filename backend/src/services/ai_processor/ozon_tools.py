@@ -127,7 +127,7 @@ OZON_TOOL_DEFINITIONS: list[dict[str, Any]] = [
         'type': 'function',
         'function': {
             'name': 'ozon_api_call',
-            'description': '通用 Ozon API 只读调用。path 须以 /v 开头，仅用于查询类端点。',
+            'description': '通用 Ozon API 只读调用（慎用：若已有 get_product_list 等语义化工具，勿用本工具重复查询同一接口）。',
             'parameters': {
                 'type': 'object',
                 'properties': {

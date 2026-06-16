@@ -306,4 +306,30 @@ body {
   .ai-qa-chat .ant-bubble-list {
     @apply gap-md;
   }
+
+  .ai-qa-process {
+    @apply min-h-[1.75rem];
+  }
+
+  .ai-qa-process-body {
+    max-height: 256px;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-hairline) transparent;
+  }
+
+  .ai-qa-process-body::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .ai-qa-process-body::-webkit-scrollbar-thumb {
+    background-color: var(--color-hairline);
+    border-radius: 9999px;
+  }
+
+  .ai-qa-process pre {
+    scrollbar-width: thin;
+  }
 }
