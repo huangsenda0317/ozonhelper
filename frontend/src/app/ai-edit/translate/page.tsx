@@ -164,7 +164,7 @@ export default function TranslatePage() {
   return (
     <div className="max-w-7xl mx-auto px-xxl py-xxl">
       <header className="mb-xl">
-        <p className="eyebrow-cap mb-sm">腾讯云 TMT · zh → ru</p>
+        <p className="eyebrow-cap mb-sm">AI TRANSLATE</p>
         <div className="flex flex-col gap-md sm:flex-row sm:items-end sm:justify-between">
           <h1 className="font-display font-bold text-heading-md text-ink">
             AI{" "}
@@ -185,17 +185,22 @@ export default function TranslatePage() {
             </p>
           )}
         </div>
-        <p className="text-body text-body mt-sm">
-          5 次/秒，单次最长 6000 字符
-        </p>
+        <p className="text-body text-body mt-sm">5 次/秒，单次最长 6000 字符</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-xl">
         {/* Left: source input */}
-        <Card variant="default" padding="lg" className="flex flex-col min-h-[360px]">
+        <Card
+          variant="default"
+          padding="lg"
+          className="flex flex-col min-h-[360px]"
+        >
           <div className="flex items-center justify-between mb-md">
             <h2 className="text-heading-sm font-display text-ink flex items-center gap-sm">
-              <Languages className="h-5 w-5 text-accent-violet-mid" aria-hidden="true" />
+              <Languages
+                className="h-5 w-5 text-accent-violet-mid"
+                aria-hidden="true"
+              />
               原文（中文）
             </h2>
             <span
@@ -221,9 +226,15 @@ export default function TranslatePage() {
         </Card>
 
         {/* Right: target output + action */}
-        <Card variant="default" padding="lg" className="flex flex-col min-h-[360px]">
+        <Card
+          variant="default"
+          padding="lg"
+          className="flex flex-col min-h-[360px]"
+        >
           <div className="flex items-center justify-between mb-md">
-            <h2 className="text-heading-sm font-display text-ink">译文（俄文）</h2>
+            <h2 className="text-heading-sm font-display text-ink">
+              译文（俄文）
+            </h2>
             <div className="flex items-center gap-sm">
               {usedAmount !== null && (
                 <span className="text-caption text-muted">
@@ -386,11 +397,7 @@ export default function TranslatePage() {
           aria-modal="true"
           aria-labelledby="edit-translate-title"
         >
-          <Card
-            variant="default"
-            padding="lg"
-            className="max-w-2xl w-full"
-          >
+          <Card variant="default" padding="lg" className="max-w-2xl w-full">
             <h3
               id="edit-translate-title"
               className="text-heading-sm font-display text-ink mb-lg"

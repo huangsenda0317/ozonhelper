@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost" | "ghost-dark" | "danger";
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   loading?: boolean;
   fullWidth?: boolean;
 }
@@ -39,6 +39,8 @@ const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
 };
 
 const sizeClasses: Record<NonNullable<ButtonProps["size"]>, string> = {
+  /** Nav / toolbar compact — sentence case, h-8 */
+  xs: "min-h-8 h-8 px-sm text-caption normal-case tracking-normal font-medium",
   sm: "min-h-11 px-md text-button-cap",
   md: "min-h-11 px-lg py-md",
   lg: "min-h-12 px-xl py-lg",

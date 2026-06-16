@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 
 export interface TrackingFilterValues {
   visibility: string;
@@ -74,16 +75,16 @@ export function TrackingFilterPanel({
             <label className="block text-caption text-muted mb-xxs">
               可见性
             </label>
-            <select
+            <Select
               value={filters.visibility}
-              onChange={(e) => handleChange("visibility", e.target.value)}
-              className="w-full px-sm py-xs text-caption border border-hairline rounded-md"
-            >
-              <option value="ALL">全部</option>
-              <option value="VISIBLE">可见</option>
-              <option value="INVISIBLE">不可见</option>
-              <option value="ARCHIVED">已归档</option>
-            </select>
+              onChange={(value) => handleChange("visibility", String(value))}
+              options={[
+                { label: "全部", value: "ALL" },
+                { label: "可见", value: "VISIBLE" },
+                { label: "不可见", value: "INVISIBLE" },
+                { label: "已归档", value: "ARCHIVED" },
+              ]}
+            />
           </div>
           <div>
             <label className="block text-caption text-muted mb-xxs">
@@ -101,42 +102,45 @@ export function TrackingFilterPanel({
             <label className="block text-caption text-muted mb-xxs">
               库存
             </label>
-            <select
-              value={filters.has_stock}
-              onChange={(e) => handleChange("has_stock", e.target.value)}
-              className="w-full px-sm py-xs text-caption border border-hairline rounded-md"
-            >
-              <option value="">不限</option>
-              <option value="true">有库存</option>
-              <option value="false">无库存</option>
-            </select>
+            <Select
+              value={filters.has_stock || undefined}
+              onChange={(value) =>
+                handleChange("has_stock", value ? String(value) : "")
+              }
+              allowClear
+              placeholder="不限"
+              options={[
+                { label: "有库存", value: "true" },
+                { label: "无库存", value: "false" },
+              ]}
+            />
           </div>
           <div>
             <label className="block text-caption text-muted mb-xxs">
               排序字段
             </label>
-            <select
+            <Select
               value={filters.sort_by}
-              onChange={(e) => handleChange("sort_by", e.target.value)}
-              className="w-full px-sm py-xs text-caption border border-hairline rounded-md"
-            >
-              <option value="updated_at">更新时间</option>
-              <option value="price">价格</option>
-              <option value="name">名称</option>
-            </select>
+              onChange={(value) => handleChange("sort_by", String(value))}
+              options={[
+                { label: "更新时间", value: "updated_at" },
+                { label: "价格", value: "price" },
+                { label: "名称", value: "name" },
+              ]}
+            />
           </div>
           <div>
             <label className="block text-caption text-muted mb-xxs">
               排序方向
             </label>
-            <select
+            <Select
               value={filters.sort_order}
-              onChange={(e) => handleChange("sort_order", e.target.value)}
-              className="w-full px-sm py-xs text-caption border border-hairline rounded-md"
-            >
-              <option value="desc">降序</option>
-              <option value="asc">升序</option>
-            </select>
+              onChange={(value) => handleChange("sort_order", String(value))}
+              options={[
+                { label: "降序", value: "desc" },
+                { label: "升序", value: "asc" },
+              ]}
+            />
           </div>
           <div className="col-span-full flex gap-md mt-sm">
             <Button variant="primary" size="sm" onClick={handleApply}>

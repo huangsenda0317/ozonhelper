@@ -2,19 +2,13 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-import { apiClient } from "@/lib/api-client";
+import { fetchStores, type StoreSummary } from "@/lib/hooks/useOrders";
 
 const STORAGE_KEY = "ozon_active_store_id";
 
 export { STORAGE_KEY as ACTIVE_STORE_STORAGE_KEY };
 
-export interface StoreSummary {
-  id: string;
-  name: string;
-  is_active: boolean;
-  last_sync_at: string | null;
-  created_at: string;
-}
+export type { StoreSummary };
 
 interface StoreContextValue {
   stores: StoreSummary[];
@@ -24,7 +18,7 @@ interface StoreContextValue {
   /** 同步完成后递增，子页面据此重新拉取数据 */
   dataRefreshKey: number;
   setActiveStoreId: (id: string) => void;
-  refreshStores: (silent?: boolean) => Promise<void>;
+  refreshStores: (silent?: boolean, force?: boolean) => Promise<void>;
   notifyDataRefresh: () => void;
 }
 
@@ -40,11 +34,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setDataRefreshKey((k) => k + 1);
   }, []);
 
-  const refreshStores = useCallback(async (silent = false) => {
+  const refreshStores = useCallback(async (silent = false, force = false) => {
     if (!silent) setLoading(true);
     try {
-      const res = await apiClient.get<StoreSummary[]>("/stores");
-      const list = res.data ?? [];
+      const list = await fetchStores(force);
       setStores(list);
       const saved = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
       const nextId =

@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Loader2, MessageCircle, Wrench } from "lucide-react";
-import { Bubble, Prompts, Sender, Think, Welcome, XProvider } from "@ant-design/x";
+import { Loader2, MessageCircle, Store, Wrench } from "lucide-react";
+import { Bubble, Sender, Think, XProvider } from "@ant-design/x";
 import { XMarkdown } from "@ant-design/x-markdown";
-import { ConfigProvider, theme } from "antd";
+import { theme } from "antd";
 
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { useTheme } from "@/lib/theme-context";
 import { streamChat, type ChatModelId } from "@/lib/sse-chat";
 
@@ -96,6 +98,96 @@ function formatToolArgs(args: Record<string, unknown>): string {
   }
 }
 
+function QuickPromptCards({
+  disabled,
+  onSelect,
+}: {
+  disabled: boolean;
+  onSelect: (label: string) => void;
+}) {
+  return (
+    <div className="mt-lg">
+      <p className="text-micro-cap uppercase tracking-[0.25px] text-muted mb-sm text-left">
+        快捷提问
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm">
+        {QUICK_PROMPTS.map((prompt) => (
+          <button
+            key={prompt.key}
+            type="button"
+            disabled={disabled}
+            onClick={() => onSelect(prompt.label)}
+            className="text-left p-md rounded-lg border border-hairline bg-surface-card hover:bg-surface-elevated/60 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40"
+          >
+            <p className="text-caption text-ink font-medium">{prompt.label}</p>
+            <p className="text-micro-cap text-muted mt-xxs">{prompt.description}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChatWelcome({
+  hasStores,
+  storesLoading,
+  canSend,
+  onQuickPrompt,
+}: {
+  hasStores: boolean;
+  storesLoading: boolean;
+  canSend: boolean;
+  onQuickPrompt: (label: string) => void;
+}) {
+  if (!hasStores && !storesLoading) {
+    return (
+      <div className="max-w-3xl mx-auto flex flex-col items-center text-center py-xxl">
+        <div className="mb-lg p-lg rounded-xxl bg-surface-elevated">
+          <Store
+            className="h-10 w-10 text-accent-violet-mid"
+            aria-hidden="true"
+          />
+        </div>
+        <h2 className="text-heading-sm font-display text-ink mb-xs">
+          尚未绑定店铺
+        </h2>
+        <p className="text-caption text-body max-w-md mb-lg">
+          绑定 Ozon 店铺后，即可用自然语言查询订单、库存与卖家信息
+        </p>
+        <Link href="/settings/stores" className="cursor-pointer">
+          <Button variant="primary">前往绑定店铺</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto">
+      <div className="text-center mb-lg">
+        <div className="inline-flex mb-lg p-lg rounded-xxl bg-surface-elevated">
+          <MessageCircle
+            className="h-10 w-10 text-accent-violet-mid"
+            aria-hidden="true"
+          />
+        </div>
+        <h2 className="text-heading-sm font-display text-ink mb-xs">
+          AI 店铺问答
+        </h2>
+        <p className="text-caption text-body max-w-lg mx-auto">
+          选择店铺后，用自然语言查询 Ozon 订单、库存、商品与卖家信息。数据来自实时
+          API，由 DeepSeek 驱动。
+        </p>
+      </div>
+      {hasStores && (
+        <QuickPromptCards
+          disabled={!canSend}
+          onSelect={onQuickPrompt}
+        />
+      )}
+    </div>
+  );
+}
+
 function ToolStepThink({ step }: { step: ToolStep }) {
   const isLoading = step.status === "loading";
   const isError = step.status === "error";
@@ -115,26 +207,28 @@ function ToolStepThink({ step }: { step: ToolStep }) {
       : step.title;
 
   return (
-    <Think
-      title={title}
-      icon={<Wrench className="h-3.5 w-3.5" aria-hidden />}
-      loading={isLoading}
-      blink={isLoading}
-      expanded={expanded}
-      defaultExpanded={false}
-      onExpand={setUserExpanded}
-    >
-      {step.content ? (
-        <pre className="text-caption whitespace-pre-wrap break-words m-0 font-text text-muted">
-          {step.content}
-        </pre>
-      ) : isLoading ? (
-        <span className="text-caption text-muted inline-flex items-center gap-xs">
-          <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
-          调用中…
-        </span>
-      ) : null}
-    </Think>
+    <div className="rounded-lg border border-hairline overflow-hidden">
+      <Think
+        title={title}
+        icon={<Wrench className="h-3.5 w-3.5" aria-hidden />}
+        loading={isLoading}
+        blink={isLoading}
+        expanded={expanded}
+        defaultExpanded={false}
+        onExpand={setUserExpanded}
+      >
+        {step.content ? (
+          <pre className="text-caption whitespace-pre-wrap break-words m-0 font-text text-muted">
+            {step.content}
+          </pre>
+        ) : isLoading ? (
+          <span className="text-caption text-muted inline-flex items-center gap-xs">
+            <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+            调用中…
+          </span>
+        ) : null}
+      </Think>
+    </div>
   );
 }
 
@@ -144,12 +238,14 @@ function AssistantThinkPanel({
   toolSteps,
   streaming,
   content,
+  reduceMotion,
 }: {
   thinkingContent: string;
   thinkingStatus: ThinkingStatus;
   toolSteps: ToolStep[];
   streaming?: boolean;
   content: string;
+  reduceMotion: boolean;
 }) {
   const thinkingLoading = thinkingStatus === "loading";
   const thinkingError = thinkingStatus === "error";
@@ -180,58 +276,82 @@ function AssistantThinkPanel({
       : "思考过程";
 
   return (
-    <div className="flex flex-col gap-sm min-w-[240px] max-w-full">
+    <div className="flex flex-col gap-md min-w-0 max-w-full">
       {showPending && (
-        <Think title="正在准备回答…" loading blink defaultExpanded={false} />
+        <div className="rounded-lg border border-hairline overflow-hidden">
+          <Think title="正在准备回答…" loading blink defaultExpanded={false} />
+        </div>
       )}
 
       {showProcess && (
-        <Think
-          title={processTitle}
-          loading={isProcessActive}
-          blink={isProcessActive}
-          expanded={expanded}
-          defaultExpanded={false}
-          onExpand={setUserExpanded}
-        >
-          <div className="flex flex-col gap-xs">
-            {toolSteps.map((step) => (
-              <ToolStepThink key={step.id} step={step} />
-            ))}
+        <div className="rounded-lg border border-hairline overflow-hidden max-w-full">
+          <Think
+            title={processTitle}
+            loading={isProcessActive}
+            blink={isProcessActive}
+            expanded={expanded}
+            defaultExpanded={false}
+            onExpand={setUserExpanded}
+          >
+            <div className="flex flex-col gap-xs">
+              {toolSteps.map((step) => (
+                <ToolStepThink key={step.id} step={step} />
+              ))}
 
-            {(thinkingContent || thinkingLoading) && (
-              <div
-                className={
-                  toolSteps.length > 0 ? "pt-sm border-t border-hairline" : ""
-                }
-              >
-                {thinkingContent ? (
-                  <pre className="text-caption whitespace-pre-wrap break-words m-0 font-text">
-                    {thinkingContent}
-                  </pre>
-                ) : (
-                  <span className="text-caption text-muted inline-flex items-center gap-xs">
-                    <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
-                    推理中…
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        </Think>
+              {(thinkingContent || thinkingLoading) && (
+                <div
+                  className={
+                    toolSteps.length > 0 ? "pt-sm border-t border-hairline" : ""
+                  }
+                >
+                  {thinkingContent ? (
+                    <pre className="text-caption whitespace-pre-wrap break-words m-0 font-text">
+                      {thinkingContent}
+                    </pre>
+                  ) : (
+                    <span className="text-caption text-muted inline-flex items-center gap-xs">
+                      <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+                      推理中…
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </Think>
+        </div>
       )}
 
       {Boolean(content) && (
-        <XMarkdown
-          content={content}
-          streaming={{
-            hasNextChunk: Boolean(streaming),
-            enableAnimation: true,
-          }}
-        />
+        <div className="min-w-0 max-w-full break-words">
+          <XMarkdown
+            content={content}
+            streaming={{
+              hasNextChunk: Boolean(streaming),
+              enableAnimation: !reduceMotion,
+            }}
+          />
+        </div>
       )}
     </div>
   );
+}
+
+function buildSentryXTheme(isDark: boolean) {
+  return {
+    algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+    token: {
+      colorPrimary: "#150f23",
+      colorBgContainer: isDark ? "#1f1633" : "#ffffff",
+      colorBgElevated: isDark ? "#150f23" : "#ffffff",
+      colorText: isDark ? "#ffffff" : "#1f1633",
+      colorTextSecondary: isDark ? "#bdb8c0" : "#4a4458",
+      colorBorder: isDark ? "#362d59" : "#e5e7eb",
+      colorBorderSecondary: isDark ? "#362d59" : "#cfcfdb",
+      borderRadius: 8,
+      fontFamily: "Rubik, system-ui, sans-serif",
+      controlOutline: "rgba(157, 193, 245, 0.5)",
+    },
+  };
 }
 
 export function AIQAChat({
@@ -245,7 +365,16 @@ export function AIQAChat({
   const [items, setItems] = useState<ChatItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reduceMotion, setReduceMotion] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduceMotion(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   const canSend = Boolean(storeId) && hasStores && !loading && !storesLoading;
 
@@ -437,123 +566,103 @@ export function AIQAChat({
     [items],
   );
 
-  const antdTheme = useMemo(
-    () => ({
-      algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
-      token: {
-        colorPrimary: "#0066cc",
-        borderRadius: 8,
-      },
-    }),
-    [isDark],
-  );
-
+  const xTheme = useMemo(() => buildSentryXTheme(isDark), [isDark]);
+  const markdownThemeClass = isDark ? "x-markdown-dark" : "x-markdown-light";
   const showWelcome = items.length === 0;
 
   return (
-    <XProvider theme={antdTheme}>
-      <ConfigProvider theme={antdTheme}>
-        <div
-          className={`flex flex-col rounded-xl border overflow-hidden ${
-            isDark
-              ? "border-on-dark-faint bg-surface-elevated/30"
-              : "border-hairline bg-white"
-          }`}
-          style={{ height: "calc(100vh - 12rem)", minHeight: 480 }}
-        >
-          <div className="flex-1 overflow-y-auto px-md py-lg">
-            {showWelcome && (
-              <div className="max-w-2xl mx-auto mb-xl">
-                <Welcome
-                  icon={<MessageCircle className="h-8 w-8 text-accent-violet-mid" />}
-                  title="AI 店铺问答"
-                  description="选择店铺后，用自然语言查询 Ozon 订单、库存、商品与卖家信息。数据来自实时 API，由 DeepSeek 驱动。"
-                />
-                {hasStores && (
-                  <div className="mt-lg">
-                    <Prompts
-                      title="快捷提问"
-                      wrap
-                      items={QUICK_PROMPTS}
-                      onItemClick={({ data }) => {
-                        if (data.label && canSend) {
-                          void sendMessage(String(data.label));
-                        }
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {bubbleItems.length > 0 && (
-              <Bubble.List
-                autoScroll
-                items={bubbleItems}
-                role={{
-                  ai: {
-                    placement: "start",
-                    contentRender: (content, info) => {
-                      const text =
-                        typeof content === "string" ? content : String(content ?? "");
-                      const extra = info.extraInfo as {
-                        streaming?: boolean;
-                        thinkingContent?: string;
-                        thinkingStatus?: ThinkingStatus;
-                        toolSteps?: ToolStep[];
-                      };
-                      return (
-                        <AssistantThinkPanel
-                          thinkingContent={extra.thinkingContent ?? ""}
-                          thinkingStatus={extra.thinkingStatus ?? "idle"}
-                          toolSteps={extra.toolSteps ?? []}
-                          streaming={extra.streaming}
-                          content={text}
-                        />
-                      );
-                    },
-                  },
-                  user: {
-                    placement: "end",
-                  },
-                }}
-              />
-            )}
-          </div>
-
-          <div
-            className={`border-t px-md py-md ${
-              isDark ? "border-on-dark-faint" : "border-hairline"
-            }`}
-          >
-            {!hasStores && !storesLoading && (
-              <p className="text-caption text-muted mb-sm">
-                请先{" "}
-                <Link
-                  href="/settings/stores"
-                  className="text-accent-violet-mid hover:underline"
-                >
-                  绑定 Ozon 店铺
-                </Link>{" "}
-                后再提问。
-              </p>
-            )}
-            {error && (
-              <p className="text-caption text-accent-pink mb-sm">{error}</p>
-            )}
-            <Sender
-              loading={loading}
-              disabled={!canSend}
-              placeholder={
-                canSend ? "输入问题，Enter 发送" : "请先选择店铺"
-              }
-              onSubmit={(message) => {
-                void sendMessage(message);
+    <XProvider theme={xTheme}>
+      <Card
+        variant="default"
+        padding="none"
+        className={`ai-qa-chat flex flex-col min-h-[480px] md:min-h-[560px] max-h-[calc(100vh-14rem)] overflow-hidden ${markdownThemeClass}`}
+      >
+        <div className="flex-1 overflow-y-auto px-lg py-lg min-h-0">
+          {showWelcome && (
+            <ChatWelcome
+              hasStores={hasStores}
+              storesLoading={storesLoading}
+              canSend={canSend}
+              onQuickPrompt={(label) => {
+                void sendMessage(label);
               }}
             />
-          </div>
+          )}
+
+          {bubbleItems.length > 0 && (
+            <Bubble.List
+              autoScroll
+              items={bubbleItems}
+              role={{
+                ai: {
+                  placement: "start",
+                  classNames: {
+                    content:
+                      "!bg-transparent !border-0 !shadow-none !p-0 max-w-full min-w-0",
+                  },
+                  contentRender: (content, info) => {
+                    const text =
+                      typeof content === "string"
+                        ? content
+                        : String(content ?? "");
+                    const extra = info.extraInfo as {
+                      streaming?: boolean;
+                      thinkingContent?: string;
+                      thinkingStatus?: ThinkingStatus;
+                      toolSteps?: ToolStep[];
+                    };
+                    return (
+                      <AssistantThinkPanel
+                        thinkingContent={extra.thinkingContent ?? ""}
+                        thinkingStatus={extra.thinkingStatus ?? "idle"}
+                        toolSteps={extra.toolSteps ?? []}
+                        streaming={extra.streaming}
+                        content={text}
+                        reduceMotion={reduceMotion}
+                      />
+                    );
+                  },
+                },
+                user: {
+                  placement: "end",
+                  classNames: {
+                    content:
+                      "bg-surface-elevated dark:bg-surface-night text-ink dark:text-on-primary border border-hairline rounded-lg break-words max-w-[85%]",
+                  },
+                },
+              }}
+            />
+          )}
         </div>
-      </ConfigProvider>
+
+        <div className="border-t border-hairline px-lg py-md shrink-0">
+          {!hasStores && !storesLoading && (
+            <p className="text-caption text-muted mb-sm">
+              请先{" "}
+              <Link
+                href="/settings/stores"
+                className="text-accent-violet-mid hover:underline cursor-pointer"
+              >
+                绑定 Ozon 店铺
+              </Link>{" "}
+              后再提问。
+            </p>
+          )}
+          {error && (
+            <p className="text-caption text-accent-pink mb-sm" role="alert">
+              {error}
+            </p>
+          )}
+          <Sender
+            loading={loading}
+            disabled={!canSend}
+            placeholder={canSend ? "输入问题，Enter 发送" : "请先选择店铺"}
+            onSubmit={(message) => {
+              void sendMessage(message);
+            }}
+          />
+        </div>
+      </Card>
     </XProvider>
   );
 }

@@ -2,12 +2,13 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Moon, Sun } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "@/lib/theme-context";
 import { Button } from "@/components/ui/Button";
+import { UserMenu } from "@/components/layout/UserMenu";
 
 //! todo: 暂时隐藏榜单发现、选品池、已采集商品、1688 比价、批量上架
 const NAV_ITEMS = [
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
 
 export function GlobalNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isAuthenticated, user, logout } = useAuth();
   const { resolvedTheme, toggleTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
@@ -70,12 +72,12 @@ export function GlobalNav() {
             </div>
           )}
 
-          <div className="flex items-center gap-sm">
+          <div className="flex items-center gap-sm h-8">
             <button
               type="button"
               onClick={toggleTheme}
               aria-label={themeAriaLabel}
-              className={`p-2 rounded-md transition-colors duration-200 cursor-pointer ${
+              className={`inline-flex items-center justify-center h-8 w-8 shrink-0 rounded-md transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40 ${
                 isDark
                   ? "text-on-dark-muted hover:text-on-primary hover:bg-on-dark-faint"
                   : "text-muted hover:text-ink-deep hover:bg-surface-elevated"
@@ -85,37 +87,30 @@ export function GlobalNav() {
             </button>
 
             {isAuthenticated ? (
-              <>
-                <Link
-                  href="/settings"
-                  className={`text-caption transition-colors duration-200 cursor-pointer ${
-                    isDark
-                      ? "text-on-dark-muted hover:text-on-primary"
-                      : "text-muted hover:text-ink-deep"
-                  }`}
-                >
-                  {user?.name || user?.email}
-                </Link>
-                <Button
-                  variant={isDark ? "ghost-dark" : "ghost"}
-                  size="sm"
-                  onClick={logout}
-                >
-                  登出
-                </Button>
-              </>
+              <UserMenu
+                displayName={user?.name || user?.email || "用户"}
+                isDark={isDark}
+                onLogout={logout}
+              />
             ) : (
               <>
-                <Link href="/login" className="cursor-pointer">
-                  <Button variant={isDark ? "ghost-dark" : "ghost"} size="sm">
-                    登录
-                  </Button>
+                <Link
+                  href="/login"
+                  className={`inline-flex items-center h-8 px-2 text-caption rounded-md transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40 ${
+                    isDark
+                      ? "text-on-dark-muted hover:text-on-primary hover:bg-on-dark-faint"
+                      : "text-muted hover:text-ink-deep hover:bg-surface-elevated"
+                  }`}
+                >
+                  登录
                 </Link>
-                <Link href="/register" className="cursor-pointer">
-                  <Button variant="primary" size="sm">
-                    注册
-                  </Button>
-                </Link>
+                <Button
+                  variant="primary"
+                  size="xs"
+                  onClick={() => router.push("/register")}
+                >
+                  注册
+                </Button>
               </>
             )}
           </div>

@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   AlertCircle,
   AlertTriangle,
-  Package,
   ShoppingCart,
   TrendingUp,
 } from "lucide-react";
@@ -37,7 +36,7 @@ function KpiCard({ label, value }: { label: string; value: string | number }) {
 }
 
 export default function TrackingDashboardPage() {
-  const { activeStoreId, stores, dataRefreshKey } = useStoreContext();
+  const { activeStoreId, dataRefreshKey } = useStoreContext();
   const [kpi, setKpi] = useState<DashboardKPI | null>(null);
   const [trends, setTrends] = useState<TrendPoint[]>([]);
   const [range, setRange] = useState<7 | 30>(7);
@@ -93,20 +92,6 @@ export default function TrackingDashboardPage() {
     if (!kpi?.last_synced_at) return null;
     return new Date(kpi.last_synced_at).toLocaleString("zh-CN");
   }, [kpi]);
-
-  if (stores.length === 0) {
-    return (
-      <UiCard variant="default" padding="lg" className="text-center">
-        <Package className="h-10 w-10 text-accent-violet-mid mx-auto mb-md" />
-        <p className="text-heading-sm mb-sm">尚未绑定 Ozon 店铺</p>
-        <Link href="/settings/stores">
-          <Button variant="primary" size="sm">
-            前往绑定
-          </Button>
-        </Link>
-      </UiCard>
-    );
-  }
 
   if (loading) {
     return <p className="text-caption text-muted">加载看板...</p>;

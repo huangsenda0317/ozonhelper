@@ -65,9 +65,24 @@ export interface StoreSummary {
   created_at: string;
 }
 
-export async function fetchStores(): Promise<StoreSummary[]> {
-  const res = await apiClient.get<StoreSummary[]>("/stores");
-  return res.data ?? [];
+let storesFetchInflight: Promise<StoreSummary[]> | null = null;
+
+/** 丢弃进行中的列表请求去重，确保变更后能拉到最新数据 */
+export function invalidateStoresFetchCache() {
+  storesFetchInflight = null;
+}
+
+export async function fetchStores(force = false): Promise<StoreSummary[]> {
+  if (!force && storesFetchInflight) {
+    return storesFetchInflight;
+  }
+  storesFetchInflight = apiClient
+    .get<StoreSummary[]>("/stores")
+    .then((res) => res.data ?? [])
+    .finally(() => {
+      storesFetchInflight = null;
+    });
+  return storesFetchInflight;
 }
 
 export async function createStore(body: { name: string; client_id: string; api_key: string }) {
@@ -77,6 +92,7 @@ export async function createStore(body: { name: string; client_id: string; api_k
 
 export async function deleteStore(storeId: string) {
   await apiClient.delete(`/stores/${storeId}`);
+  invalidateStoresFetchCache();
 }
 
 export async function verifyStore(storeId: string) {

@@ -6,13 +6,17 @@ import { usePathname } from "next/navigation";
 import {
   AlertTriangle,
   LayoutDashboard,
+  Loader2,
   Package,
   RefreshCw,
   ShoppingCart,
+  Store,
   Warehouse,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { StoreSelect } from "@/components/features/StoreSelect";
 import { useStoreContext } from "@/lib/store-context";
 import { triggerSync, pollSyncJob } from "@/lib/hooks/useDashboard";
 
@@ -24,40 +28,79 @@ const NAV = [
   { href: "/tracking/alerts", label: "预警", icon: AlertTriangle },
 ];
 
+function TrackingStoresLoading() {
+  return (
+    <div className="w-full space-y-lg animate-pulse" aria-hidden="true">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-lg">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-24 rounded-lg border border-hairline bg-surface-elevated/50"
+          />
+        ))}
+      </div>
+      <div className="h-56 rounded-lg border border-hairline bg-surface-elevated/50" />
+    </div>
+  );
+}
+
+function TrackingEmptyStores() {
+  return (
+    <Card variant="default" padding="lg" className="text-center">
+      <Store
+        className="h-10 w-10 text-accent-violet-mid mx-auto mb-md"
+        aria-hidden="true"
+      />
+      <p className="text-heading-sm font-display text-ink mb-sm">
+        尚未绑定 Ozon 店铺
+      </p>
+      <p className="text-caption text-muted mb-lg">
+        绑定店铺后可同步商品、订单与库存数据
+      </p>
+      <Link href="/settings/stores" className="inline-flex cursor-pointer">
+        <Button
+          variant="primary"
+          className="gap-sm normal-case tracking-normal"
+        >
+          <Store className="h-4 w-4" aria-hidden="true" />
+          前往绑定
+        </Button>
+      </Link>
+    </Card>
+  );
+}
+
 export function StoreSwitcher() {
   const { stores, activeStoreId, setActiveStoreId, loading } =
     useStoreContext();
-  if (loading)
-    return <span className="text-caption text-muted">加载店铺...</span>;
-  if (stores.length === 0) {
-    return (
-      <Link
-        href="/settings/stores"
-        className="text-caption text-accent-violet-mid hover:underline"
-      >
-        绑定店铺
-      </Link>
-    );
-  }
+
   return (
-    <select
-      value={activeStoreId ?? ""}
-      onChange={(e) => setActiveStoreId(e.target.value)}
-      className="text-caption bg-surface-elevated border border-hairline rounded-md px-sm py-xs"
-    >
-      {stores.map((s) => (
-        <option key={s.id} value={s.id}>
-          {s.name}
-        </option>
-      ))}
-    </select>
+    <div className="flex items-center gap-sm flex-nowrap">
+      {!loading && stores.length > 0 && (
+        <span className="text-caption text-muted whitespace-nowrap shrink-0">
+          当前店铺：
+        </span>
+      )}
+      <StoreSelect
+        stores={stores}
+        value={activeStoreId}
+        onChange={setActiveStoreId}
+        loading={loading}
+        className="min-w-[10rem] !w-auto"
+      />
+    </div>
   );
 }
 
 export function TrackingShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { stores, activeStoreId, refreshStores, notifyDataRefresh } =
-    useStoreContext();
+  const {
+    stores,
+    activeStoreId,
+    loading: storesLoading,
+    refreshStores,
+    notifyDataRefresh,
+  } = useStoreContext();
   const [syncing, setSyncing] = React.useState(false);
   const [syncError, setSyncError] = React.useState<string | null>(null);
 
@@ -83,7 +126,7 @@ export function TrackingShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="max-w-7xl mx-auto px-xxl py-xxl">
-      <header className="mb-xl flex flex-wrap items-start justify-between gap-md">
+      <header className="mb-xl flex flex-wrap items-center justify-between gap-md">
         <div>
           <p className="eyebrow-cap mb-sm">Shop ERP</p>
           <h1 className="font-display font-bold text-heading-md text-ink">
@@ -92,29 +135,24 @@ export function TrackingShell({ children }: { children: React.ReactNode }) {
               跟踪
             </span>
           </h1>
-          <div className="flex items-center gap-md mt-sm">
+          <div className="mt-sm">
             <StoreSwitcher />
-            {stores.length === 0 && (
-              <Link href="/settings/stores">
-                <Button variant="primary" size="sm">
-                  添加店铺
-                </Button>
-              </Link>
-            )}
           </div>
         </div>
-        {stores.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
+        {!storesLoading && stores.length > 0 && (
+          <button
+            type="button"
             onClick={handleSync}
             disabled={syncing}
+            title={syncing ? "同步中" : "立即同步"}
+            className="inline-flex items-center gap-xs h-8 shrink-0 px-2 text-caption rounded-md transition-colors duration-200 cursor-pointer text-muted hover:text-ink hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40 dark:text-on-dark-muted dark:hover:text-on-primary dark:hover:bg-on-dark-faint"
           >
             <RefreshCw
-              className={`h-4 w-4 mr-xs ${syncing ? "animate-spin" : ""}`}
+              className={`h-4 w-4 shrink-0 ${syncing ? "animate-spin" : ""}`}
+              aria-hidden="true"
             />
-            {syncing ? "同步中..." : "立即同步"}
-          </Button>
+            {syncing ? "同步中…" : "立即同步"}
+          </button>
         )}
       </header>
       {syncError && (
@@ -146,7 +184,23 @@ export function TrackingShell({ children }: { children: React.ReactNode }) {
         })}
       </nav>
 
-      {children}
+      {storesLoading ? (
+        <div
+          className="flex flex-col items-center gap-md py-xxl"
+          aria-busy="true"
+        >
+          <Loader2
+            className="h-8 w-8 animate-spin text-accent-violet-mid"
+            aria-hidden="true"
+          />
+          <p className="text-caption text-muted">加载店铺信息…</p>
+          <TrackingStoresLoading />
+        </div>
+      ) : stores.length === 0 ? (
+        <TrackingEmptyStores />
+      ) : (
+        children
+      )}
     </div>
   );
 }

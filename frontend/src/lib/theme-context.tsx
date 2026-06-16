@@ -32,6 +32,8 @@ const SENTRY = {
   inkDeep: "#1f1633",
   surfaceNight: "#150f23",
   surfaceElevated: "#422082",
+  accentVioletDeep: "#422082",
+  accentVioletMid: "#79628c",
   onPrimary: "#ffffff",
   bodyLight: "#4a4458",
   onDarkMuted: "#bdb8c0",
@@ -88,6 +90,22 @@ function buildAntdTheme(resolved: ResolvedTheme) {
       },
       Drawer: {
         colorBgElevated: isDark ? SENTRY.surfaceNight : SENTRY.onPrimary,
+      },
+      Select: {
+        colorBgContainer: isDark ? SENTRY.surfaceNight : SENTRY.onPrimary,
+        colorBgElevated: isDark ? SENTRY.inkDeep : SENTRY.onPrimary,
+        colorBorder: isDark ? SENTRY.hairlineViolet : SENTRY.hairlineCool,
+        colorText: isDark ? SENTRY.onPrimary : SENTRY.inkDeep,
+        colorTextPlaceholder: isDark ? SENTRY.onDarkMuted : SENTRY.bodyLight,
+        optionSelectedBg: isDark
+          ? "rgba(121, 98, 140, 0.22)"
+          : "rgba(21, 15, 35, 0.08)",
+        optionActiveBg: isDark
+          ? "rgba(255, 255, 255, 0.06)"
+          : SENTRY.hairlineCloud,
+        controlHeight: 36,
+        borderRadius: 6,
+        fontSize: 14,
       },
     },
   };

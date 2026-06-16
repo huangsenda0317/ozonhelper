@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 
 interface FilterPanelProps {
   onApply: (filters: FilterValues) => void;
@@ -96,16 +97,19 @@ export function FilterPanel({ onApply, className = "" }: FilterPanelProps) {
             <label className="block text-caption text-muted mb-xxs">
               最低评分
             </label>
-            <select
-              value={filters.rating_min}
-              onChange={(e) => handleChange("rating_min", e.target.value)}
-              className="w-full px-sm py-xs text-caption border border-hairline rounded-md"
-            >
-              <option value="">不限</option>
-              <option value="4.5">4.5+</option>
-              <option value="4.0">4.0+</option>
-              <option value="3.5">3.5+</option>
-            </select>
+            <Select
+              value={filters.rating_min || undefined}
+              onChange={(value) =>
+                handleChange("rating_min", value ? String(value) : "")
+              }
+              allowClear
+              placeholder="不限"
+              options={[
+                { label: "4.5+", value: "4.5" },
+                { label: "4.0+", value: "4.0" },
+                { label: "3.5+", value: "3.5" },
+              ]}
+            />
           </div>
           <div>
             <label className="block text-caption text-muted mb-xxs">

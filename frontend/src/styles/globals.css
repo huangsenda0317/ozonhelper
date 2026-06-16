@@ -152,6 +152,61 @@ body {
     box-shadow: rgba(0, 0, 0, 0.35) 0 2px 10px inset;
   }
 
+  /* ── Select (aligned with input-sentry) ── */
+  .select-sentry.ant-select {
+    @apply w-full font-text text-caption;
+  }
+
+  .select-sentry .ant-select-selector {
+    @apply !border-hairline-cool !rounded-sm !bg-surface-canvas-light !text-ink-deep
+      !shadow-none transition-colors duration-200;
+  }
+
+  .select-sentry.ant-select-focused .ant-select-selector {
+    @apply !border-transparent !ring-2 !ring-ring-focus;
+    box-shadow: rgba(0, 0, 0, 0.15) 0 2px 10px inset !important;
+  }
+
+  .dark .select-sentry .ant-select-selector {
+    @apply !border-hairline-violet !bg-surface-night !text-on-primary;
+  }
+
+  .dark .select-sentry.ant-select-focused .ant-select-selector {
+    box-shadow: rgba(0, 0, 0, 0.35) 0 2px 10px inset !important;
+  }
+
+  .select-sentry-dropdown.ant-select-dropdown {
+    @apply !rounded-md !border !border-hairline-cool !p-xs;
+  }
+
+  .dark .select-sentry-dropdown.ant-select-dropdown {
+    @apply !border-hairline-violet;
+  }
+
+  .select-sentry-dropdown .ant-select-item {
+    @apply !rounded-sm !text-caption;
+  }
+
+  .select-sentry-dropdown
+    .ant-select-item-option-active:not(.ant-select-item-option-selected) {
+    background-color: var(--color-surface-elevated) !important;
+  }
+
+  .dark
+    .select-sentry-dropdown
+    .ant-select-item-option-active:not(.ant-select-item-option-selected) {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .select-sentry-dropdown .ant-select-item-option-selected {
+    @apply !font-medium;
+    background-color: rgba(21, 15, 35, 0.08) !important;
+  }
+
+  .dark .select-sentry-dropdown .ant-select-item-option-selected {
+    background-color: rgba(121, 98, 140, 0.22) !important;
+  }
+
   .eyebrow-cap {
     @apply font-text text-eyebrow uppercase tracking-[0.2px] text-muted;
   }
@@ -241,5 +296,14 @@ body {
   .ai-edit-upload--empty .ant-upload.ant-upload-select {
     aspect-ratio: auto;
     min-height: 128px;
+  }
+
+  /* ── AI QA chat ── */
+  .ai-qa-chat .ant-sender {
+    @apply rounded-lg border border-hairline bg-surface-card;
+  }
+
+  .ai-qa-chat .ant-bubble-list {
+    @apply gap-md;
   }
 }

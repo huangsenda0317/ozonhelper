@@ -1,0 +1,106 @@
+/** 更新日志数据 — 按日期分组，最新在上 */
+
+export type ChangelogTag = "新功能" | "改进" | "修复" | "其他";
+
+export interface ChangelogItem {
+  title: string;
+  description?: string;
+  tag: ChangelogTag;
+}
+
+export interface ChangelogDay {
+  /** ISO 日期 YYYY-MM-DD */
+  date: string;
+  items: ChangelogItem[];
+}
+
+/** 展示用日期，如「2026 年 6 月 16 日 · 星期一」 */
+export function formatChangelogDate(isoDate: string): string {
+  const d = new Date(`${isoDate}T12:00:00`);
+  const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+  const y = d.getFullYear();
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  return `${y} 年 ${m} 月 ${day} 日 · ${weekdays[d.getDay()]}`;
+}
+
+export const CHANGELOG: ChangelogDay[] = [
+  {
+    date: "2026-06-16",
+    items: [
+      {
+        tag: "新功能",
+        title: "AI 店铺问答",
+        description:
+          "新增 AI 问答页，基于 DeepSeek 流式对话；支持查询当前店铺 Ozon 订单、库存与卖家数据，展示思考过程与工具调用详情。",
+      },
+      {
+        tag: "新功能",
+        title: "销售趋势图表",
+        description:
+          "经营看板销售趋势改用 ECharts，支持折线/柱图切换，以及销量与营收维度切换。",
+      },
+      {
+        tag: "新功能",
+        title: "多店铺 ERP 同步",
+        description:
+          "支持多店铺 Ozon 凭证绑定；自动同步商品、库存与订单；经营看板汇总展示；低库存与订单超时预警。",
+      },
+      {
+        tag: "改进",
+        title: "店铺绑定与管理",
+        description:
+          "移除环境变量默认店铺引导，凭证统一在设置页绑定；删除店铺时级联清理同步数据；全局店铺选择器与导航优化。",
+      },
+      {
+        tag: "修复",
+        title: "生产构建稳定性",
+        description:
+          "修复前端生产构建 SWC 版本不匹配、lockfile 依赖安装失败及 OOM SIGKILL 问题。",
+      },
+      {
+        tag: "修复",
+        title: "凭证加密与调度",
+        description: "修复 ENCRYPTION_KEY 配置问题；完善 Celery Beat 本地调度状态忽略规则。",
+      },
+    ],
+  },
+  {
+    date: "2026-06-15",
+    items: [
+      {
+        tag: "新功能",
+        title: "Ozon Seller API MCP",
+        description:
+          "集成 Ozon 卖家 API MCP 服务，覆盖目录、库存、订单等只读工具，便于 AI 与 IDE 调用 Ozon 接口。",
+      },
+      {
+        tag: "改进",
+        title: "UI/UX 设计规范",
+        description: "引入 UI 设计技能库，统一 Apple Design 风格组件与页面布局规范。",
+      },
+      {
+        tag: "其他",
+        title: "部署与启动脚本",
+        description: "完善生产环境启动脚本与服务编排配置。",
+      },
+    ],
+  },
+  {
+    date: "2026-06-13",
+    items: [
+      {
+        tag: "新功能",
+        title: "店铺跟踪 ERP",
+        description:
+          "上线店铺跟踪模块：商品列表与详情、库存快照、订单列表、预警中心及同步任务调度。",
+      },
+      {
+        tag: "新功能",
+        title: "Ozon 跟卖全链路平台",
+        description:
+          "完成榜单发现、选品池、1688 比价、AI 改图/翻译、批量上架等核心模块的首版实现。",
+      },
+    ],
+  },
+];

@@ -9,6 +9,11 @@ echo "🐳 启动 Docker..."
 docker compose up -d postgres redis minio
 sleep 3
 
+echo "🗄️  运行数据库迁移..."
+cd "$ROOT/backend"
+.venv/bin/alembic upgrade head
+cd "$ROOT"
+
 echo "▶️  启动 systemd 服务..."
 bash "$ROOT/scripts/validate-backend-env.sh"
 sudo systemctl start ozonhelper-api

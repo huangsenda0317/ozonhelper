@@ -6,7 +6,6 @@ import { ImagePlus, Sparkles, Wand2 } from "lucide-react";
 
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
-import { useTheme } from "@/lib/theme-context";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
@@ -27,24 +26,41 @@ interface ImagePreviewState {
   initialIndex?: number;
 }
 
+function TaskStatsSkeleton() {
+  return (
+    <dl
+      className="flex flex-wrap gap-lg justify-start sm:justify-end"
+      aria-busy="true"
+      aria-label="加载任务统计"
+    >
+      {["进行中", "已完成", "失败"].map((label) => (
+        <div key={label}>
+          <dt className="text-micro-cap uppercase tracking-[0.25px] text-muted">
+            {label}
+          </dt>
+          <dd className="font-display text-heading-sm text-muted mt-xxs">
+            <span className="inline-block h-6 w-6 rounded bg-hairline animate-pulse" />
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 function TaskStats({ tasks }: { tasks: AITask[] }) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
   const running = tasks.filter(
     (t) => t.status === "pending" || t.status === "running",
   ).length;
   const success = tasks.filter((t) => t.status === "success").length;
   const failed = tasks.filter((t) => t.status === "failed").length;
 
-  const statClass = isDark
-    ? "font-display text-heading-lg text-on-primary"
-    : "font-display text-heading-lg text-ink-deep";
-  const highlightClass = isDark
-    ? "font-display text-heading-lg text-accent-lime"
-    : "font-display text-heading-lg text-ink-deep";
+  const statClass =
+    "font-display text-heading-sm text-ink-deep dark:text-on-primary";
+  const highlightClass =
+    "font-display text-heading-sm text-ink-deep dark:text-accent-lime";
 
   return (
-    <dl className="flex flex-wrap gap-xl">
+    <dl className="flex flex-wrap gap-lg justify-start sm:justify-end">
       <div>
         <dt className="text-micro-cap uppercase tracking-[0.25px] text-muted">
           进行中
@@ -271,15 +287,22 @@ export default function AIEditPage() {
     <div className="max-w-7xl mx-auto px-xxl py-xxl">
       {/* Page header */}
       <header className="mb-xl">
-        <p className="eyebrow-cap">AI IMAGES</p>
-        <div className="flex flex-col gap-lg sm:flex-row sm:items-end sm:justify-between">
-          <h1 className="font-display font-bold text-heading-md text-ink">
-            AI{" "}
-            <span className="bg-accent-lime text-ink-deep px-sm rounded-xs">
-              改图
-            </span>
-          </h1>
-          {!loading && tasks.length > 0 && <TaskStats tasks={tasks} />}
+        <p className="eyebrow-cap mb-sm">AI IMAGES</p>
+        <div className="flex flex-col gap-md sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-display font-bold text-heading-md text-ink">
+              AI{" "}
+              <span className="bg-accent-lime text-ink-deep px-sm rounded-xs">
+                改图
+              </span>
+            </h1>
+            <p className="text-caption text-muted mt-xs">
+              上传商品图并填写提示词，异步批量改图
+            </p>
+          </div>
+          <div className="min-w-[200px] shrink-0">
+            {loading ? <TaskStatsSkeleton /> : <TaskStats tasks={tasks} />}
+          </div>
         </div>
       </header>
 

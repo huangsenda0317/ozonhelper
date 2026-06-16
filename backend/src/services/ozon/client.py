@@ -108,7 +108,16 @@ class OzonSellerClient:
                     message=f'Ozon API 错误 ({response.status_code}){": " + detail if detail else ""}',
                     http_status=502,
                 )
-            return response.json()
+            try:
+                return response.json()
+            except ValueError as exc:
+                detail = response.text[:200] if response.text else ''
+                raise AppException(
+                    code='OZON_API_ERROR',
+                    message='Ozon API 返回无效 JSON'
+                    + (f': {detail}' if detail else ''),
+                    http_status=502,
+                ) from exc
 
         if last_exc:
             raise last_exc

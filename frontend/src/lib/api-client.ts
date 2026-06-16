@@ -16,6 +16,47 @@ interface ApiResponse<T> {
   meta: { total: number; page: number; limit: number; cached_at?: string | null } | null;
 }
 
+const EMPTY_SUCCESS: ApiResponse<null> = {
+  success: true,
+  data: null,
+  error: null,
+  meta: null,
+};
+
+async function parseApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
+  if (response.status === 204 || response.status === 205) {
+    if (!response.ok) {
+      throw new ApiError('UNKNOWN', '未知错误', response.status);
+    }
+    return EMPTY_SUCCESS as ApiResponse<T>;
+  }
+
+  const text = await response.text();
+  if (!text) {
+    if (!response.ok) {
+      throw new ApiError('UNKNOWN', '未知错误', response.status);
+    }
+    return EMPTY_SUCCESS as ApiResponse<T>;
+  }
+
+  let json: ApiResponse<T>;
+  try {
+    json = JSON.parse(text) as ApiResponse<T>;
+  } catch {
+    throw new ApiError('INVALID_RESPONSE', '服务器返回无效响应', response.status);
+  }
+
+  if (!response.ok) {
+    if (response.status === 401 && onUnauthorized) {
+      onUnauthorized();
+    }
+    const error = json.error || { code: 'UNKNOWN', message: '未知错误' };
+    throw new ApiError(error.code, error.message, response.status);
+  }
+
+  return json;
+}
+
 class ApiClient {
   private getToken(): string | null {
     if (typeof window !== 'undefined') {
@@ -67,22 +108,7 @@ class ApiClient {
       );
     }
 
-    let json: ApiResponse<T>;
-    try {
-      json = await response.json();
-    } catch {
-      throw new ApiError('INVALID_RESPONSE', '服务器返回无效响应', response.status);
-    }
-
-    if (!response.ok) {
-      if (response.status === 401 && onUnauthorized) {
-        onUnauthorized();
-      }
-      const error = json.error || { code: 'UNKNOWN', message: '未知错误' };
-      throw new ApiError(error.code, error.message, response.status);
-    }
-
-    return json;
+    return parseApiResponse<T>(response);
   }
 
   get<T>(endpoint: string) {
@@ -132,22 +158,7 @@ class ApiClient {
       );
     }
 
-    let json: ApiResponse<T>;
-    try {
-      json = await response.json();
-    } catch {
-      throw new ApiError('INVALID_RESPONSE', '服务器返回无效响应', response.status);
-    }
-
-    if (!response.ok) {
-      if (response.status === 401 && onUnauthorized) {
-        onUnauthorized();
-      }
-      const error = json.error || { code: 'UNKNOWN', message: '未知错误' };
-      throw new ApiError(error.code, error.message, response.status);
-    }
-
-    return json;
+    return parseApiResponse<T>(response);
   }
 }
 

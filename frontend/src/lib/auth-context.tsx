@@ -44,7 +44,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('user');
     setUser(null);
     setHasToken(false);
-  }, []);
+    router.push('/');
+  }, [router]);
 
   // 从 localStorage 恢复登录状态（须同时有 token 与 user）
   useEffect(() => {
@@ -66,10 +67,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setUnauthorizedHandler(() => {
       logout();
-      router.push('/login');
     });
     return () => setUnauthorizedHandler(null);
-  }, [logout, router]);
+  }, [logout]);
 
   const login = useCallback(async (email: string, password: string) => {
     const response = await apiClient.request<{
