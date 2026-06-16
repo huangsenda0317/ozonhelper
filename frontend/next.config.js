@@ -18,6 +18,8 @@ const nextConfig = {
   },
   experimental: {
     typedRoutes: false,
+    // 低内存 ECS 构建：单线程编译，降低峰值内存
+    ...(process.env.LOW_MEMORY_BUILD === '1' ? { cpus: 1, workerThreads: false } : {}),
   },
   async rewrites() {
     return [
