@@ -77,7 +77,7 @@ export default function AlertsPage() {
             size="sm"
             onClick={async () => {
               if (activeStoreId) {
-                await batchPatchAlerts(activeStoreId, [...selected], "read");
+                await batchPatchAlerts(activeStoreId, Array.from(selected), "read");
                 setSelected(new Set());
               }
             }}
