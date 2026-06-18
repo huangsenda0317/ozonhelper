@@ -1,5 +1,7 @@
-## Requirements
+## Purpose
 
+定义经营看板 KPI、销售趋势与 Phase2 财务摘要的数据契约与前端展示要求。
+## Requirements
 ### Requirement: 概览 KPI API
 
 后端 SHALL 提供 `GET /api/v1/tracking/dashboard?store_id=`，返回当前店铺经营概览：
@@ -9,7 +11,8 @@
 - `units_sold_today` / `units_sold_week` / `units_sold_month`：销量
 - `conversion_rate`：整体转化率
 - `last_synced_at`：最近同步时间
-- `alert_counts`：低库存、超时订单、异常商品数量
+- `alert_counts`：低库存、超时订单、异常商品、**物流预警**、**差评**、**价格异常**数量
+- `revenue_month`、`fees_month`、`gross_profit_month`：财务 KPI（有 finance 同步数据时）
 
 #### Scenario: 看板数据加载
 
@@ -36,9 +39,9 @@
 ### Requirement: 概览看板页面
 
 前端 SHALL 在 `/tracking` 展示：
-- KPI 卡片行（商品数、今日/本周/本月订单与销量、转化率）
+- KPI 卡片行（商品数、今日/本周/本月订单与销量、转化率、**本月回款/毛利**）
 - 销售趋势 **ECharts 图表**（销量/营收切换，折线/柱图切换，7/30 天范围切换）
-- 预警摘要卡片（低库存、超时订单、异常商品），点击跳转 `/tracking/alerts`
+- 预警摘要卡片（低库存、超时订单、异常商品、**物流**、**差评**、**价格异常**），点击跳转 `/tracking/alerts`
 - 「立即同步」按钮（由 TrackingShell 提供）
 
 #### Scenario: 看板渲染
@@ -55,3 +58,9 @@
 
 - **WHEN** 用户点击 7 天或 30 天按钮
 - **THEN** 重新请求 trends API 并更新 ECharts 数据，图表类型与指标选择不变
+
+#### Scenario: 财务 KPI 展示
+
+- **WHEN** finance 数据已同步
+- **THEN** 看板展示 revenue_month 与 gross_profit_month 卡片
+

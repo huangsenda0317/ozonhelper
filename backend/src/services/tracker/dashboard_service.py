@@ -89,12 +89,35 @@ async def get_dashboard_kpi(db: AsyncSession, store: Store) -> DashboardKPI:
             )
         )
     ).scalar_one()
+
+    def _alert_count_stmt(alert_type: str):
+        return select(func.count()).select_from(Alert).where(
+            Alert.store_id == store.id,
+            Alert.alert_type == alert_type,
+            Alert.status == 'unread',
+        )
+
+    logistics = (await db.execute(_alert_count_stmt('logistics'))).scalar_one()
+    bad_review = (await db.execute(_alert_count_stmt('bad_review'))).scalar_one()
+    price_anomaly = (await db.execute(_alert_count_stmt('price_anomaly'))).scalar_one()
+
     alert_counts = AlertCounts(
         low_stock=low_stock,
         overdue_orders=overdue,
         exception_products=exceptions,
-        total=low_stock + overdue + exceptions,
+        logistics=logistics,
+        bad_review=bad_review,
+        price_anomaly=price_anomaly,
+        total=low_stock + overdue + exceptions + logistics + bad_review + price_anomaly,
     )
+
+    finance_kpi = {}
+    try:
+        from src.services.phase2.finance import dashboard_finance_kpi
+
+        finance_kpi = await dashboard_finance_kpi(db, store)
+    except Exception:
+        finance_kpi = {}
 
     return DashboardKPI(
         total_products=total_products,
@@ -108,6 +131,9 @@ async def get_dashboard_kpi(db: AsyncSession, store: Store) -> DashboardKPI:
         last_synced_at=store.last_sync_at.isoformat() if store.last_sync_at else None,
         sync_required=total_products == 0,
         alert_counts=alert_counts,
+        revenue_month=finance_kpi.get('revenue_month'),
+        fees_month=finance_kpi.get('fees_month'),
+        gross_profit_month=finance_kpi.get('gross_profit_month'),
     )
 
 
@@ -119,10 +145,23 @@ async def get_dashboard_trends(db: AsyncSession, store: Store, days: int = 7) ->
         .order_by(AnalyticsDaily.day.asc())
     )
     rows = (await db.execute(stmt)).scalars().all()
+
+    order_stmt = (
+        select(func.date(SyncedOrder.created_at).label('day'), func.count().label('cnt'))
+        .where(
+            SyncedOrder.store_id == store.id,
+            SyncedOrder.created_at.isnot(None),
+            func.date(SyncedOrder.created_at) >= since,
+        )
+        .group_by(func.date(SyncedOrder.created_at))
+    )
+    order_rows = (await db.execute(order_stmt)).all()
+    orders_by_day = {row.day: int(row.cnt) for row in order_rows}
+
     return [
         TrendPoint(
             date=row.day.isoformat(),
-            orders=row.orders,
+            orders=orders_by_day.get(row.day, row.orders),
             units_sold=row.units_sold,
             revenue=float(row.revenue) if row.revenue is not None else None,
         )

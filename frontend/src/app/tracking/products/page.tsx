@@ -261,11 +261,19 @@ export default function TrackingProductsPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-md mb-lg">
         <p className="text-body text-body">商品中心 — 搜索、筛选与批量操作</p>
-        {selected.length > 0 && (
-          <Button variant="danger" size="sm" onClick={handleBatchArchive}>
-            批量下架 ({selected.length})
-          </Button>
-        )}
+        <div className="flex flex-wrap items-center gap-sm">
+          <Link
+            href="/tracking/pricing?anomaly=1"
+            className="text-caption px-md py-xs rounded-md border border-hairline text-muted hover:text-ink cursor-pointer transition-colors"
+          >
+            价格异常
+          </Link>
+          {selected.length > 0 && (
+            <Button variant="danger" size="sm" onClick={handleBatchArchive}>
+              批量下架 ({selected.length})
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* KPI row */}

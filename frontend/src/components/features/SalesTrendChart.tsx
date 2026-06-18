@@ -85,7 +85,6 @@ function buildOption(
           lines.push(`营收：₽${point.revenue.toLocaleString()}`);
         }
       }
-      lines.push(`订单：${point.orders} 单`);
       return lines.join("<br/>");
     },
   };

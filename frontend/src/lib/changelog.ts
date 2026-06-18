@@ -26,6 +26,46 @@ export function formatChangelogDate(isoDate: string): string {
 
 export const CHANGELOG: ChangelogDay[] = [
   {
+    date: "2026-06-18",
+    items: [
+      {
+        tag: "新功能",
+        title: "价格中心",
+        description:
+          "新增价格页：批量改价、成本定价模型（采购/物流/平台费率）、汇率配置与低价/高价异常检测；侧边栏 ERP 导航同步扩展。",
+      },
+      {
+        tag: "新功能",
+        title: "新品刊登",
+        description:
+          "支持 Excel 导入 SKU 素材并提交 Ozon 批量刊登；刊登任务队列、审核状态轮询与异常标记，工作台位于 /tracking/listing。",
+      },
+      {
+        tag: "新功能",
+        title: "财务对账",
+        description:
+          "同步 Ozon 交易流水并汇总回款、手续费、退款与净结算；看板扩展月度财务 KPI；支持 Excel 导出。",
+      },
+      {
+        tag: "新功能",
+        title: "物流节点预警",
+        description:
+          "可配置待打包/待揽收/运输停滞等节点阈值；定时检测生成预警台账，支持未处理/已处理/忽略闭环，页面位于 /tracking/logistics-alerts。",
+      },
+      {
+        tag: "改进",
+        title: "预警中心与订单履约",
+        description:
+          "预警 Hub 聚合低库存、订单超时、物流、差评与价格异常；订单页扩展 FBS 发货、运单回传、批量导出/备注及售后退货列表。",
+      },
+      {
+        tag: "改进",
+        title: "销售趋势 Tooltip",
+        description: "经营看板图表悬停提示精简为日期、销量与营收，移除不可靠的订单数展示。",
+      },
+    ],
+  },
+  {
     date: "2026-06-17",
     items: [
       {

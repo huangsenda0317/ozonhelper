@@ -137,6 +137,14 @@ export default function TrackingDashboardPage() {
         />
       </div>
 
+      {(kpi.revenue_month != null || kpi.gross_profit_month != null) && (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-lg">
+          <KpiCard label="本月回款" value={kpi.revenue_month?.toFixed(0) ?? "-"} />
+          <KpiCard label="本月手续费" value={kpi.fees_month?.toFixed(0) ?? "-"} />
+          <KpiCard label="本月毛利估算" value={kpi.gross_profit_month?.toFixed(0) ?? "-"} />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-xl">
         <UiCard variant="default" padding="lg">
           <div className="flex flex-wrap items-center justify-between gap-sm mb-sm">
@@ -199,13 +207,43 @@ export default function TrackingDashboardPage() {
             </Link>
             <Link
               href="/tracking/products?exception=1"
-              className="flex items-center justify-between p-sm rounded-md hover:bg-surface-elevated"
+              className="flex items-center justify-between p-sm rounded-md hover:bg-surface-elevated cursor-pointer"
             >
               <span className="flex items-center gap-sm text-body">
                 <TrendingUp className="h-4 w-4 text-accent-violet-mid" />
                 异常商品
               </span>
               <span className="font-display">{kpi.alert_counts.exception_products}</span>
+            </Link>
+            <Link
+              href="/tracking/logistics-alerts"
+              className="flex items-center justify-between p-sm rounded-md hover:bg-surface-elevated cursor-pointer"
+            >
+              <span className="flex items-center gap-sm text-body">
+                <AlertTriangle className="h-4 w-4 text-accent-pink" />
+                物流预警
+              </span>
+              <span className="font-display">{kpi.alert_counts.logistics}</span>
+            </Link>
+            <Link
+              href="/tracking/alerts?type=bad_review"
+              className="flex items-center justify-between p-sm rounded-md hover:bg-surface-elevated cursor-pointer"
+            >
+              <span className="flex items-center gap-sm text-body">
+                <AlertCircle className="h-4 w-4 text-accent-pink" />
+                差评提醒
+              </span>
+              <span className="font-display">{kpi.alert_counts.bad_review}</span>
+            </Link>
+            <Link
+              href="/tracking/pricing?anomaly=1"
+              className="flex items-center justify-between p-sm rounded-md hover:bg-surface-elevated cursor-pointer"
+            >
+              <span className="flex items-center gap-sm text-body">
+                <TrendingUp className="h-4 w-4 text-accent-pink" />
+                价格异常
+              </span>
+              <span className="font-display">{kpi.alert_counts.price_anomaly}</span>
             </Link>
           </div>
         </UiCard>

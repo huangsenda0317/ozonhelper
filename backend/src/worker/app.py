@@ -15,6 +15,7 @@ celery_app = Celery(
         'src.worker.scraper_tasks',
         'src.worker.ai_tasks',
         'src.worker.sync_tasks',
+        'src.worker.phase2_tasks',
     ],
 )
 
@@ -22,6 +23,10 @@ celery_app.conf.beat_schedule = {
     'sync-all-stores-every-15-min': {
         'task': 'sync_all_active_stores',
         'schedule': 900.0,
+    },
+    'phase2-sync-every-30-min': {
+        'task': 'phase2_sync_all_stores',
+        'schedule': 1800.0,
     },
 }
 

@@ -43,7 +43,7 @@ class OzonSellerClient:
     def _get_http(self) -> httpx.AsyncClient:
         if self._http is None or self._http.is_closed:
             self._http = httpx.AsyncClient(
-                timeout=httpx.Timeout(30.0),
+                timeout=httpx.Timeout(connect=45.0, read=60.0, write=30.0, pool=30.0),
                 limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
             )
         return self._http
@@ -75,17 +75,25 @@ class OzonSellerClient:
             try:
                 response = await self._get_http().post(url, json=body, headers=headers)
             except httpx.TimeoutException as exc:
-                raise AppException(
+                last_exc = AppException(
                     code='OZON_API_ERROR',
-                    message='Ozon 服务请求超时，请稍后重试',
+                    message='Ozon 服务连接超时，请检查网络或代理后重试',
                     http_status=502,
-                ) from exc
+                )
+                if attempt < retries - 1:
+                    await asyncio.sleep(2**attempt)
+                    continue
+                raise last_exc from exc
             except httpx.RequestError as exc:
-                raise AppException(
+                last_exc = AppException(
                     code='OZON_API_ERROR',
-                    message='Ozon 服务连接失败，请稍后重试',
+                    message='Ozon 服务连接失败，请检查网络或代理后重试',
                     http_status=502,
-                ) from exc
+                )
+                if attempt < retries - 1:
+                    await asyncio.sleep(2**attempt)
+                    continue
+                raise last_exc from exc
 
             if response.status_code in (401, 403):
                 raise AppException(
@@ -236,3 +244,78 @@ class OzonSellerClient:
 
     async def seller_info(self) -> dict:
         return await self._post('/v1/seller/info', {})
+
+    async def product_info_prices(
+        self,
+        *,
+        product_ids: list[str] | None = None,
+        offer_ids: list[str] | None = None,
+        limit: int = 100,
+    ) -> dict:
+        filt: dict = {}
+        if product_ids:
+            filt['product_id'] = [int(pid) for pid in product_ids if str(pid).isdigit()]
+        if offer_ids:
+            filt['offer_id'] = offer_ids
+        return await self._post('/v5/product/info/prices', {'filter': filt, 'limit': min(limit, 1000)})
+
+    async def price_import(self, *, prices: list[dict]) -> dict:
+        return await self._post('/v1/product/import/prices', {'prices': prices})
+
+    async def product_import(self, *, items: list[dict]) -> dict:
+        return await self._post('/v3/product/import', {'items': items})
+
+    async def product_import_info(self, *, task_id: int | str) -> dict:
+        return await self._post('/v1/product/import/info', {'task_id': int(task_id)})
+
+    async def posting_fbs_get(self, *, posting_number: str) -> dict:
+        return await self._post('/v3/posting/fbs/get', {'posting_number': posting_number})
+
+    async def posting_fbs_ship(self, *, posting_number: str, packages: list[dict]) -> dict:
+        return await self._post('/v4/posting/fbs/ship', {'posting_number': posting_number, 'packages': packages})
+
+    async def set_tracking_number(self, *, posting_number: str, tracking_number: str) -> dict:
+        return await self._post(
+            '/v2/fbs/posting/tracking-number/set',
+            {'posting_number': posting_number, 'tracking_number': tracking_number},
+        )
+
+    async def finance_transaction_list(
+        self,
+        *,
+        date_from: str,
+        date_to: str,
+        page: int = 1,
+        page_size: int = 100,
+    ) -> dict:
+        return await self._post(
+            '/v3/finance/transaction/list',
+            {
+                'filter': {'date': {'from': date_from, 'to': date_to}, 'transaction_type': 'all'},
+                'page': page,
+                'page_size': min(page_size, 1000),
+            },
+        )
+
+    async def returns_list(
+        self,
+        *,
+        last_id: str = '',
+        limit: int = 100,
+    ) -> dict:
+        body: dict = {'limit': min(limit, 500)}
+        if last_id:
+            body['last_id'] = last_id
+        return await self._post('/v1/returns/list', body)
+
+    async def review_list(
+        self,
+        *,
+        last_id: str = '',
+        limit: int = 100,
+        sort_dir: str = 'DESC',
+    ) -> dict:
+        body: dict = {'limit': min(limit, 100), 'sort_dir': sort_dir}
+        if last_id:
+            body['last_id'] = last_id
+        return await self._post('/v2/review/list', body)

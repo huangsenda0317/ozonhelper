@@ -18,8 +18,14 @@ export interface DashboardKPI {
     low_stock: number;
     overdue_orders: number;
     exception_products: number;
+    logistics: number;
+    bad_review: number;
+    price_anomaly: number;
     total: number;
   };
+  revenue_month?: number | null;
+  fees_month?: number | null;
+  gross_profit_month?: number | null;
 }
 
 export interface TrendPoint {

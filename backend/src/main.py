@@ -71,6 +71,7 @@ from src.api.products import router as products_router
 from src.api.exchange_rate import router as exchange_rate_router
 from src.api.stores import router as stores_router
 from src.api.tracking import router as tracking_router
+from src.api.tracking_phase2 import router as tracking_phase2_router
 
 app.include_router(auth_router, tags=['认证'])
 app.include_router(stores_router, tags=['店铺管理'])
@@ -80,3 +81,4 @@ app.include_router(ai_router, tags=['AI 处理'])
 app.include_router(products_router, tags=['商品采集'])
 app.include_router(exchange_rate_router, tags=['汇率'])
 app.include_router(tracking_router, tags=['店铺跟踪'])
+app.include_router(tracking_phase2_router, tags=['店铺跟踪 Phase2'])

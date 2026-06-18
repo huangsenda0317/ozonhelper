@@ -5,12 +5,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   AlertTriangle,
+  DollarSign,
+  FileSpreadsheet,
   LayoutDashboard,
   Loader2,
   Package,
   RefreshCw,
   ShoppingCart,
   Store,
+  Truck,
   Warehouse,
 } from "lucide-react";
 
@@ -24,7 +27,11 @@ const NAV = [
   { href: "/tracking", label: "概览", icon: LayoutDashboard, exact: true },
   { href: "/tracking/products", label: "商品", icon: Package },
   { href: "/tracking/inventory", label: "库存", icon: Warehouse },
+  { href: "/tracking/pricing", label: "价格", icon: DollarSign },
+  { href: "/tracking/listing", label: "刊登", icon: FileSpreadsheet },
   { href: "/tracking/orders", label: "订单", icon: ShoppingCart },
+  { href: "/tracking/finance", label: "财务", icon: DollarSign },
+  { href: "/tracking/logistics-alerts", label: "物流预警", icon: Truck },
   { href: "/tracking/alerts", label: "预警", icon: AlertTriangle },
 ];
 

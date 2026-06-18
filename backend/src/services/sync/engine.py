@@ -245,6 +245,18 @@ async def sync_analytics(db: AsyncSession, store: Store, client: OzonSellerClien
     data = result.get('data') or []
     processed = 0
     now = datetime.now(UTC)
+    date_from_day = today - timedelta(days=30)
+    order_stmt = (
+        select(func.date(SyncedOrder.created_at).label('day'), func.count().label('cnt'))
+        .where(
+            SyncedOrder.store_id == store.id,
+            SyncedOrder.created_at.isnot(None),
+            func.date(SyncedOrder.created_at) >= date_from_day,
+        )
+        .group_by(func.date(SyncedOrder.created_at))
+    )
+    order_rows = (await db.execute(order_stmt)).all()
+    orders_by_day = {row.day: int(row.cnt) for row in order_rows}
     for row in data:
         dims = row.get('dimensions') or []
         metrics = row.get('metrics') or []
@@ -261,7 +273,7 @@ async def sync_analytics(db: AsyncSession, store: Store, client: OzonSellerClien
         values = {
             'store_id': store.id,
             'day': day,
-            'orders': 0,
+            'orders': orders_by_day.get(day, 0),
             'units_sold': units,
             'revenue': revenue,
             'hits_view': hits,
@@ -345,6 +357,20 @@ async def run_sync_scope(db: AsyncSession, store: Store, scope: str) -> int:
         except AppException as exc:
             logger.warning('analytics sync skipped: %s', exc.message)
         await rebuild_alerts(db, store)
+        try:
+            from src.services.phase2.sync_extra import (
+                sync_finance,
+                sync_prices,
+                sync_returns,
+                sync_review_alerts,
+            )
+
+            total += await sync_prices(db, store, client)
+            total += await sync_finance(db, store, client)
+            total += await sync_returns(db, store, client)
+            total += await sync_review_alerts(db, store, client)
+        except Exception as exc:
+            logger.warning('phase2 sync skipped: %s', exc)
     store.last_sync_at = datetime.now(UTC)
     return total
 

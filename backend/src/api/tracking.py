@@ -337,13 +337,20 @@ async def list_orders(
 
 @router.get('/alerts', response_model=ApiResponse[list[AlertItem]])
 async def list_alerts(
+    alert_type: str | None = Query(default=None, alias='type'),
+    status: str | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=50, ge=1, le=100),
     store: Store = Depends(get_user_store),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    stmt = select(Alert).where(Alert.store_id == store.id).order_by(Alert.created_at.desc())
+    stmt = select(Alert).where(Alert.store_id == store.id)
+    if alert_type and alert_type != 'all':
+        stmt = stmt.where(Alert.alert_type == alert_type)
+    if status:
+        stmt = stmt.where(Alert.status == status)
+    stmt = stmt.order_by(Alert.created_at.desc())
     count = (await db.execute(select(func.count()).select_from(stmt.subquery()))).scalar_one()
     rows = (await db.execute(stmt.offset((page - 1) * limit).limit(limit))).scalars().all()
     items = [

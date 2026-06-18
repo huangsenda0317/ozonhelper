@@ -1,5 +1,7 @@
-## Requirements
+## Purpose
 
+定义店铺跟踪 ERP 的全局导航、侧边栏路由与模块入口布局。
+## Requirements
 ### Requirement: 导航首位展示
 
 `GlobalNav` 与首页模块卡片 SHALL 将「店铺跟踪」置于所有业务模块之前（第一位）。
@@ -19,7 +21,7 @@
 前端 SHALL 为 `/tracking` 及其子路由提供共享 Layout（`TrackingShell`），包含：
 - 页面标题区「店铺跟踪」
 - 店铺切换器（`StoreSwitcher`）
-- 二级顶栏导航：概览、商品、库存、订单、预警
+- 二级顶栏导航：概览、商品、库存、**价格**、**刊登**、订单、**财务**、**物流预警**、预警
 - 全局「立即同步」按钮
 
 #### Scenario: 子路由共享 Layout
@@ -42,10 +44,20 @@
 | `/tracking/products` | 商品中心 |
 | `/tracking/products/{id}` | 商品详情 |
 | `/tracking/inventory` | 库存中心 |
+| `/tracking/pricing` | 价格中心 |
+| `/tracking/listing` | 新品刊登 |
 | `/tracking/orders` | 订单中心 |
+| `/tracking/finance` | 财务对账 |
+| `/tracking/logistics-alerts` | 物流预警 |
 | `/tracking/alerts` | 预警汇总 |
 
 #### Scenario: 商品列表路径
 
 - **WHEN** 用户访问商品列表
 - **THEN** 位于 `/tracking/products` 且功能完整
+
+#### Scenario: 价格中心路径
+
+- **WHEN** 用户点击侧边栏「价格」
+- **THEN** 导航至 `/tracking/pricing` 且 Layout 激活态正确
+

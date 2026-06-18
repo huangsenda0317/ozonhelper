@@ -48,11 +48,33 @@ export interface AlertItem {
   created_at: string;
 }
 
-export async function fetchAlerts(storeId: string, page = 1, limit = 50) {
+export async function fetchAlerts(storeId: string, page = 1, limit = 50, type?: string) {
   const qs = new URLSearchParams(storeQuery(storeId));
   qs.set("page", String(page));
   qs.set("limit", String(limit));
+  if (type) qs.set("type", type);
   const res = await apiClient.get<AlertItem[]>(`/tracking/alerts?${qs}`);
+  return { items: res.data ?? [], total: res.meta?.total ?? 0 };
+}
+
+export async function shipOrder(storeId: string, postingNumber: string, trackingNumber: string) {
+  const res = await apiClient.post<{ posting_number: string; status: string }>(
+    `/tracking/orders/${encodeURIComponent(postingNumber)}/ship?${storeQuery(storeId)}`,
+    { tracking_number: trackingNumber },
+  );
+  return res.data;
+}
+
+export function exportOrdersUrl(storeId: string, status?: string) {
+  const qs = new URLSearchParams(storeQuery(storeId));
+  if (status) qs.set("status", status);
+  return `/api/v1/tracking/orders/export?${qs}`;
+}
+
+export async function fetchReturns(storeId: string, page = 1) {
+  const res = await apiClient.get<{ return_id: string; posting_number: string | null; status: string; reason: string | null }[]>(
+    `/tracking/returns?${storeQuery(storeId)}&page=${page}`,
+  );
   return { items: res.data ?? [], total: res.meta?.total ?? 0 };
 }
 
