@@ -186,7 +186,7 @@ export default function LoginPage() {
                   required
                   autoComplete="username"
                   className="input-sentry"
-                  placeholder="admin"
+                  placeholder="请输入账号名"
                 />
               </div>
               <div>
@@ -287,7 +287,7 @@ export default function LoginPage() {
             </form>
           )}
 
-          <p className="text-caption text-muted text-center mt-xl">
+          {/* <p className="text-caption text-muted text-center mt-xl">
             还没有账号？{" "}
             <Link
               href="/register"
@@ -295,7 +295,7 @@ export default function LoginPage() {
             >
               立即注册
             </Link>
-          </p>
+          </p> */}
         </Card>
       </div>
     </div>
