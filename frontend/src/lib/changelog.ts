@@ -26,6 +26,17 @@ export function formatChangelogDate(isoDate: string): string {
 
 export const CHANGELOG: ChangelogDay[] = [
   {
+    date: "2026-06-21",
+    items: [
+      {
+        tag: "修复",
+        title: "生产环境销售趋势与转化率不同步",
+        description:
+          "Analytics 同步改用莫斯科时区计算 date_to，修复东八区凌晨 date_to 超前于 Ozon 当前日导致 API 400、analytics_daily 为空的问题；看板 KPI 与趋势查询日期边界一并对齐。",
+      },
+    ],
+  },
+  {
     date: "2026-06-20",
     items: [
       {

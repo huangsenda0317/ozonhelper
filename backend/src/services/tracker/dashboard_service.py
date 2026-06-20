@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.store import Store
 from src.models.tracking_sync import Alert, AnalyticsDaily, SyncedOrder, SyncedProduct
 from src.schemas.dashboard import AlertCounts, DashboardKPI, TrendPoint
+from src.services.ozon.dates import ozon_local_date
 
 
 async def get_dashboard_kpi(db: AsyncSession, store: Store) -> DashboardKPI:
@@ -21,7 +22,7 @@ async def get_dashboard_kpi(db: AsyncSession, store: Store) -> DashboardKPI:
     ).scalar_one()
 
     now = datetime.now(UTC)
-    today = now.date()
+    today = ozon_local_date()
     week_start = today - timedelta(days=7)
     month_start = today - timedelta(days=30)
 
@@ -138,7 +139,7 @@ async def get_dashboard_kpi(db: AsyncSession, store: Store) -> DashboardKPI:
 
 
 async def get_dashboard_trends(db: AsyncSession, store: Store, days: int = 7) -> list[TrendPoint]:
-    since = date.today() - timedelta(days=days - 1)
+    since = ozon_local_date() - timedelta(days=days - 1)
     stmt = (
         select(AnalyticsDaily)
         .where(AnalyticsDaily.store_id == store.id, AnalyticsDaily.day >= since)

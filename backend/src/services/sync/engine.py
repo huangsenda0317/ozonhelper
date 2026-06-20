@@ -23,6 +23,7 @@ from src.models.tracking_sync import (
     SyncedProduct,
 )
 from src.services.ozon.client import OzonSellerClient
+from src.services.ozon.dates import ozon_local_date
 from src.services.stores.credentials import ozon_client_for_store
 from src.services.tracker.product_service import detect_exception, map_to_summary
 
@@ -253,7 +254,7 @@ async def sync_orders(
 
 async def sync_analytics(db: AsyncSession, store: Store, client: OzonSellerClient | None = None) -> int:
     client = client or ozon_client_for_store(store)
-    today = date.today()
+    today = ozon_local_date()
     date_from = (today - timedelta(days=30)).isoformat()
     date_to = today.isoformat()
     resp = await client.analytics_data(
