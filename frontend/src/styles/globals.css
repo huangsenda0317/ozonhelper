@@ -21,8 +21,8 @@
   --color-btn-ghost-text: #1f1633;
   --color-focus-ring: #9dc1f5;
   /* Light cards: Sentry elevation level-2 */
-  --shadow-card: rgba(0, 0, 0, 0.1) 0 10px 15px -3px,
-    rgba(0, 0, 0, 0.1) 0 4px 6px -4px;
+  --shadow-card:
+    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.1) 0 4px 6px -4px;
 }
 
 /* ── Sentry Dark canvas (.dark) ── */
@@ -32,7 +32,7 @@
   --color-surface-elevated: #422082;
   --color-ink: #ffffff;
   --color-body: #bdb8c0;
-  --color-muted: #3f3849;
+  --color-muted: #c9b1eb;
   --color-hairline: #362d59;
   /* button-inverted polarity flip */
   --color-btn-primary-bg: #ffffff;
@@ -51,10 +51,16 @@ html {
 }
 
 body {
-  font-family: Rubik, system-ui, -apple-system, sans-serif;
+  font-family:
+    Rubik,
+    system-ui,
+    -apple-system,
+    sans-serif;
   color: var(--color-ink);
   background-color: var(--color-canvas);
-  transition: background-color 200ms ease-out, color 200ms ease-out;
+  transition:
+    background-color 200ms ease-out,
+    color 200ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -129,6 +135,60 @@ body {
 
   .nav-bar-dark {
     @apply nav-bar bg-surface-canvas-dark text-on-primary border-hairline-violet;
+  }
+
+  /* Theme-aware muted controls — avoid static ink-deep on hover (invisible in dark mode) */
+  .interactive-muted {
+    @apply text-muted transition-colors duration-200
+      hover:text-ink hover:bg-surface-elevated
+      dark:text-on-dark-muted dark:hover:text-on-primary dark:hover:bg-on-dark-faint;
+  }
+
+  .interactive-muted-soft {
+    @apply text-muted transition-colors duration-200
+      hover:text-ink
+      dark:text-on-dark-muted dark:hover:text-on-primary;
+  }
+
+  .interactive-muted-soft:hover {
+    background-color: color-mix(in srgb, var(--color-surface-elevated) 60%, transparent);
+  }
+
+  .dark .interactive-muted-soft:hover {
+    background-color: rgb(63 56 73 / 0.6);
+  }
+
+  .nav-tab-active {
+    @apply bg-surface-elevated text-ink font-medium dark:text-on-primary;
+  }
+
+  /* Toggle switch — theme-aware enable controls */
+  .switch-sentry {
+    @apply relative inline-flex shrink-0 cursor-pointer items-center rounded-full
+      border border-transparent transition-colors duration-200
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring-focus;
+    width: 2.75rem;
+    height: 1.5rem;
+    padding: 2px;
+  }
+
+  .switch-sentry-off {
+    @apply bg-hairline-cloud dark:bg-on-dark-faint;
+  }
+
+  .switch-sentry-on {
+    @apply bg-accent-violet-mid;
+  }
+
+  .switch-sentry-knob {
+    @apply block rounded-full bg-white shadow-level-1 transition-transform duration-200 ease-out;
+    width: 1.25rem;
+    height: 1.25rem;
+    transform: translateX(0);
+  }
+
+  .switch-sentry-on .switch-sentry-knob {
+    transform: translateX(1.25rem);
   }
 
   /* ── Inputs (text-input / text-input-focused) ── */
@@ -280,7 +340,8 @@ body {
   }
 
   /* Inline leave: motion node lingers at full grid size — hide instantly */
-  .ai-edit-upload .ant-upload-list-item-container.ant-upload-animate-inline-leave {
+  .ai-edit-upload
+    .ant-upload-list-item-container.ant-upload-animate-inline-leave {
     display: none !important;
   }
 

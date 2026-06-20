@@ -179,9 +179,7 @@ export function TrackingShell({ children }: { children: React.ReactNode }) {
               key={item.href}
               href={item.href}
               className={`inline-flex items-center gap-xs px-md py-sm text-caption rounded-md transition-colors ${
-                active
-                  ? "bg-surface-elevated text-ink-deep font-medium"
-                  : "text-muted hover:text-ink-deep hover:bg-surface-elevated/60"
+                active ? "nav-tab-active" : "interactive-muted-soft"
               }`}
             >
               <Icon className="h-4 w-4" />

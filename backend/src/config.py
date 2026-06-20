@@ -52,6 +52,16 @@ class Settings(BaseSettings):
     tencent_tmt_region: str = 'ap-guangzhou'
     tencent_tmt_project_id: int = 0
 
+    # 阿里云号码认证 — 短信验证码登录
+    aliyun_access_key_id: str = ''
+    aliyun_access_key_secret: str = ''
+    aliyun_sms_sign_name: str = '速通互联验证码'
+    aliyun_sms_template_code: str = '100001'
+    aliyun_sms_scheme_name: str = '默认方案'
+    aliyun_sms_code_length: int = 6
+    aliyun_sms_valid_time: int = 300
+    aliyun_sms_interval: int = 60
+
     # 图片存储 (MinIO/S3)
     minio_endpoint: str = 'localhost:9000'
     minio_access_key: str = 'minioadmin'

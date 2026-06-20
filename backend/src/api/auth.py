@@ -7,11 +7,21 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.deps import get_current_user
-from src.api.exceptions import DuplicateException, NotFoundException, UnauthorizedException, ValidationException
+from src.api.exceptions import (
+    AppException,
+    BadGatewayException,
+    DuplicateException,
+    NotFoundException,
+    RateLimitException,
+    ServiceUnavailableException,
+    UnauthorizedException,
+    ValidationException,
+)
 from src.auth.api_key import generate_api_key, KEY_PREFIX
 from src.auth.jwt import create_access_token
 from src.auth.password import hash_password, verify_password
 from src.bootstrap.admin_user import normalize_login_account
+from src.config import get_settings
 from src.database import get_db
 from src.models.api_key import ApiKey
 from src.models.user import User
@@ -21,12 +31,39 @@ from src.schemas.auth import (
     ApiKeyResponse,
     LoginRequest,
     RegisterRequest,
+    SmsLoginRequest,
+    SmsSendRequest,
     TokenResponse,
     UserResponse,
 )
 from src.schemas.common import ApiResponse
+from src.services.sms.aliyun_sms import (
+    AliyunSmsService,
+    SmsNotConfiguredError,
+    SmsRateLimitError,
+    SmsSendFailedError,
+)
 
 router = APIRouter(prefix='/api/v1/auth', tags=['认证'])
+settings = get_settings()
+
+
+def _sms_placeholder_email(phone: str) -> str:
+    return f'{phone}@sms.ozonhelper.local'
+
+
+def _sms_default_name(phone: str) -> str:
+    return f'用户{phone[-4:]}'
+
+
+def _token_response(user_id: uuid.UUID) -> ApiResponse[TokenResponse]:
+    return ApiResponse(
+        success=True,
+        data=TokenResponse(
+            access_token=create_access_token(user_id),
+            expires_in=settings.jwt_expire_seconds,
+        ),
+    )
 
 
 @router.post('/register', response_model=ApiResponse[UserResponse], status_code=201)
@@ -65,17 +102,58 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
 
-    if not user or not verify_password(request.password, user.password_hash):
+    if not user or not user.password_hash or not verify_password(request.password, user.password_hash):
         raise UnauthorizedException('邮箱或密码错误')
 
-    access_token = create_access_token(user.id)
-    return ApiResponse(
-        success=True,
-        data=TokenResponse(
-            access_token=access_token,
-            expires_in=86400,
-        ),
-    )
+    return _token_response(user.id)
+
+
+@router.post('/sms/send', response_model=ApiResponse[None])
+async def send_sms_code(request: SmsSendRequest):
+    """发送短信验证码。"""
+    sms = AliyunSmsService()
+    try:
+        sms.send_verify_code(request.phone)
+    except SmsNotConfiguredError:
+        raise ServiceUnavailableException('短信服务', code='SMS_NOT_CONFIGURED') from None
+    except SmsRateLimitError as exc:
+        raise RateLimitException(code='SMS_RATE_LIMITED', message='发送过于频繁，请稍后再试') from exc
+    except SmsSendFailedError as exc:
+        raise BadGatewayException(code='SMS_SEND_FAILED', message='短信发送失败，请稍后重试') from exc
+
+    return ApiResponse(success=True, data=None)
+
+
+@router.post('/sms/login', response_model=ApiResponse[TokenResponse])
+async def sms_login(request: SmsLoginRequest, db: AsyncSession = Depends(get_db)):
+    """短信验证码登录（首次登录自动注册）。"""
+    sms = AliyunSmsService()
+    try:
+        passed = sms.check_verify_code(request.phone, request.code)
+    except SmsNotConfiguredError:
+        raise ServiceUnavailableException('短信服务', code='SMS_NOT_CONFIGURED') from None
+
+    if not passed:
+        raise AppException(code='INVALID_SMS_CODE', message='验证码错误或已过期', http_status=401)
+
+    stmt = select(User).where(User.phone == request.phone)
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
+
+    if user and not user.is_active:
+        raise AppException(code='USER_DISABLED', message='账号已被禁用', http_status=403)
+
+    if not user:
+        user = User(
+            phone=request.phone,
+            email=_sms_placeholder_email(request.phone),
+            password_hash=None,
+            name=_sms_default_name(request.phone),
+        )
+        db.add(user)
+        await db.flush()
+
+    return _token_response(user.id)
 
 
 @router.post('/api-keys', response_model=ApiResponse[ApiKeyCreatedResponse], status_code=201)

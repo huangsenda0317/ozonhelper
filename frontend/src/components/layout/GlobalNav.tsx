@@ -55,14 +55,12 @@ export function GlobalNav() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`px-3 py-1 text-caption rounded-md transition-colors duration-200 whitespace-nowrap cursor-pointer ${
+                    className={`px-3 py-1 text-caption rounded-md whitespace-nowrap cursor-pointer ${
                       isActive
                         ? isDark
                           ? "bg-on-dark-faint text-on-primary font-medium"
-                          : "bg-surface-elevated text-ink-deep font-medium"
-                        : isDark
-                          ? "text-on-dark-muted hover:text-on-primary"
-                          : "text-muted hover:text-ink-deep"
+                          : "nav-tab-active"
+                        : "interactive-muted"
                     }`}
                   >
                     {item.label}
@@ -80,7 +78,7 @@ export function GlobalNav() {
               className={`inline-flex items-center justify-center h-8 w-8 shrink-0 rounded-md transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40 ${
                 isDark
                   ? "text-on-dark-muted hover:text-on-primary hover:bg-on-dark-faint"
-                  : "text-muted hover:text-ink-deep hover:bg-surface-elevated"
+                  : "interactive-muted"
               }`}
             >
               <ThemeIcon className="h-4 w-4" aria-hidden="true" />
@@ -99,18 +97,18 @@ export function GlobalNav() {
                   className={`inline-flex items-center h-8 px-2 text-caption rounded-md transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40 ${
                     isDark
                       ? "text-on-dark-muted hover:text-on-primary hover:bg-on-dark-faint"
-                      : "text-muted hover:text-ink-deep hover:bg-surface-elevated"
+                      : "interactive-muted"
                   }`}
                 >
                   登录
                 </Link>
-                <Button
+                {/* <Button
                   variant="primary"
                   size="xs"
                   onClick={() => router.push("/register")}
                 >
                   注册
-                </Button>
+                </Button> */}
               </>
             )}
           </div>

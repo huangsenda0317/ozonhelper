@@ -42,9 +42,19 @@ class ValidationException(AppException):
 
 
 class ServiceUnavailableException(AppException):
-    def __init__(self, service: str = '服务'):
+    def __init__(self, service: str = '服务', code: str = 'SERVICE_UNAVAILABLE'):
         super().__init__(
-            code='SERVICE_UNAVAILABLE',
+            code=code,
             message=f'{service}暂时不可用，请稍后重试',
             http_status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
+
+
+class RateLimitException(AppException):
+    def __init__(self, code: str = 'RATE_LIMITED', message: str = '请求过于频繁，请稍后重试'):
+        super().__init__(code=code, message=message, http_status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+
+class BadGatewayException(AppException):
+    def __init__(self, code: str = 'BAD_GATEWAY', message: str = '上游服务异常，请稍后重试'):
+        super().__init__(code=code, message=message, http_status=status.HTTP_502_BAD_GATEWAY)

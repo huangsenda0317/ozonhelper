@@ -18,7 +18,7 @@ export function UserMenu({ displayName, isDark, onLogout }: UserMenuProps) {
 
   const triggerClass = isDark
     ? "text-on-dark-muted hover:text-on-primary hover:bg-on-dark-faint"
-    : "text-muted hover:text-ink-deep hover:bg-surface-elevated";
+    : "interactive-muted";
 
   const items: MenuProps["items"] = [
     {

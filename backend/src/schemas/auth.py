@@ -1,8 +1,11 @@
 """认证相关 Pydantic Schemas"""
 
+import re
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+PHONE_PATTERN = re.compile(r'^1[3-9]\d{9}$')
 
 
 class RegisterRequest(BaseModel):
@@ -14,6 +17,29 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str = Field(min_length=1, max_length=255)
     password: str
+
+
+class SmsSendRequest(BaseModel):
+    phone: str = Field(min_length=11, max_length=11)
+
+    @field_validator('phone')
+    @classmethod
+    def validate_phone(cls, value: str) -> str:
+        if not PHONE_PATTERN.match(value):
+            raise ValueError('手机号格式不正确')
+        return value
+
+
+class SmsLoginRequest(BaseModel):
+    phone: str = Field(min_length=11, max_length=11)
+    code: str = Field(min_length=4, max_length=8)
+
+    @field_validator('phone')
+    @classmethod
+    def validate_phone(cls, value: str) -> str:
+        if not PHONE_PATTERN.match(value):
+            raise ValueError('手机号格式不正确')
+        return value
 
 
 class TokenResponse(BaseModel):

@@ -107,12 +107,12 @@ export default function HomePage() {
         </p>
         <div className="flex flex-wrap justify-center gap-md">
           <Link href="/register" className="cursor-pointer">
-            <Button variant="primary" size="lg">
+            {/* <Button variant="ghost" size="lg">
               免费注册
-            </Button>
+            </Button> */}
           </Link>
           <Link href="/login" className="cursor-pointer">
-            <Button variant="ghost" size="lg">
+            <Button variant="primary" size="lg">
               登录
             </Button>
           </Link>

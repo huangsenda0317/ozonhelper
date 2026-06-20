@@ -26,6 +26,35 @@ export function formatChangelogDate(isoDate: string): string {
 
 export const CHANGELOG: ChangelogDay[] = [
   {
+    date: "2026-06-20",
+    items: [
+      {
+        tag: "新功能",
+        title: "短信验证码登录",
+        description:
+          "登录页新增「短信登录」Tab，接入阿里云号码认证服务；支持验证码发送/核验、手机号首次登录自动注册，与密码登录并存。",
+      },
+      {
+        tag: "改进",
+        title: "物流预警阈值配置",
+        description:
+          "物流预警页阈值设置改为弹窗编辑，启用开关与天数输入适配深色模式。",
+      },
+      {
+        tag: "改进",
+        title: "深色模式交互样式",
+        description:
+          "统一导航与 Tab 的 hover/选中色，新增 interactive-muted 与 switch-sentry 组件，修复 ink-deep 在深色背景下不可见的问题。",
+      },
+      {
+        tag: "修复",
+        title: "订单同步为空",
+        description:
+          "修复商品同步提前更新 last_sync_at 导致订单时间窗口为零、以及 Ozon 价格字段解析崩溃；空库时自动回溯 30 天订单。",
+      },
+    ],
+  },
+  {
     date: "2026-06-18",
     items: [
       {

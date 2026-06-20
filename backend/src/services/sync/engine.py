@@ -107,7 +107,6 @@ async def sync_products(db: AsyncSession, store: Store, client: OzonSellerClient
             )
             await db.execute(stmt)
             processed += 1
-    store.last_sync_at = now
     return processed
 
 
@@ -152,6 +151,22 @@ async def sync_inventory(db: AsyncSession, store: Store, client: OzonSellerClien
     return processed
 
 
+def _parse_price_value(value: object) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        value = value.get('price') or value.get('total_price')
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+
+
+def _parse_decimal_price(value: object) -> Decimal | None:
+    parsed = _parse_price_value(value)
+    return Decimal(str(parsed)) if parsed is not None else None
+
+
 def _map_order_posting(posting: dict, fulfillment_type: str) -> dict:
     products = []
     for p in posting.get('products') or []:
@@ -160,7 +175,7 @@ def _map_order_posting(posting: dict, fulfillment_type: str) -> dict:
                 'sku': str(p.get('sku') or ''),
                 'name': p.get('name'),
                 'quantity': int(p.get('quantity') or 0),
-                'price': float(p.get('price') or 0) if p.get('price') is not None else None,
+                'price': _parse_price_value(p.get('price')),
             }
         )
     return {
@@ -171,14 +186,21 @@ def _map_order_posting(posting: dict, fulfillment_type: str) -> dict:
         'created_at': _parse_dt(posting.get('in_process_at') or posting.get('created_at')),
         'shipment_date': _parse_dt(posting.get('shipment_date')),
         'products': products,
-        'total_price': Decimal(str(posting.get('total_price') or 0)) if posting.get('total_price') else None,
+        'total_price': _parse_decimal_price(posting.get('total_price')),
     }
 
 
-async def sync_orders(db: AsyncSession, store: Store, client: OzonSellerClient | None = None) -> int:
+async def sync_orders(
+    db: AsyncSession,
+    store: Store,
+    client: OzonSellerClient | None = None,
+    *,
+    since_dt: datetime | None = None,
+) -> int:
     client = client or ozon_client_for_store(store)
     config = await _get_alert_config(db, store.id)
-    since_dt = store.last_sync_at or (datetime.now(UTC) - timedelta(days=30))
+    if since_dt is None:
+        since_dt = store.last_sync_at or (datetime.now(UTC) - timedelta(days=30))
     since = since_dt.isoformat().replace('+00:00', 'Z')
     to = datetime.now(UTC).isoformat().replace('+00:00', 'Z')
     processed = 0
@@ -345,12 +367,19 @@ async def rebuild_alerts(db: AsyncSession, store: Store) -> int:
 async def run_sync_scope(db: AsyncSession, store: Store, scope: str) -> int:
     total = 0
     client = ozon_client_for_store(store)
+    order_count = (
+        await db.execute(select(func.count()).select_from(SyncedOrder).where(SyncedOrder.store_id == store.id))
+    ).scalar_one()
+    if order_count == 0:
+        orders_since = datetime.now(UTC) - timedelta(days=30)
+    else:
+        orders_since = store.last_sync_at or (datetime.now(UTC) - timedelta(days=30))
     if scope in ('products', 'all'):
         total += await sync_products(db, store, client)
     if scope in ('inventory', 'all'):
         total += await sync_inventory(db, store, client)
     if scope in ('orders', 'all'):
-        total += await sync_orders(db, store, client)
+        total += await sync_orders(db, store, client, since_dt=orders_since)
     if scope in ('all',):
         try:
             total += await sync_analytics(db, store, client)

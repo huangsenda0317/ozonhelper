@@ -171,7 +171,11 @@ export default function OrdersPageContent() {
               ))}
             </tbody>
           </table>
-          {items.length === 0 && <p className="text-center text-muted py-xl">暂无订单，请先同步</p>}
+          {items.length === 0 && (
+            <p className="text-center text-muted py-xl">
+              暂无订单数据，请点击页面右上角「同步」拉取最近 30 天订单
+            </p>
+          )}
         </Card>
       )}
 
