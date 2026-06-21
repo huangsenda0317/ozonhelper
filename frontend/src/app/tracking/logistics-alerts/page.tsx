@@ -52,6 +52,8 @@ export default function LogisticsAlertsPage() {
     if (!activeStoreId) return;
     const saved = await saveLogisticsConfig(activeStoreId, items);
     setConfig(saved);
+    const { items: nextAlerts } = await fetchLogisticsAlerts(activeStoreId, "unhandled");
+    setAlerts(nextAlerts);
   };
 
   if (loading) {

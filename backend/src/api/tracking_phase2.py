@@ -55,7 +55,11 @@ from src.services.phase2.listing import (
 )
 from src.services.phase2.listing_worker import process_listing_job
 from src.services.phase2.pricing import batch_update_prices, get_profit_config, list_pricing
-from src.services.phase2.sync_extra import LOGISTICS_NODE_DEFAULTS, ensure_logistics_configs
+from src.services.phase2.sync_extra import (
+    LOGISTICS_NODE_DEFAULTS,
+    check_logistics_alerts,
+    ensure_logistics_configs,
+)
 from src.worker.phase2_tasks import dispatch_listing_job
 
 router = APIRouter(prefix='/api/v1/tracking', tags=['店铺跟踪 Phase2'])
@@ -418,6 +422,7 @@ async def put_logistics_config(
         row.threshold_days = item.threshold_days
         row.updated_at = datetime.now(UTC)
     await db.flush()
+    await check_logistics_alerts(db, store)
     return await get_logistics_config(store=store, db=db, current_user=current_user)
 
 
@@ -431,6 +436,7 @@ async def list_logistics_alerts(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    await check_logistics_alerts(db, store)
     stmt = select(LogisticsAlertEvent).where(LogisticsAlertEvent.store_id == store.id)
     if status:
         stmt = stmt.where(LogisticsAlertEvent.status == status)

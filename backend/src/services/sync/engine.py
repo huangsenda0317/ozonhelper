@@ -12,6 +12,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.exceptions import AppException
+from src.config import get_settings
 from src.models.store import Store
 from src.models.tracking_sync import (
     Alert,
@@ -31,6 +32,15 @@ logger = logging.getLogger(__name__)
 
 INFO_BATCH = 1000
 STOCK_BATCH = 100
+
+# 增量 FBS 同步仅拉取未完结履约状态（按状态分次请求，避免单页全量翻页）
+FBS_ACTIVE_STATUSES = (
+    'awaiting_packaging',
+    'awaiting_deliver',
+    'delivering',
+    'awaiting_registration',
+    'acceptance_in_progress',
+)
 
 
 def _parse_dt(value: str | None) -> datetime | None:
@@ -191,64 +201,140 @@ def _map_order_posting(posting: dict, fulfillment_type: str) -> dict:
     }
 
 
+async def _upsert_order_posting(
+    db: AsyncSession,
+    store: Store,
+    posting: dict,
+    fulfillment_type: str,
+    *,
+    config: InventoryAlertConfig,
+    now: datetime,
+    overdue_delta: timedelta,
+) -> None:
+    mapped = _map_order_posting(posting, fulfillment_type)
+    created_at = mapped['created_at']
+    is_overdue = False
+    if fulfillment_type == 'FBS' and mapped['status'] in {'awaiting_packaging', 'awaiting_deliver'}:
+        if created_at and now - created_at > overdue_delta:
+            is_overdue = True
+    values = {
+        'store_id': store.id,
+        'posting_number': mapped['posting_number'],
+        'order_id': mapped['order_id'],
+        'status': mapped['status'],
+        'fulfillment_type': fulfillment_type,
+        'created_at': created_at,
+        'shipment_date': mapped['shipment_date'],
+        'products': mapped['products'],
+        'total_price': mapped['total_price'],
+        'is_overdue': is_overdue,
+        'synced_at': now,
+    }
+    ins = insert(SyncedOrder).values(**values)
+    ins = ins.on_conflict_do_update(
+        constraint='uq_synced_orders_store_posting',
+        set_={k: v for k, v in values.items() if k not in ('store_id', 'posting_number')},
+    )
+    await db.execute(ins)
+
+
+async def _sync_posting_pages(
+    db: AsyncSession,
+    store: Store,
+    fetch,
+    fulfillment_type: str,
+    *,
+    since: str,
+    to: str,
+    config: InventoryAlertConfig,
+    now: datetime,
+    overdue_delta: timedelta,
+    status: str | None = None,
+) -> int:
+    processed = 0
+    offset = 0
+    while True:
+        resp = await fetch(since=since, to=to, limit=100, offset=offset, status=status)
+        result = resp.get('result') or resp
+        postings = result.get('postings') or result.get('posting') or []
+        if not postings:
+            break
+        for posting in postings:
+            await _upsert_order_posting(
+                db,
+                store,
+                posting,
+                fulfillment_type,
+                config=config,
+                now=now,
+                overdue_delta=overdue_delta,
+            )
+            processed += 1
+        if len(postings) < 100:
+            break
+        offset += 100
+    return processed
+
+
 async def sync_orders(
     db: AsyncSession,
     store: Store,
     client: OzonSellerClient | None = None,
     *,
     since_dt: datetime | None = None,
+    fbs_active_only: bool = False,
 ) -> int:
     client = client or ozon_client_for_store(store)
     config = await _get_alert_config(db, store.id)
+    settings = get_settings()
     if since_dt is None:
-        since_dt = store.last_sync_at or (datetime.now(UTC) - timedelta(days=30))
+        since_dt = store.last_sync_at or (
+            datetime.now(UTC) - timedelta(days=settings.order_sync_initial_days)
+        )
     since = since_dt.isoformat().replace('+00:00', 'Z')
     to = datetime.now(UTC).isoformat().replace('+00:00', 'Z')
-    processed = 0
     now = datetime.now(UTC)
     overdue_delta = timedelta(hours=config.order_overdue_hours)
+    processed = 0
 
-    for fulfillment_type, fetch in (
-        ('FBS', client.posting_fbs_list),
-        ('FBO', client.posting_fbo_list),
-    ):
-        offset = 0
-        while True:
-            resp = await fetch(since=since, to=to, limit=100, offset=offset)
-            result = resp.get('result') or resp
-            postings = result.get('postings') or result.get('posting') or []
-            if not postings:
-                break
-            for posting in postings:
-                mapped = _map_order_posting(posting, fulfillment_type)
-                created_at = mapped['created_at']
-                is_overdue = False
-                if fulfillment_type == 'FBS' and mapped['status'] in {'awaiting_packaging', 'awaiting_deliver'}:
-                    if created_at and now - created_at > overdue_delta:
-                        is_overdue = True
-                values = {
-                    'store_id': store.id,
-                    'posting_number': mapped['posting_number'],
-                    'order_id': mapped['order_id'],
-                    'status': mapped['status'],
-                    'fulfillment_type': fulfillment_type,
-                    'created_at': created_at,
-                    'shipment_date': mapped['shipment_date'],
-                    'products': mapped['products'],
-                    'total_price': mapped['total_price'],
-                    'is_overdue': is_overdue,
-                    'synced_at': now,
-                }
-                ins = insert(SyncedOrder).values(**values)
-                ins = ins.on_conflict_do_update(
-                    constraint='uq_synced_orders_store_posting',
-                    set_={k: v for k, v in values.items() if k not in ('store_id', 'posting_number')},
-                )
-                await db.execute(ins)
-                processed += 1
-            if len(postings) < 100:
-                break
-            offset += 100
+    if fbs_active_only:
+        for status in FBS_ACTIVE_STATUSES:
+            processed += await _sync_posting_pages(
+                db,
+                store,
+                client.posting_fbs_list,
+                'FBS',
+                since=since,
+                to=to,
+                config=config,
+                now=now,
+                overdue_delta=overdue_delta,
+                status=status,
+            )
+    else:
+        processed += await _sync_posting_pages(
+            db,
+            store,
+            client.posting_fbs_list,
+            'FBS',
+            since=since,
+            to=to,
+            config=config,
+            now=now,
+            overdue_delta=overdue_delta,
+        )
+
+    processed += await _sync_posting_pages(
+        db,
+        store,
+        client.posting_fbo_list,
+        'FBO',
+        since=since,
+        to=to,
+        config=config,
+        now=now,
+        overdue_delta=overdue_delta,
+    )
     return processed
 
 
@@ -368,41 +454,61 @@ async def rebuild_alerts(db: AsyncSession, store: Store) -> int:
 async def run_sync_scope(db: AsyncSession, store: Store, scope: str) -> int:
     total = 0
     client = ozon_client_for_store(store)
+    settings = get_settings()
     order_count = (
         await db.execute(select(func.count()).select_from(SyncedOrder).where(SyncedOrder.store_id == store.id))
     ).scalar_one()
+    initial_days = settings.order_sync_initial_days
     if order_count == 0:
-        orders_since = datetime.now(UTC) - timedelta(days=30)
+        orders_since = datetime.now(UTC) - timedelta(days=initial_days)
     else:
-        orders_since = store.last_sync_at or (datetime.now(UTC) - timedelta(days=30))
-    if scope in ('products', 'all'):
+        orders_since = store.last_sync_at or (datetime.now(UTC) - timedelta(days=initial_days))
+    fbs_active_only = order_count > 0
+
+    if scope in ('products', 'all', 'quick'):
         total += await sync_products(db, store, client)
-    if scope in ('inventory', 'all'):
+    if scope in ('inventory', 'all', 'quick'):
         total += await sync_inventory(db, store, client)
     if scope in ('orders', 'all'):
-        total += await sync_orders(db, store, client, since_dt=orders_since)
-    if scope in ('all',):
+        total += await sync_orders(
+            db, store, client, since_dt=orders_since, fbs_active_only=fbs_active_only
+        )
+    if scope in ('all', 'quick'):
         try:
             total += await sync_analytics(db, store, client)
         except AppException as exc:
             logger.warning('analytics sync skipped: %s', exc.message)
-        await rebuild_alerts(db, store)
-        try:
-            from src.services.phase2.sync_extra import (
-                sync_finance,
-                sync_prices,
-                sync_returns,
-                sync_review_alerts,
-            )
+        total += await rebuild_alerts(db, store)
+        if scope == 'all':
+            try:
+                from src.services.phase2.sync_extra import (
+                    run_logistics_alert_check,
+                    sync_finance,
+                    sync_prices,
+                    sync_returns,
+                    sync_review_alerts,
+                )
 
-            total += await sync_prices(db, store, client)
-            total += await sync_finance(db, store, client)
-            total += await sync_returns(db, store, client)
-            total += await sync_review_alerts(db, store, client)
-        except Exception as exc:
-            logger.warning('phase2 sync skipped: %s', exc)
+                total += await sync_prices(db, store, client)
+                total += await sync_finance(db, store, client)
+                total += await sync_returns(db, store, client)
+                total += await sync_review_alerts(db, store, client)
+                total += await run_logistics_alert_check(db, store)
+            except Exception as exc:
+                logger.warning('phase2 sync skipped: %s', exc)
     store.last_sync_at = datetime.now(UTC)
     return total
+
+
+async def fail_sync_job(db: AsyncSession, job_id: uuid.UUID, message: str) -> None:
+    """将未开始的同步任务标记为失败（派发/重试耗尽时调用）。"""
+    job = (await db.execute(select(SyncJob).where(SyncJob.id == job_id))).scalar_one_or_none()
+    if job is None or job.status != 'pending':
+        return
+    job.status = 'failed'
+    job.error_message = message[:500]
+    job.finished_at = datetime.now(UTC)
+    await db.commit()
 
 
 async def execute_sync_job(db: AsyncSession, job_id: uuid.UUID) -> None:
@@ -414,11 +520,14 @@ async def execute_sync_job(db: AsyncSession, job_id: uuid.UUID) -> None:
         job.status = 'failed'
         job.error_message = '店铺不存在'
         job.finished_at = datetime.now(UTC)
+        await db.commit()
         return
 
     job.status = 'running'
     job.started_at = datetime.now(UTC)
     await db.flush()
+    # Celery/内联同步可能耗时数分钟，先提交 running 供前端轮询
+    await db.commit()
     try:
         job.records_processed = await run_sync_scope(db, store, job.scope)
         job.status = 'succeeded'

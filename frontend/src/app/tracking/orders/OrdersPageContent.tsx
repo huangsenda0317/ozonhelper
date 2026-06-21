@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { useStoreContext } from "@/lib/store-context";
 import { exportOrdersUrl, fetchOrders, fetchReturns, OrderSummary, shipOrder } from "@/lib/hooks/useOrders";
+import { formatOrderStatus, formatReturnStatus } from "@/lib/order-status";
 
 export default function OrdersPageContent() {
   const { activeStoreId, dataRefreshKey } = useStoreContext();
@@ -111,7 +112,7 @@ export default function OrdersPageContent() {
                 <tr key={r.return_id} className="border-b border-hairline">
                   <td className="px-lg py-md font-mono text-caption">{r.return_id}</td>
                   <td className="px-lg py-md">{r.posting_number ?? "-"}</td>
-                  <td className="px-lg py-md">{r.status}</td>
+                  <td className="px-lg py-md">{formatReturnStatus(r.status)}</td>
                   <td className="px-lg py-md text-caption text-muted">{r.reason ?? "-"}</td>
                 </tr>
               ))}
@@ -142,7 +143,7 @@ export default function OrdersPageContent() {
                   <td className="px-lg py-md font-mono text-caption">{o.posting_number}</td>
                   <td className="px-lg py-md">{o.fulfillment_type}</td>
                   <td className={`px-lg py-md ${o.is_overdue ? "text-accent-pink" : ""}`}>
-                    {o.status}
+                    {formatOrderStatus(o.status)}
                     {o.is_overdue && " ⚠"}
                   </td>
                   <td className="px-lg py-md text-caption text-muted">

@@ -30,6 +30,51 @@ export const CHANGELOG: ChangelogDay[] = [
     items: [
       {
         tag: "修复",
+        title: "物流预警检测与阈值生效",
+        description:
+          "按订单 status 与 created_at/shipped_at 计算超时，修复 packed_at、last_tracking_at 被批量同步污染导致列表始终为空；调高阈值后自动关闭不再符合条件的记录；打开列表/保存配置时即时本地检测。",
+      },
+      {
+        tag: "修复",
+        title: "保存物流预警配置超时",
+        description: "保存阈值时不再串行调用 Ozon 轨迹 API（原约 30s 易 500），改为仅本地重算；保存成功后自动刷新预警列表。",
+      },
+      {
+        tag: "修复",
+        title: "AI 问答日期回答错误",
+        description:
+          "system prompt 注入服务器当前时间（北京时间 + Ozon 莫斯科业务日），避免模型凭训练数据猜测「今天几号」。",
+      },
+      {
+        tag: "改进",
+        title: "移动端顶部导航",
+        description:
+          "屏幕宽度小于 1024px 时，Header 左侧 Logo 替换为菜单按钮；点击从侧边滑出导航栏，支持遮罩/关闭按钮/Esc 关闭与路由切换自动收起。",
+      },
+      {
+        tag: "改进",
+        title: "订单与退货状态中文展示",
+        description: "订单列表与退货列表的状态字段改为中文可读文案，超时订单仍保留醒目标记。",
+      },
+      {
+        tag: "改进",
+        title: "Ant Design 6 弃用 API 适配",
+        description: "Select 下拉改用 classNames.popup.root；Modal 遮罩关闭改用 mask.closable，消除控制台 deprecation 警告。",
+      },
+      {
+        tag: "改进",
+        title: "订单同步加速与看板双模式同步",
+        description:
+          "首 sync 默认回溯 7 天（ORDER_SYNC_INITIAL_DAYS 可配置）；增量 FBS 仅拉活跃履约状态；看板拆分为「快速同步」（商品/库存/趋势）与「含订单同步」全量。",
+      },
+      {
+        tag: "修复",
+        title: "删除店铺外键约束失败",
+        description:
+          "补全 price_snapshots、profit_configs、finance_transactions 等 phase2 子表及 listing_items 的级联删除，修复删除店铺时 500 错误。",
+      },
+      {
+        tag: "修复",
         title: "生产环境销售趋势与转化率不同步",
         description:
           "Analytics 同步改用莫斯科时区计算 date_to，修复东八区凌晨 date_to 超前于 Ozon 当前日导致 API 400、analytics_daily 为空的问题；看板 KPI 与趋势查询日期边界一并对齐。",

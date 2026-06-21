@@ -108,15 +108,15 @@ export function TrackingShell({ children }: { children: React.ReactNode }) {
     refreshStores,
     notifyDataRefresh,
   } = useStoreContext();
-  const [syncing, setSyncing] = React.useState(false);
+  const [syncingScope, setSyncingScope] = React.useState<"quick" | "all" | null>(null);
   const [syncError, setSyncError] = React.useState<string | null>(null);
 
-  const handleSync = async () => {
+  const handleSync = async (scope: "quick" | "all") => {
     if (!activeStoreId) return;
-    setSyncing(true);
+    setSyncingScope(scope);
     setSyncError(null);
     try {
-      const job = await triggerSync(activeStoreId, "all");
+      const job = await triggerSync(activeStoreId, scope);
       const result = await pollSyncJob(activeStoreId, job.id);
       if (result.status === "failed") {
         setSyncError(result.error_message || "同步失败");
@@ -127,7 +127,7 @@ export function TrackingShell({ children }: { children: React.ReactNode }) {
     } catch (err) {
       setSyncError(err instanceof Error ? err.message : "同步失败");
     } finally {
-      setSyncing(false);
+      setSyncingScope(null);
     }
   };
 
@@ -147,19 +147,34 @@ export function TrackingShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         {!storesLoading && stores.length > 0 && (
-          <button
-            type="button"
-            onClick={handleSync}
-            disabled={syncing}
-            title={syncing ? "同步中" : "立即同步"}
-            className="inline-flex items-center gap-xs h-8 shrink-0 px-2 text-caption rounded-md transition-colors duration-200 cursor-pointer text-muted hover:text-ink hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40 dark:text-on-dark-muted dark:hover:text-on-primary dark:hover:bg-on-dark-faint"
-          >
-            <RefreshCw
-              className={`h-4 w-4 shrink-0 ${syncing ? "animate-spin" : ""}`}
-              aria-hidden="true"
-            />
-            {syncing ? "同步中…" : "立即同步"}
-          </button>
+          <div className="flex items-center gap-xs shrink-0">
+            <button
+              type="button"
+              onClick={() => handleSync("quick")}
+              disabled={syncingScope !== null}
+              title="同步商品、库存与销售趋势（不含订单，约半分钟）"
+              className="inline-flex items-center gap-xs h-8 px-2 text-caption rounded-md transition-colors duration-200 cursor-pointer text-muted hover:text-ink hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40 dark:text-on-dark-muted dark:hover:text-on-primary dark:hover:bg-on-dark-faint"
+            >
+              <RefreshCw
+                className={`h-4 w-4 shrink-0 ${syncingScope === "quick" ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />
+              {syncingScope === "quick" ? "同步中…" : "快速同步"}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSync("all")}
+              disabled={syncingScope !== null}
+              title="含 FBS/FBO 订单与财务等全量同步，订单多时可能较久"
+              className="inline-flex items-center gap-xs h-8 px-2 text-caption rounded-md transition-colors duration-200 cursor-pointer text-muted hover:text-ink hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40 dark:text-on-dark-muted dark:hover:text-on-primary dark:hover:bg-on-dark-faint"
+            >
+              <RefreshCw
+                className={`h-4 w-4 shrink-0 ${syncingScope === "all" ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />
+              {syncingScope === "all" ? "同步中…" : "含订单同步"}
+            </button>
+          </div>
         )}
       </header>
       {syncError && (

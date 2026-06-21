@@ -38,6 +38,109 @@ LOGISTICS_NODE_DEFAULTS = {
     'abnormal': 3,
 }
 
+# 节点类型 → 触发检测的订单 status 集合
+_LOGISTICS_STATUS_BY_NODE: dict[str, frozenset[str]] = {
+    'pending_pack': frozenset({'awaiting_packaging'}),
+    'pending_pickup': frozenset({'awaiting_deliver', 'awaiting_registration'}),
+    'transport_stall': frozenset({'delivering', 'driver_pickup', 'sent_by_seller'}),
+    'pending_delivery': frozenset({'driver_pickup'}),
+}
+
+_TERMINAL_ORDER_STATUSES = frozenset({'delivered', 'received', 'cancelled', 'not_accepted'})
+
+
+def _overdue_days(now: datetime, anchor: datetime) -> int:
+    """距 anchor 已满的天数（向下取整）。"""
+    if anchor.tzinfo is None:
+        anchor = anchor.replace(tzinfo=UTC)
+    return max(0, (now - anchor).days)
+
+
+def _order_anchor(order: SyncedOrder, *fields: str) -> datetime | None:
+    for name in fields:
+        value = getattr(order, name, None)
+        if value is not None:
+            return value
+    return None
+
+
+def _future_safe_anchor(order: SyncedOrder, now: datetime, *fields: str) -> datetime | None:
+    """取锚点时间，跳过晚于当前时刻的字段（如 Ozon 预约 shipment_date）。"""
+    for name in fields:
+        value = getattr(order, name, None)
+        if value is None:
+            continue
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=UTC)
+        if value <= now:
+            return value
+    return None
+
+
+def _tracking_stall_anchor(order: SyncedOrder, now: datetime) -> datetime | None:
+    """运输停滞锚点：有多条真实轨迹更新时用 last_tracking_at，否则用发货时间。"""
+    events = order.tracking_events or []
+    if order.last_tracking_at and len(events) >= 2:
+        anchor = order.last_tracking_at
+        if anchor.tzinfo is None:
+            anchor = anchor.replace(tzinfo=UTC)
+        if anchor <= now:
+            return anchor
+    return _future_safe_anchor(order, now, 'shipped_at', 'shipment_date', 'created_at')
+
+
+def _compute_logistics_checks(
+    order: SyncedOrder,
+    configs: dict[str, LogisticsAlertConfig],
+    now: datetime,
+) -> list[tuple[str, int]]:
+    """按当前配置计算订单应触发的物流预警节点。"""
+    status = (order.status or '').lower()
+    if status in _TERMINAL_ORDER_STATUSES:
+        return []
+
+    checks: list[tuple[str, int]] = []
+
+    cfg = configs.get('pending_pack')
+    if cfg and cfg.enabled and status in _LOGISTICS_STATUS_BY_NODE['pending_pack']:
+        anchor = _future_safe_anchor(order, now, 'created_at', 'shipment_date')
+        if anchor is not None:
+            overdue = _overdue_days(now, anchor)
+            if overdue >= cfg.threshold_days:
+                checks.append(('pending_pack', overdue))
+
+    cfg = configs.get('pending_pickup')
+    if cfg and cfg.enabled and status in _LOGISTICS_STATUS_BY_NODE['pending_pickup']:
+        # 待揽收：以进入该状态的 created_at 为准，不用 packed_at（易被批量同步污染）
+        anchor = _future_safe_anchor(order, now, 'created_at', 'shipment_date')
+        if anchor is not None:
+            overdue = _overdue_days(now, anchor)
+            if overdue >= cfg.threshold_days:
+                checks.append(('pending_pickup', overdue))
+
+    cfg = configs.get('transport_stall')
+    if cfg and cfg.enabled and status in _LOGISTICS_STATUS_BY_NODE['transport_stall'] and not order.delivered_at:
+        anchor = _tracking_stall_anchor(order, now)
+        if anchor is not None:
+            overdue = _overdue_days(now, anchor)
+            if overdue >= cfg.threshold_days:
+                checks.append(('transport_stall', overdue))
+
+    cfg = configs.get('pending_delivery')
+    if cfg and cfg.enabled and status in _LOGISTICS_STATUS_BY_NODE['pending_delivery'] and not order.delivered_at:
+        anchor = _future_safe_anchor(order, now, 'shipped_at', 'shipment_date', 'created_at')
+        if anchor is not None:
+            overdue = _overdue_days(now, anchor)
+            if overdue >= cfg.threshold_days:
+                checks.append(('pending_delivery', overdue))
+
+    ts = (order.tracking_status or order.status or '').lower()
+    cfg = configs.get('abnormal')
+    if cfg and cfg.enabled and any(k in ts for k in ('return', 'exception', 'error', 'arbitration')):
+        checks.append(('abnormal', 0))
+
+    return checks
+
 PRICE_BATCH = 100
 
 
@@ -192,9 +295,13 @@ async def sync_order_tracking(db: AsyncSession, store: Store, client: OzonSeller
     client = client or ozon_client_for_store(store)
     stmt = (
         select(SyncedOrder)
-        .where(SyncedOrder.store_id == store.id, SyncedOrder.fulfillment_type == 'FBS')
-        .order_by(SyncedOrder.created_at.desc())
-        .limit(50)
+        .where(
+            SyncedOrder.store_id == store.id,
+            SyncedOrder.fulfillment_type == 'FBS',
+            SyncedOrder.status.notin_(tuple(_TERMINAL_ORDER_STATUSES)),
+        )
+        .order_by(SyncedOrder.synced_at.desc())
+        .limit(100)
     )
     orders = (await db.execute(stmt)).scalars().all()
     processed = 0
@@ -207,15 +314,23 @@ async def sync_order_tracking(db: AsyncSession, store: Store, client: OzonSeller
         result = resp.get('result') or resp
         analytics = result.get('analytics_data') or {}
         tracking = result.get('tracking_number') or analytics.get('tracking_number')
-        status = result.get('status') or order.status
-        events = order.tracking_events or []
-        if tracking:
-            events = events + [{'at': now.isoformat(), 'status': status, 'tracking_number': tracking}]
+        status = (result.get('status') or order.status or '').lower()
+        prev_status = (order.tracking_status or order.status or '').lower()
+        prev_tracking = order.tracking_events[-1].get('tracking_number') if order.tracking_events else None
+        status_changed = status != prev_status
+        tracking_changed = bool(tracking) and tracking != prev_tracking
         order.tracking_status = status
-        order.tracking_events = events
-        order.last_tracking_at = now
+        if status != order.status:
+            order.status = status
+        if status_changed or tracking_changed:
+            events = list(order.tracking_events or [])
+            events.append({'at': now.isoformat(), 'status': status, 'tracking_number': tracking})
+            order.tracking_events = events
+            order.last_tracking_at = now
+        if status in {'delivering', 'driver_pickup', 'sent_by_seller'} and order.shipped_at is None:
+            order.shipped_at = order.shipment_date or now
         if status in {'delivered', 'received'}:
-            order.delivered_at = now
+            order.delivered_at = order.delivered_at or now
         processed += 1
     return processed
 
@@ -277,6 +392,15 @@ async def sync_review_alerts(db: AsyncSession, store: Store, client: OzonSellerC
     return processed
 
 
+async def run_logistics_alert_check(db: AsyncSession, store: Store) -> int:
+    """拉取在途订单轨迹并执行物流节点超时检测。"""
+    try:
+        await sync_order_tracking(db, store)
+    except Exception as exc:
+        logger.warning('order tracking sync skipped: %s', exc)
+    return await check_logistics_alerts(db, store)
+
+
 async def check_logistics_alerts(db: AsyncSession, store: Store) -> int:
     await ensure_logistics_configs(db, store.id)
     configs = {
@@ -287,36 +411,22 @@ async def check_logistics_alerts(db: AsyncSession, store: Store) -> int:
     }
     now = datetime.now(UTC)
     count = 0
+    active_keys: set[tuple[str, str]] = set()
 
     orders = (await db.execute(select(SyncedOrder).where(SyncedOrder.store_id == store.id))).scalars().all()
     for order in orders:
-        created = order.created_at
-        checks: list[tuple[str, int]] = []
-
-        cfg = configs.get('pending_pack')
-        if cfg and cfg.enabled and created and not order.packed_at:
-            days = (now - created).days
-            if days >= cfg.threshold_days:
-                checks.append(('pending_pack', days))
-
-        cfg = configs.get('pending_pickup')
-        if cfg and cfg.enabled and order.shipped_at and not order.last_tracking_at:
-            days = (now - order.shipped_at).days
-            if days >= cfg.threshold_days:
-                checks.append(('pending_pickup', days))
-
-        cfg = configs.get('transport_stall')
-        if cfg and cfg.enabled and order.last_tracking_at and not order.delivered_at:
-            days = (now - order.last_tracking_at).days
-            if days >= cfg.threshold_days:
-                checks.append(('transport_stall', days))
-
-        ts = (order.tracking_status or '').lower()
-        cfg = configs.get('abnormal')
-        if cfg and cfg.enabled and any(k in ts for k in ('return', 'exception', 'error')):
-            checks.append(('abnormal', 0))
-
+        checks = _compute_logistics_checks(order, configs, now)
         for node_type, overdue_days in checks:
+            active_keys.add((order.posting_number, node_type))
+            existing = (
+                await db.execute(
+                    select(LogisticsAlertEvent).where(
+                        LogisticsAlertEvent.store_id == store.id,
+                        LogisticsAlertEvent.posting_number == order.posting_number,
+                        LogisticsAlertEvent.node_type == node_type,
+                    )
+                )
+            ).scalar_one_or_none()
             values = {
                 'store_id': store.id,
                 'posting_number': order.posting_number,
@@ -328,18 +438,34 @@ async def check_logistics_alerts(db: AsyncSession, store: Store) -> int:
             ins = insert(LogisticsAlertEvent).values(**values)
             ins = ins.on_conflict_do_update(
                 constraint='uq_logistics_events',
-                set_={'overdue_days': overdue_days, 'triggered_at': now},
+                set_={'overdue_days': overdue_days, 'triggered_at': now, 'status': 'unhandled'},
             )
             await db.execute(ins)
-            db.add(
-                Alert(
-                    store_id=store.id,
-                    alert_type='logistics',
-                    reference_id=f'{order.posting_number}:{node_type}',
-                    title=f'物流预警：{order.posting_number}',
-                    message=f'节点 {node_type} 超时 {overdue_days} 天',
-                    severity='critical',
+            if existing is None:
+                db.add(
+                    Alert(
+                        store_id=store.id,
+                        alert_type='logistics',
+                        reference_id=f'{order.posting_number}:{node_type}',
+                        title=f'物流预警：{order.posting_number}',
+                        message=f'节点 {node_type} 超时 {overdue_days} 天',
+                        severity='critical',
+                    )
                 )
-            )
             count += 1
+
+    stale_events = (
+        await db.execute(
+            select(LogisticsAlertEvent).where(
+                LogisticsAlertEvent.store_id == store.id,
+                LogisticsAlertEvent.status == 'unhandled',
+            )
+        )
+    ).scalars().all()
+    for event in stale_events:
+        if (event.posting_number, event.node_type) not in active_keys:
+            event.status = 'ignored'
+            event.note = '未达当前阈值或订单状态已变更，自动关闭'
+            event.handled_at = now
+
     return count

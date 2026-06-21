@@ -35,6 +35,8 @@ export interface TrendPoint {
   revenue: number | null;
 }
 
+export type SyncScope = "quick" | "all" | "products" | "inventory" | "orders";
+
 export interface SyncJob {
   id: string;
   status: string;
@@ -60,7 +62,7 @@ export async function fetchTrends(storeId: string, range: 7 | 30 = 7): Promise<T
   return res.data ?? [];
 }
 
-export async function triggerSync(storeId: string, scope = "all"): Promise<SyncJob> {
+export async function triggerSync(storeId: string, scope: SyncScope = "quick"): Promise<SyncJob> {
   const res = await apiClient.post<SyncJob>(`/tracking/sync?${qs(storeId)}`, { scope });
   if (!res.data) throw new ApiError("SYNC_ERROR", "同步触发失败", 500);
   return res.data;
@@ -75,7 +77,7 @@ export async function fetchSyncJob(storeId: string, jobId: string): Promise<Sync
 export async function pollSyncJob(
   storeId: string,
   jobId: string,
-  maxAttempts = 150,
+  maxAttempts = 300,
 ): Promise<SyncJob> {
   let last: SyncJob | null = null;
   for (let i = 0; i < maxAttempts; i++) {
@@ -94,14 +96,14 @@ export async function pollSyncJob(
   if (last?.status === "pending") {
     throw new ApiError(
       "SYNC_TIMEOUT",
-      "同步超时：任务一直未开始。请确认后端已重启，或设置 SYNC_INLINE=true（默认已开启）且仅需 uvicorn。若使用 Celery，请启动 Worker。",
+      "同步超时：任务一直未开始。若 .env 设置了 SYNC_INLINE=false，请重启 uvicorn 与 Celery Worker；若 SYNC_INLINE=true（默认），只需 uvicorn、无需 Celery。",
       504,
     );
   }
   if (last?.status === "running") {
     throw new ApiError(
       "SYNC_TIMEOUT",
-      "同步超时：商品较多时首次全量同步可能超过 5 分钟，请稍后在看板查看是否已有数据。",
+      "同步超时：订单量较大时全量同步可能超过 5 分钟，后台仍在执行，请稍后刷新看板。",
       504,
     );
   }

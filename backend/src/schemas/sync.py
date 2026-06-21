@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class SyncTriggerRequest(BaseModel):
-    scope: str = 'all'  # products | inventory | orders | all
+    scope: str = 'quick'  # quick | products | inventory | orders | all
 
 
 class SyncJobResponse(BaseModel):

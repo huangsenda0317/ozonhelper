@@ -94,7 +94,7 @@ export function LogisticsConfigModal({
       open={open}
       onCancel={handleClose}
       destroyOnHidden
-      maskClosable={!saving}
+      mask={{ closable: !saving }}
       closable={!saving}
       width={560}
       footer={

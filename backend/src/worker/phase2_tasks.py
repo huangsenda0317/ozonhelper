@@ -5,9 +5,8 @@ import uuid
 from src.config import get_settings
 from src.services.phase2.listing_worker import process_listing_job
 from src.services.phase2.sync_extra import (
-    check_logistics_alerts,
+    run_logistics_alert_check,
     sync_finance,
-    sync_order_tracking,
     sync_prices,
     sync_returns,
     sync_review_alerts,
@@ -69,8 +68,7 @@ def check_logistics_alerts_task(store_id: str):
     async def _run(db):
         store = (await db.execute(select(Store).where(Store.id == uuid.UUID(store_id)))).scalar_one_or_none()
         if store:
-            await sync_order_tracking(db, store)
-            await check_logistics_alerts(db, store)
+            await run_logistics_alert_check(db, store)
             await sync_review_alerts(db, store)
             await db.commit()
 

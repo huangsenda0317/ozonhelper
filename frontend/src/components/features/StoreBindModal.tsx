@@ -75,7 +75,7 @@ export function StoreBindModal({
       open={open}
       onCancel={handleClose}
       destroyOnHidden
-      maskClosable={!submitting}
+      mask={{ closable: !submitting }}
       closable={!submitting}
       footer={
         <div className="flex justify-end gap-sm">

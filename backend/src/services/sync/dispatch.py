@@ -7,11 +7,23 @@ import uuid
 from fastapi import BackgroundTasks
 
 from src.config import get_settings
-from src.services.sync.engine import execute_sync_job
+from src.services.sync.engine import execute_sync_job, fail_sync_job
 from src.worker.async_runner import run_async_task
 from src.worker.sync_tasks import sync_store_job
 
 logger = logging.getLogger(__name__)
+
+_INLINE_FAIL_MSG = '内联同步未能启动，请查看 API 日志或改用 SYNC_INLINE=false 并启动 Celery Worker'
+
+
+def _fail_sync_job_blocking(job_id: str, message: str) -> None:
+    async def _run(db):
+        await fail_sync_job(db, uuid.UUID(job_id), message)
+
+    try:
+        run_async_task(_run)
+    except Exception:
+        logger.exception('标记 SyncJob %s 失败状态时出错', job_id)
 
 
 def run_sync_job_blocking(job_id: str) -> None:
@@ -29,8 +41,10 @@ def run_sync_job_blocking(job_id: str) -> None:
                 time.sleep(0.2 * (attempt + 1))
                 continue
             logger.error('SyncJob %s 在重试后仍不存在，跳过执行', job_id)
+            _fail_sync_job_blocking(job_id, '同步任务未找到，请重试')
         except Exception:
             logger.exception('SyncJob %s 内联同步失败', job_id)
+            _fail_sync_job_blocking(job_id, _INLINE_FAIL_MSG)
             return
 
 

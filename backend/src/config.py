@@ -78,6 +78,9 @@ class Settings(BaseSettings):
     # 为 true 时在 API 进程内后台执行同步（无需单独启动 Celery Worker，适合本地开发）
     sync_inline: bool = True
 
+    # 店铺首次订单同步回溯天数（空库时）
+    order_sync_initial_days: int = 7
+
 
 @lru_cache()
 def get_settings() -> Settings:

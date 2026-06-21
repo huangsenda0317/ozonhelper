@@ -5,11 +5,23 @@ import { Select as AntSelect, type SelectProps } from "antd";
 
 export type { SelectProps };
 
-export function Select({ className = "", popupClassName = "", ...props }: SelectProps) {
+export function Select({
+  className = "",
+  popupClassName = "",
+  classNames,
+  ...props
+}: SelectProps) {
+  const dropdownClass = `select-sentry-dropdown ${popupClassName}`.trim();
   return (
     <AntSelect
       className={`select-sentry ${className}`.trim()}
-      popupClassName={`select-sentry-dropdown ${popupClassName}`.trim()}
+      classNames={{
+        ...classNames,
+        popup: {
+          ...classNames?.popup,
+          root: [dropdownClass, classNames?.popup?.root].filter(Boolean).join(" ") || undefined,
+        },
+      }}
       {...props}
     />
   );
