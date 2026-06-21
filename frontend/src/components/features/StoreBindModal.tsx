@@ -7,6 +7,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { createStore } from "@/lib/hooks/useOrders";
 import { ACTIVE_STORE_STORAGE_KEY } from "@/lib/store-context";
+import { beginStoreSyncTracking } from "@/lib/store-sync-tracker";
 
 interface StoreBindModalProps {
   open: boolean;
@@ -55,9 +56,12 @@ export function StoreBindModal({
         client_id: clientId,
         api_key: apiKey,
       });
-      message.success("店铺绑定成功");
+      message.success("店铺绑定成功，正在同步数据…");
       if (created?.id) {
         localStorage.setItem(ACTIVE_STORE_STORAGE_KEY, created.id);
+      }
+      if (created?.id && created.sync_job_id) {
+        beginStoreSyncTracking(created.id, created.sync_job_id, onSuccess);
       }
       resetForm();
       onClose();

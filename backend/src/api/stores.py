@@ -15,7 +15,7 @@ from src.models.store import Store
 from src.models.tracking_sync import SyncJob
 from src.models.user import User
 from src.schemas.common import ApiResponse
-from src.schemas.stores import StoreCreateRequest, StoreSummary, StoreVerifyResponse
+from src.schemas.stores import StoreCreateRequest, StoreCreateResponse, StoreSummary, StoreVerifyResponse
 from src.services.ozon.client import OzonSellerClient
 from src.services.stores.credentials import (
     decrypt_store_client_id,
@@ -67,7 +67,7 @@ async def list_stores(
     return ApiResponse(success=True, data=[_to_summary(s) for s in stores])
 
 
-@router.post('', response_model=ApiResponse[StoreSummary], status_code=status.HTTP_201_CREATED)
+@router.post('', response_model=ApiResponse[StoreCreateResponse], status_code=status.HTTP_201_CREATED)
 async def create_store(
     body: StoreCreateRequest,
     background_tasks: BackgroundTasks,
@@ -130,7 +130,11 @@ async def create_store(
     except Exception:
         logger.exception('create_store sync dispatch failed for job %s', job_id)
 
-    return ApiResponse(success=True, data=_to_summary(store))
+    summary = _to_summary(store)
+    return ApiResponse(
+        success=True,
+        data=StoreCreateResponse(**summary.model_dump(), sync_job_id=job_id),
+    )
 
 
 @router.delete('/{store_id}', status_code=status.HTTP_204_NO_CONTENT)

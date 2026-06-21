@@ -10,6 +10,7 @@ import { useTheme } from "@/lib/theme-context";
 import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { Card } from "@/components/ui/Card";
+import { formatRubPrice } from "@/lib/currency";
 
 interface PoolItem {
   id: string;
@@ -233,7 +234,7 @@ export default function SelectionPoolPage() {
                           isDark ? "text-on-primary" : "text-ink-deep"
                         }`}
                       >
-                        ₽{item.price_rub.toLocaleString()}
+                        {formatRubPrice(item.price_rub)}
                       </span>
                     )}
                     {item.rating != null && (

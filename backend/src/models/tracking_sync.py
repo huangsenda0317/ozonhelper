@@ -229,6 +229,7 @@ class FinanceTransaction(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=Decimal('0'))
     currency: Mapped[str] = mapped_column(String(8), default='RUB')
     posting_number: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    posting_order_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     sku: Mapped[str | None] = mapped_column(String(64), nullable=True)
     operation_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)

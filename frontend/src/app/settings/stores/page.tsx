@@ -2,12 +2,13 @@
 
 import React, { useState } from "react";
 import { message, Popconfirm, Spin, Tooltip } from "antd";
-import { Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { Plus, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { StoreBindModal } from "@/components/features/StoreBindModal";
 import { deleteStore, StoreSummary, verifyStore } from "@/lib/hooks/useOrders";
+import { useSyncingStoreIds } from "@/lib/hooks/useSyncingStoreId";
 import { ACTIVE_STORE_STORAGE_KEY, useStoreContext } from "@/lib/store-context";
 
 function StoreIconButton({
@@ -37,6 +38,7 @@ function StoreIconButton({
 
 export default function StoresSettingsPage() {
   const { stores, loading: storesLoading, refreshStores } = useStoreContext();
+  const syncingStoreIds = useSyncingStoreIds();
   const [bindModalOpen, setBindModalOpen] = useState(false);
 
   const openBindModal = () => setBindModalOpen(true);
@@ -103,12 +105,25 @@ export default function StoresSettingsPage() {
                   className="flex items-center justify-between p-md border border-hairline rounded-lg"
                 >
                   <div>
-                    <p className="text-body font-medium">{s.name}</p>
+                    <div className="flex items-center gap-sm flex-wrap">
+                      <p className="text-body font-medium">{s.name}</p>
+                      {syncingStoreIds.includes(s.id) && (
+                        <span className="inline-flex items-center gap-xs text-caption text-accent-violet-mid">
+                          <RefreshCw
+                            className="h-3 w-3 animate-spin shrink-0"
+                            aria-hidden="true"
+                          />
+                          同步中
+                        </span>
+                      )}
+                    </div>
                     <p className="text-caption text-muted">
                       最后同步：
-                      {s.last_sync_at
-                        ? new Date(s.last_sync_at).toLocaleString("zh-CN")
-                        : "从未"}
+                      {syncingStoreIds.includes(s.id)
+                        ? "进行中…"
+                        : s.last_sync_at
+                          ? new Date(s.last_sync_at).toLocaleString("zh-CN")
+                          : "从未"}
                     </p>
                   </div>
                   <div className="flex items-center h-8 gap-sm shrink-0">
@@ -163,7 +178,7 @@ export default function StoresSettingsPage() {
       <StoreBindModal
         open={bindModalOpen}
         onClose={() => setBindModalOpen(false)}
-        onSuccess={() => refreshStores(true)}
+        onSuccess={() => refreshStores(true, true)}
       />
     </div>
   );

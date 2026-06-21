@@ -10,6 +10,9 @@ export interface TrackingProductSummary {
   name: string;
   price: number | null;
   currency: string;
+  price_rub: number | null;
+  price_rub_estimated: boolean;
+  price_rub_source: string | null;
   stock_present: number;
   status_name: string | null;
   primary_image_url: string | null;
@@ -31,6 +34,11 @@ export interface TrackingProductDetail {
   old_price: number | null;
   min_price: number | null;
   currency: string;
+  price_rub: number | null;
+  price_rub_estimated: boolean;
+  price_rub_source: string | null;
+  old_price_rub: number | null;
+  min_price_rub: number | null;
   stock_present: number;
   stock_reserved: number;
   has_stock: boolean;

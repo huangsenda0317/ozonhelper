@@ -21,7 +21,8 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { StoreSelect } from "@/components/features/StoreSelect";
 import { useStoreContext } from "@/lib/store-context";
-import { triggerSync, pollSyncJob } from "@/lib/hooks/useDashboard";
+import { useStoreSync } from "@/lib/hooks/useStoreSync";
+import { useSyncingStoreIds } from "@/lib/hooks/useSyncingStoreId";
 
 const NAV = [
   { href: "/tracking", label: "概览", icon: LayoutDashboard, exact: true },
@@ -104,32 +105,29 @@ export function TrackingShell({ children }: { children: React.ReactNode }) {
   const {
     stores,
     activeStoreId,
+    activeStore,
     loading: storesLoading,
     refreshStores,
     notifyDataRefresh,
   } = useStoreContext();
-  const [syncingScope, setSyncingScope] = React.useState<"quick" | "all" | null>(null);
-  const [syncError, setSyncError] = React.useState<string | null>(null);
 
-  const handleSync = async (scope: "quick" | "all") => {
-    if (!activeStoreId) return;
-    setSyncingScope(scope);
-    setSyncError(null);
-    try {
-      const job = await triggerSync(activeStoreId, scope);
-      const result = await pollSyncJob(activeStoreId, job.id);
-      if (result.status === "failed") {
-        setSyncError(result.error_message || "同步失败");
-        return;
-      }
-      await refreshStores(true);
-      notifyDataRefresh();
-    } catch (err) {
-      setSyncError(err instanceof Error ? err.message : "同步失败");
-    } finally {
-      setSyncingScope(null);
-    }
-  };
+  const syncingStoreIds = useSyncingStoreIds();
+  const otherStoresSyncing = syncingStoreIds.filter((id) => id !== activeStoreId);
+  const otherSyncingNames = stores
+    .filter((s) => otherStoresSyncing.includes(s.id))
+    .map((s) => s.name);
+
+  const onSyncSuccess = React.useCallback(async () => {
+    await refreshStores(true);
+    notifyDataRefresh();
+  }, [refreshStores, notifyDataRefresh]);
+
+  const { syncing, syncError, handleSync } = useStoreSync({
+    activeStoreId,
+    onSuccess: onSyncSuccess,
+  });
+
+  const activeStoreName = activeStore?.name ?? "当前店铺";
 
   return (
     <div className="max-w-7xl mx-auto px-xxl py-xxl">
@@ -147,33 +145,25 @@ export function TrackingShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         {!storesLoading && stores.length > 0 && (
-          <div className="flex items-center gap-xs shrink-0">
+          <div className="flex flex-col items-end gap-xs shrink-0">
             <button
               type="button"
-              onClick={() => handleSync("quick")}
-              disabled={syncingScope !== null}
-              title="同步商品、库存与销售趋势（不含订单，约半分钟）"
+              onClick={handleSync}
+              disabled={syncing}
+              title={`仅同步当前所选店铺「${activeStoreName}」的商品、库存、订单与财务数据，不影响其他店铺`}
               className="inline-flex items-center gap-xs h-8 px-2 text-caption rounded-md transition-colors duration-200 cursor-pointer text-muted hover:text-ink hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40 dark:text-on-dark-muted dark:hover:text-on-primary dark:hover:bg-on-dark-faint"
             >
               <RefreshCw
-                className={`h-4 w-4 shrink-0 ${syncingScope === "quick" ? "animate-spin" : ""}`}
+                className={`h-4 w-4 shrink-0 ${syncing ? "animate-spin" : ""}`}
                 aria-hidden="true"
               />
-              {syncingScope === "quick" ? "同步中…" : "快速同步"}
+              {syncing ? "同步中…" : "同步当前店铺"}
             </button>
-            <button
-              type="button"
-              onClick={() => handleSync("all")}
-              disabled={syncingScope !== null}
-              title="含 FBS/FBO 订单与财务等全量同步，订单多时可能较久"
-              className="inline-flex items-center gap-xs h-8 px-2 text-caption rounded-md transition-colors duration-200 cursor-pointer text-muted hover:text-ink hover:bg-surface-elevated disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40 dark:text-on-dark-muted dark:hover:text-on-primary dark:hover:bg-on-dark-faint"
-            >
-              <RefreshCw
-                className={`h-4 w-4 shrink-0 ${syncingScope === "all" ? "animate-spin" : ""}`}
-                aria-hidden="true"
-              />
-              {syncingScope === "all" ? "同步中…" : "含订单同步"}
-            </button>
+            {otherSyncingNames.length > 0 && (
+              <p className="text-caption text-muted max-w-[16rem] text-right">
+                「{otherSyncingNames.join("」「")}」正在后台同步
+              </p>
+            )}
           </div>
         )}
       </header>

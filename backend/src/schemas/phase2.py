@@ -88,6 +88,13 @@ class FinanceSummary(BaseModel):
     net_settlement: float = 0
     gross_profit: float = 0
     transaction_count: int = 0
+    delivery_count: int = 0
+    actual_delivered_order_count: int = 0
+    synced_order_count: int = 0
+    synced_delivered_order_count: int = 0
+    range_days: int = 30
+    period_start: str | None = None
+    period_end: str | None = None
 
 
 class FinanceTransactionItem(BaseModel):

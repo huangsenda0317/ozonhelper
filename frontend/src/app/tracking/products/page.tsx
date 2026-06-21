@@ -28,6 +28,8 @@ import {
   getTrackingErrorMessage,
   TrackingProductSummary,
 } from "@/lib/hooks/useTracking";
+import { formatSellerPrice, SELLER_PRICE_NOTE } from "@/lib/currency";
+import { formatProductStatusName } from "@/lib/product-status";
 
 function StatCard({
   label,
@@ -352,6 +354,7 @@ export default function TrackingProductsPage() {
         </Card>
       ) : (
         <>
+          <p className="text-caption text-muted mb-md">{SELLER_PRICE_NOTE}</p>
           <Card variant="default" padding="none" className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[640px]">
@@ -422,14 +425,7 @@ export default function TrackingProductsPage() {
                         {p.ordered_units}
                       </td>
                       <td className="px-lg py-md align-middle text-body whitespace-nowrap">
-                        {p.price != null ? (
-                          <>
-                            {p.currency === "RUB" ? "₽" : p.currency}
-                            {p.price.toLocaleString()}
-                          </>
-                        ) : (
-                          <span className="text-muted">-</span>
-                        )}
+                        {formatSellerPrice(p.price, p.currency)}
                       </td>
                       <td className="px-lg py-md align-middle text-body whitespace-nowrap">
                         <span
@@ -441,7 +437,7 @@ export default function TrackingProductsPage() {
                         </span>
                       </td>
                       <td className="px-lg py-md align-middle text-caption text-body whitespace-nowrap">
-                        {p.status_name || "-"}
+                        {formatProductStatusName(p.status_name)}
                       </td>
                       <td className="px-lg py-md align-middle text-right whitespace-nowrap">
                         <Link

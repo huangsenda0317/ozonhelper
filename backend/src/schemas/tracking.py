@@ -10,6 +10,9 @@ class TrackingProductSummary(BaseModel):
     name: str
     price: float | None = None
     currency: str = 'RUB'
+    price_rub: float | None = None
+    price_rub_estimated: bool = False
+    price_rub_source: str | None = None
     stock_present: int = 0
     status_name: str | None = None
     primary_image_url: str | None = None
@@ -31,6 +34,10 @@ class TrackingProductDetail(BaseModel):
     old_price: float | None = None
     min_price: float | None = None
     currency: str = 'RUB'
+    price_rub: float | None = None
+    price_rub_estimated: bool = False
+    old_price_rub: float | None = None
+    min_price_rub: float | None = None
     stock_present: int = 0
     stock_reserved: int = 0
     has_stock: bool = False

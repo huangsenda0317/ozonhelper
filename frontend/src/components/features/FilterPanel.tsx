@@ -4,6 +4,7 @@ import React, { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
+import { RUB_SUFFIX } from "@/lib/currency";
 
 interface FilterPanelProps {
   onApply: (filters: FilterValues) => void;
@@ -71,7 +72,7 @@ export function FilterPanel({ onApply, className = "" }: FilterPanelProps) {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-md mt-md">
           <div>
             <label className="block text-caption text-muted mb-xxs">
-              最低价格 (₽)
+              最低价格{RUB_SUFFIX}
             </label>
             <input
               type="number"
@@ -83,7 +84,7 @@ export function FilterPanel({ onApply, className = "" }: FilterPanelProps) {
           </div>
           <div>
             <label className="block text-caption text-muted mb-xxs">
-              最高价格 (₽)
+              最高价格{RUB_SUFFIX}
             </label>
             <input
               type="number"

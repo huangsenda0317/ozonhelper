@@ -87,6 +87,10 @@ export interface StoreSummary {
   created_at: string;
 }
 
+export interface StoreCreateResult extends StoreSummary {
+  sync_job_id: string;
+}
+
 let storesFetchInflight: Promise<StoreSummary[]> | null = null;
 
 /** 丢弃进行中的列表请求去重，确保变更后能拉到最新数据 */
@@ -108,7 +112,8 @@ export async function fetchStores(force = false): Promise<StoreSummary[]> {
 }
 
 export async function createStore(body: { name: string; client_id: string; api_key: string }) {
-  const res = await apiClient.post<StoreSummary>("/stores", body);
+  const res = await apiClient.post<StoreCreateResult>("/stores", body);
+  invalidateStoresFetchCache();
   return res.data;
 }
 

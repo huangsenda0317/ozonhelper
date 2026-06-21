@@ -3,6 +3,7 @@
 import React from "react";
 
 import { Card } from "@/components/ui/Card";
+import { formatRubPrice } from "@/lib/currency";
 
 interface ProductCardProps {
   id: string;
@@ -65,7 +66,7 @@ export function ProductCard({
           <h3 className="text-body font-medium truncate">{title}</h3>
           <div className="flex items-center gap-md mt-xs">
             <span className="text-heading-sm font-display">
-              ₽{price_rub.toLocaleString()}
+              {formatRubPrice(price_rub)}
             </span>
             {rating && (
               <span className="text-caption text-muted">★ {rating}</span>

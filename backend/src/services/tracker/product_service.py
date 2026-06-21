@@ -16,6 +16,7 @@ from src.models.store import Store
 from src.models.tracking_sync import SyncedProduct
 from src.schemas.tracking import TrackingProductDetail, TrackingProductListParams, TrackingProductSummary
 from src.services.ozon.client import OzonSellerClient
+from src.services.phase2.exchange_rate import get_cny_to_rub_rate
 from src.services.stores.credentials import ozon_client_for_store
 
 logger = logging.getLogger(__name__)
@@ -215,6 +216,142 @@ def _matches_stock(item: TrackingProductSummary, has_stock: bool | None) -> bool
     if has_stock:
         return item.stock_present > 0
     return item.stock_present <= 0
+
+
+def _extract_v5_rub_hints(item: dict) -> dict[str, float | None]:
+    price_block = item.get('price') or {}
+    currency = str(price_block.get('currency_code') or 'RUB').upper()
+    seller_price = _parse_float(price_block.get('price'))
+    marketing = _parse_float(price_block.get('marketing_price'))
+
+    marketing_rub: float | None = None
+    if marketing is not None and marketing > 0:
+        if currency == 'RUB':
+            marketing_rub = marketing
+        elif seller_price and seller_price > 0 and marketing > seller_price * 1.5:
+            # 跨境 CNY 店若 marketing 明显高于卖家 CNY 价，视为 Ozon 返回的卢布橱窗价
+            marketing_rub = marketing
+
+    return {'marketing_price': marketing_rub, 'seller_currency': currency}
+
+
+def _resolve_storefront_rub(
+    seller_price: float | None,
+    currency: str,
+    hints: dict[str, float | None],
+    cny_to_rub: float | None,
+    cny_to_rub_source: str | None = None,
+) -> tuple[float | None, bool, str | None]:
+    cur = (currency or 'RUB').upper()
+
+    if cur == 'RUB' and seller_price is not None:
+        return round(seller_price, 2), False, 'seller'
+
+    marketing = hints.get('marketing_price')
+    if marketing is not None and marketing > 0:
+        return round(marketing, 2), False, 'ozon_marketing'
+
+    if cur == 'CNY' and seller_price is not None and cny_to_rub is not None and cny_to_rub > 0:
+        source = cny_to_rub_source or 'market_rate'
+        return round(seller_price * cny_to_rub, 2), True, source
+
+    return None, True, None
+
+
+async def _fetch_v5_price_hints(
+    client: OzonSellerClient,
+    product_ids: list[str],
+) -> dict[str, dict[str, float | None]]:
+    result: dict[str, dict[str, float | None]] = {}
+    if not product_ids:
+        return result
+    for i in range(0, len(product_ids), 1000):
+        batch = product_ids[i : i + 1000]
+        try:
+            raw = await client.product_info_prices(product_ids=batch, limit=len(batch))
+            for item in raw.get('items') or []:
+                pid = str(item.get('product_id') or '')
+                result[pid] = _extract_v5_rub_hints(item)
+        except Exception:
+            logger.warning('v5 product_info/prices 拉取失败', exc_info=True)
+    return result
+
+
+def _enrich_summary_rub(
+    summary: TrackingProductSummary,
+    hints: dict[str, float | None] | None,
+    cny_to_rub: float | None,
+    cny_to_rub_source: str | None = None,
+) -> TrackingProductSummary:
+    rub, estimated, source = _resolve_storefront_rub(
+        summary.price,
+        summary.currency,
+        hints or {},
+        cny_to_rub,
+        cny_to_rub_source,
+    )
+    return summary.model_copy(
+        update={
+            'price_rub': rub,
+            'price_rub_estimated': estimated if rub is not None else False,
+            'price_rub_source': source,
+        }
+    )
+
+
+def _enrich_detail_rub(
+    detail: TrackingProductDetail,
+    hints: dict[str, float | None] | None,
+    cny_to_rub: float | None,
+    cny_to_rub_source: str | None = None,
+) -> TrackingProductDetail:
+    price_rub, price_estimated, source = _resolve_storefront_rub(
+        detail.price,
+        detail.currency,
+        hints or {},
+        cny_to_rub,
+        cny_to_rub_source,
+    )
+    old_rub, _, _ = _resolve_storefront_rub(
+        detail.old_price, detail.currency, {}, cny_to_rub, cny_to_rub_source
+    )
+    min_rub, _, _ = _resolve_storefront_rub(
+        detail.min_price, detail.currency, {}, cny_to_rub, cny_to_rub_source
+    )
+    return detail.model_copy(
+        update={
+            'price_rub': price_rub,
+            'price_rub_estimated': price_estimated if price_rub is not None else False,
+            'price_rub_source': source,
+            'old_price_rub': old_rub,
+            'min_price_rub': min_rub,
+        }
+    )
+
+
+async def _enrich_summaries(
+    client: OzonSellerClient,
+    items: list[TrackingProductSummary],
+    cny_to_rub: float | None,
+    cny_to_rub_source: str | None = None,
+) -> list[TrackingProductSummary]:
+    if not items:
+        return items
+    hints_map = await _fetch_v5_price_hints(client, [item.product_id for item in items])
+    return [
+        _enrich_summary_rub(item, hints_map.get(item.product_id), cny_to_rub, cny_to_rub_source)
+        for item in items
+    ]
+
+
+async def _enrich_detail(
+    client: OzonSellerClient,
+    detail: TrackingProductDetail,
+    cny_to_rub: float | None,
+    cny_to_rub_source: str | None = None,
+) -> TrackingProductDetail:
+    hints_map = await _fetch_v5_price_hints(client, [detail.product_id])
+    return _enrich_detail_rub(detail, hints_map.get(detail.product_id), cny_to_rub, cny_to_rub_source)
 
 
 def _sort_key(item: TrackingProductSummary, sort_by: str):
@@ -422,6 +559,9 @@ class TrackingProductService:
         offset = (params.page - 1) * params.limit
         rows = (await db.execute(stmt.offset(offset).limit(params.limit))).scalars().all()
         items = [_row_to_summary(r) for r in rows]
+        client = self._client_for_store(store)
+        cny_to_rub, fx_source = await get_cny_to_rub_rate(db, store.id)
+        items = await _enrich_summaries(client, items, cny_to_rub, fx_source)
         cached_at = store.last_sync_at.isoformat() if store.last_sync_at else None
         return items, total, cached_at
 
@@ -438,7 +578,10 @@ class TrackingProductService:
         row = (await db.execute(stmt)).scalar_one_or_none()
         if not row:
             raise NotFoundException('product', product_id)
-        return _row_to_detail(row)
+        detail = _row_to_detail(row)
+        client = self._client_for_store(store)
+        cny_to_rub, fx_source = await get_cny_to_rub_rate(db, store.id)
+        return await _enrich_detail(client, detail, cny_to_rub, fx_source)
 
     async def list_products(
         self,
@@ -478,6 +621,9 @@ class TrackingProductService:
         total = len(filtered)
         start = (params.page - 1) * params.limit
         page_items = filtered[start : start + params.limit]
+        if page_items:
+            cny_to_rub, fx_source = await get_cny_to_rub_rate(db, store.id if db else None)
+            page_items = await _enrich_summaries(client, page_items, cny_to_rub, fx_source)
         return page_items, total, cached_at
 
     async def get_product_detail(
@@ -500,7 +646,11 @@ class TrackingProductService:
         items = raw.get('items') or []
         if not items:
             raise NotFoundException('product', product_id)
-        return map_to_detail(items[0])
+        detail = map_to_detail(items[0])
+        cny_to_rub, fx_source = (
+            await get_cny_to_rub_rate(db, store.id) if db else await get_cny_to_rub_rate(None, None)
+        )
+        return await _enrich_detail(client, detail, cny_to_rub, fx_source)
 
     async def batch_visibility(
         self,

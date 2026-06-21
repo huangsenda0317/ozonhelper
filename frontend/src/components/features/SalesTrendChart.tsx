@@ -12,6 +12,7 @@ import type { EChartsOption } from "echarts";
 import { CanvasRenderer } from "echarts/renderers";
 
 import { TrendPoint } from "@/lib/hooks/useDashboard";
+import { formatRubCompact, formatRubPrice } from "@/lib/currency";
 import { useTheme } from "@/lib/theme-context";
 
 echarts.use([LineChart, BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
@@ -75,14 +76,14 @@ function buildOption(
       if (isRevenue) {
         lines.push(
           point.revenue != null
-            ? `营收：₽${point.revenue.toLocaleString()}`
+            ? `营收：${formatRubPrice(point.revenue)}`
             : "营收：暂无",
         );
         lines.push(`销量：${point.units_sold} 件`);
       } else {
         lines.push(`销量：${point.units_sold} 件`);
         if (point.revenue != null) {
-          lines.push(`营收：₽${point.revenue.toLocaleString()}`);
+          lines.push(`营收：${formatRubPrice(point.revenue)}`);
         }
       }
       return lines.join("<br/>");
@@ -149,7 +150,7 @@ function buildOption(
         color: colors.axis,
         fontSize: 11,
         formatter: isRevenue
-          ? (v: number) => (v >= 1000 ? `₽${(v / 1000).toFixed(0)}k` : `₽${v}`)
+          ? (v: number) => formatRubCompact(v)
           : undefined,
       },
     },
@@ -218,7 +219,7 @@ export function MetricSwitch({
       onChange={onChange}
       options={[
         { id: "units", label: "销量" },
-        { id: "revenue", label: "营收" },
+        { id: "revenue", label: "营收 (₽)" },
       ]}
     />
   );

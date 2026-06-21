@@ -11,6 +11,10 @@ class StoreSummary(BaseModel):
     created_at: str
 
 
+class StoreCreateResponse(StoreSummary):
+    sync_job_id: str
+
+
 class StoreCreateRequest(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     client_id: str = Field(min_length=1)

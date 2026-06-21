@@ -62,7 +62,7 @@ export async function fetchTrends(storeId: string, range: 7 | 30 = 7): Promise<T
   return res.data ?? [];
 }
 
-export async function triggerSync(storeId: string, scope: SyncScope = "quick"): Promise<SyncJob> {
+export async function triggerSync(storeId: string, scope: SyncScope = "all"): Promise<SyncJob> {
   const res = await apiClient.post<SyncJob>(`/tracking/sync?${qs(storeId)}`, { scope });
   if (!res.data) throw new ApiError("SYNC_ERROR", "同步触发失败", 500);
   return res.data;
@@ -108,4 +108,19 @@ export async function pollSyncJob(
     );
   }
   throw new ApiError("SYNC_TIMEOUT", "同步超时", 504);
+}
+
+const syncInflight = new Map<string, Promise<SyncJob>>();
+
+/** 等待同步任务完成；同一 store+job 复用进行中的轮询，避免重复请求 */
+export function waitForSyncJob(storeId: string, jobId: string): Promise<SyncJob> {
+  const key = `${storeId}:${jobId}`;
+  let existing = syncInflight.get(key);
+  if (!existing) {
+    existing = pollSyncJob(storeId, jobId).finally(() => {
+      syncInflight.delete(key);
+    });
+    syncInflight.set(key, existing);
+  }
+  return existing;
 }

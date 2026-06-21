@@ -9,6 +9,7 @@ import { useTheme } from "@/lib/theme-context";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { formatRubPrice } from "@/lib/currency";
 
 interface Product {
   id: string;
@@ -177,7 +178,7 @@ export default function ProductsPage() {
                           isDark ? "text-on-primary" : "text-ink-deep"
                         }`}
                       >
-                        ₽{p.price_rub.toLocaleString()}
+                        {formatRubPrice(p.price_rub)}
                       </span>
                     </td>
                     <td className="px-lg py-md align-middle text-caption text-body max-w-[160px] truncate">

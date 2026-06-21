@@ -25,6 +25,7 @@ import {
   fetchTrends,
   TrendPoint,
 } from "@/lib/hooks/useDashboard";
+import { formatRub } from "@/lib/currency";
 
 function KpiCard({ label, value }: { label: string; value: string | number }) {
   return (
@@ -139,9 +140,9 @@ export default function TrackingDashboardPage() {
 
       {(kpi.revenue_month != null || kpi.gross_profit_month != null) && (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-lg">
-          <KpiCard label="本月回款" value={kpi.revenue_month?.toFixed(0) ?? "-"} />
-          <KpiCard label="本月手续费" value={kpi.fees_month?.toFixed(0) ?? "-"} />
-          <KpiCard label="本月毛利估算" value={kpi.gross_profit_month?.toFixed(0) ?? "-"} />
+          <KpiCard label="本月回款" value={kpi.revenue_month != null ? formatRub(kpi.revenue_month, { decimals: 0 }) : "-"} />
+          <KpiCard label="本月手续费" value={kpi.fees_month != null ? formatRub(kpi.fees_month, { decimals: 0 }) : "-"} />
+          <KpiCard label="本月毛利估算" value={kpi.gross_profit_month != null ? formatRub(kpi.gross_profit_month, { decimals: 0 }) : "-"} />
         </div>
       )}
 

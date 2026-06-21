@@ -49,6 +49,27 @@ _LOGISTICS_STATUS_BY_NODE: dict[str, frozenset[str]] = {
 _TERMINAL_ORDER_STATUSES = frozenset({'delivered', 'received', 'cancelled', 'not_accepted'})
 
 
+def _parse_finance_posting(op: dict) -> tuple[str | None, datetime | None, str | None]:
+    """从 Ozon 财务 operation 解析货号、下单日与 SKU。"""
+    posting = op.get('posting') or {}
+    posting_number = op.get('posting_number') or posting.get('posting_number')
+    order_dt = None
+    order_date_raw = posting.get('order_date')
+    if order_date_raw:
+        try:
+            order_dt = datetime.fromisoformat(str(order_date_raw).replace('Z', '+00:00'))
+            if order_dt.tzinfo is None:
+                order_dt = order_dt.replace(tzinfo=UTC)
+        except ValueError:
+            order_dt = None
+    sku = op.get('sku')
+    if not sku:
+        items = op.get('items') or []
+        if items:
+            sku = str(items[0].get('sku') or '') or None
+    return posting_number, order_dt, sku
+
+
 def _overdue_days(now: datetime, anchor: datetime) -> int:
     """距 anchor 已满的天数（向下取整）。"""
     if anchor.tzinfo is None:
@@ -216,16 +237,20 @@ async def sync_finance(db: AsyncSession, store: Store, client: OzonSellerClient 
             if op_date:
                 try:
                     dt = datetime.fromisoformat(str(op_date).replace('Z', '+00:00'))
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=UTC)
                 except ValueError:
                     dt = None
+            posting_number, posting_order_date, sku = _parse_finance_posting(op)
             values = {
                 'store_id': store.id,
                 'transaction_id': tx_id,
                 'tx_type': str(op.get('operation_type') or op.get('type') or ''),
                 'amount': Decimal(str(op.get('amount') or 0)),
                 'currency': str(op.get('currency_code') or 'RUB'),
-                'posting_number': op.get('posting_number'),
-                'sku': str(op.get('sku') or '') or None,
+                'posting_number': posting_number,
+                'posting_order_date': posting_order_date,
+                'sku': sku,
                 'operation_date': dt,
                 'description': op.get('name') or op.get('description'),
                 'synced_at': now,

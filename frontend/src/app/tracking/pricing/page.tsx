@@ -14,6 +14,16 @@ import {
   ProfitConfig,
   saveProfitConfig,
 } from "@/lib/hooks/usePricing";
+import { formatRubPrice, RUB_SUFFIX } from "@/lib/currency";
+
+const PROFIT_CONFIG_LABELS: Record<string, string> = {
+  purchase_cost: `采购成本${RUB_SUFFIX}`,
+  logistics_cost: `物流成本${RUB_SUFFIX}`,
+  platform_fee_rate: "平台费率",
+  exchange_rate: "汇率",
+  margin_buffer: "利润缓冲",
+  max_price_threshold: `最高限价${RUB_SUFFIX}`,
+};
 
 export default function PricingPage() {
   const searchParams = useSearchParams();
@@ -96,7 +106,7 @@ export default function PricingPage() {
           {(["purchase_cost", "logistics_cost", "platform_fee_rate", "exchange_rate", "margin_buffer"] as const).map(
             (key) => (
               <label key={key} className="block">
-                <span className="text-caption text-muted">{key}</span>
+                <span className="text-caption text-muted">{PROFIT_CONFIG_LABELS[key] ?? key}</span>
                 <input
                   type="number"
                   step="0.01"
@@ -128,8 +138,8 @@ export default function PricingPage() {
                 <tr className="border-b border-hairline bg-surface-elevated">
                   <th className="px-lg py-md w-10" />
                   <th className="px-lg py-md text-micro-cap text-muted">商品</th>
-                  <th className="px-lg py-md text-micro-cap text-muted">当前价</th>
-                  <th className="px-lg py-md text-micro-cap text-muted">保本价</th>
+                  <th className="px-lg py-md text-micro-cap text-muted">当前价{RUB_SUFFIX}</th>
+                  <th className="px-lg py-md text-micro-cap text-muted">保本价{RUB_SUFFIX}</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,9 +160,9 @@ export default function PricingPage() {
                       <p className="text-body">{item.name ?? item.offer_id}</p>
                       <p className="text-caption text-muted">{item.offer_id}</p>
                     </td>
-                    <td className="px-lg py-md">{item.price ?? "-"}</td>
+                    <td className="px-lg py-md">{formatRubPrice(item.price)}</td>
                     <td className={`px-lg py-md ${item.is_price_anomaly ? "text-accent-pink font-medium" : ""}`}>
-                      {item.suggested_min_price ?? "-"}
+                      {formatRubPrice(item.suggested_min_price)}
                     </td>
                   </tr>
                 ))}
@@ -164,7 +174,7 @@ export default function PricingPage() {
               <span className="text-caption">已选 {selected.size} 项</span>
               <input
                 type="number"
-                placeholder="新价格"
+                placeholder={`新价格${RUB_SUFFIX}`}
                 value={newPrice}
                 onChange={(e) => setNewPrice(e.target.value)}
                 className="w-28 px-sm py-xs rounded text-ink"

@@ -29,6 +29,36 @@ export const CHANGELOG: ChangelogDay[] = [
     date: "2026-06-21",
     items: [
       {
+        tag: "改进",
+        title: "商品中心价格展示",
+        description:
+          "列表与详情仅展示 Ozon 卖家结算价（跨境店多为 CNY），移除不可靠的前台卢布换算列，并补充价格口径说明；商品/销售状态改为中文展示，详情返回链接回到商品 Tab。",
+      },
+      {
+        tag: "改进",
+        title: "财务对账指标口径",
+        description:
+          "区分「财务入账笔数」「实际送达订单」「同期入库订单」；修复 posting_number / posting_order_date 解析与 stale 元数据自动回填，使实际送达订单统计可用。",
+      },
+      {
+        tag: "改进",
+        title: "ERP 金额与状态展示",
+        description:
+          "看板、价格中心、订单等模块金额统一卢布格式化；新增 product-status 映射；筛选面板销售状态下拉中文化。",
+      },
+      {
+        tag: "新功能",
+        title: "店铺绑定后同步进度",
+        description:
+          "绑定 Ozon 店铺后展示同步进度与完成提示；跨 Tab 通过 store-sync-tracker / sync-session 跟踪正在同步的店铺，看板与订单页自动刷新。",
+      },
+      {
+        tag: "改进",
+        title: "CNY/RUB 市场汇率服务",
+        description:
+          "后端接入 fawazahmed0/currency-api 公共接口获取 CNY→RUB 汇率（Redis 缓存 24h），GET /api/v1/exchange-rate 返回真实数据；商品前台卢布价已从 UI 移除。",
+      },
+      {
         tag: "修复",
         title: "物流预警检测与阈值生效",
         description:

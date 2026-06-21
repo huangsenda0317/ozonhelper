@@ -4,6 +4,7 @@ import React, { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
+import { PRODUCT_STATUS_FILTER_OPTIONS } from "@/lib/product-status";
 
 export interface TrackingFilterValues {
   visibility: string;
@@ -90,12 +91,15 @@ export function TrackingFilterPanel({
             <label className="block text-caption text-muted mb-xxs">
               销售状态
             </label>
-            <input
-              type="text"
-              value={filters.status}
-              onChange={(e) => handleChange("status", e.target.value)}
-              className="w-full px-sm py-xs text-caption border border-hairline rounded-md"
-              placeholder="如：Продается / 在售"
+            <Select
+              value={filters.status || undefined}
+              onChange={(value) => handleChange("status", value ? String(value) : "")}
+              allowClear
+              placeholder="全部"
+              options={PRODUCT_STATUS_FILTER_OPTIONS.filter((o) => o.value !== "").map((o) => ({
+                label: o.label,
+                value: o.value,
+              }))}
             />
           </div>
           <div>

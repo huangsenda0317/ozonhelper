@@ -20,6 +20,13 @@ import {
   getTrackingErrorMessage,
   TrackingProductDetail,
 } from "@/lib/hooks/useTracking";
+import { formatSellerPrice, SELLER_PRICE_NOTE } from "@/lib/currency";
+import {
+  formatProductModerateStatus,
+  formatProductStatusDescription,
+  formatProductStatusName,
+  formatProductValidationStatus,
+} from "@/lib/product-status";
 
 interface PageProps {
   params: { productId: string };
@@ -129,7 +136,7 @@ export default function TrackingProductDetailPage({ params }: PageProps) {
   return (
     <div className="max-w-7xl mx-auto px-xxl py-xxl">
       <div className="mb-xl">
-        <Link href="/tracking" className="cursor-pointer inline-block">
+        <Link href="/tracking/products" className="cursor-pointer inline-block">
           <Button variant="ghost" size="sm" className="gap-xs">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             返回列表
@@ -173,14 +180,10 @@ export default function TrackingProductDetailPage({ params }: PageProps) {
           </header>
 
           {/* KPI strip */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-lg mb-xl">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-lg mb-md">
             <DetailStat
-              label="售价"
-              value={
-                product.price != null
-                  ? `${product.currency === "RUB" ? "₽" : product.currency}${product.price.toLocaleString()}`
-                  : "-"
-              }
+              label="价格"
+              value={formatSellerPrice(product.price, product.currency)}
               highlight
             />
             <DetailStat
@@ -193,13 +196,10 @@ export default function TrackingProductDetailPage({ params }: PageProps) {
             />
             <DetailStat
               label="最低价"
-              value={
-                product.min_price != null
-                  ? `₽${product.min_price.toLocaleString()}`
-                  : "-"
-              }
+              value={formatSellerPrice(product.min_price, product.currency)}
             />
           </div>
+          <p className="text-caption text-muted mb-xl">{SELLER_PRICE_NOTE}</p>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-xl">
             {/* Image column */}
@@ -242,13 +242,13 @@ export default function TrackingProductDetailPage({ params }: PageProps) {
                 {product.status_name && (
                   <StatusBadge
                     status={statusType}
-                    label={product.status_name}
+                    label={formatProductStatusName(product.status_name)}
                   />
                 )}
                 {product.price != null && product.old_price != null &&
                   product.old_price > 0 && (
                     <span className="text-caption text-muted line-through">
-                      ₽{product.old_price.toLocaleString()}
+                      {formatSellerPrice(product.old_price, product.currency)}
                     </span>
                   )}
               </div>
@@ -261,15 +261,23 @@ export default function TrackingProductDetailPage({ params }: PageProps) {
                 <InfoRow label="Offer ID" value={product.offer_id} />
                 <InfoRow label="SKU" value={product.sku} />
                 <InfoRow label="条码" value={product.barcode} />
-                <InfoRow label="状态说明" value={product.status_description} />
-                <InfoRow label="审核状态" value={product.moderate_status} />
-                <InfoRow label="验证状态" value={product.validation_status} />
+                <InfoRow label="状态说明" value={formatProductStatusDescription(product.status_description)} />
+                <InfoRow label="审核状态" value={formatProductModerateStatus(product.moderate_status)} />
+                <InfoRow label="验证状态" value={formatProductValidationStatus(product.validation_status)} />
               </Card>
 
               <Card variant="default" padding="md">
                 <h2 className="text-heading-sm font-display text-ink mb-md">
                   价格与库存
                 </h2>
+                <InfoRow
+                  label="价格"
+                  value={formatSellerPrice(product.price, product.currency)}
+                />
+                <InfoRow
+                  label="结算货币"
+                  value={product.currency}
+                />
                 <InfoRow
                   label="是否有货"
                   value={product.has_stock ? "是" : "否"}
