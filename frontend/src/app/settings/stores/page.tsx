@@ -1,15 +1,34 @@
 "use client";
 
 import React, { useState } from "react";
-import { message, Popconfirm, Spin, Tooltip } from "antd";
+import { message, Modal, Popconfirm, Spin, Tooltip } from "antd";
 import { Plus, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
 import { StoreBindModal } from "@/components/features/StoreBindModal";
-import { deleteStore, StoreSummary, verifyStore } from "@/lib/hooks/useOrders";
+import {
+  deleteStore,
+  OrderSyncInitialDays,
+  StoreSummary,
+  updateStoreOrderSyncDays,
+  verifyStore,
+} from "@/lib/hooks/useOrders";
 import { useSyncingStoreIds } from "@/lib/hooks/useSyncingStoreId";
+import { beginStoreSyncTracking } from "@/lib/store-sync-tracker";
 import { ACTIVE_STORE_STORAGE_KEY, useStoreContext } from "@/lib/store-context";
+
+const ORDER_SYNC_DAY_OPTIONS: { value: OrderSyncInitialDays; label: string }[] = [
+  { value: 7, label: "7 天" },
+  { value: 14, label: "14 天" },
+  { value: 30, label: "30 天" },
+];
+
+interface PendingOrderSyncChange {
+  store: StoreSummary;
+  days: OrderSyncInitialDays;
+}
 
 function StoreIconButton({
   label,
@@ -40,6 +59,9 @@ export default function StoresSettingsPage() {
   const { stores, loading: storesLoading, refreshStores } = useStoreContext();
   const syncingStoreIds = useSyncingStoreIds();
   const [bindModalOpen, setBindModalOpen] = useState(false);
+  const [pendingOrderSyncChange, setPendingOrderSyncChange] =
+    useState<PendingOrderSyncChange | null>(null);
+  const [orderSyncUpdating, setOrderSyncUpdating] = useState(false);
 
   const openBindModal = () => setBindModalOpen(true);
 
@@ -66,6 +88,27 @@ export default function StoresSettingsPage() {
       await refreshStores(true, true);
     } catch (err) {
       message.error(err instanceof Error ? err.message : "删除失败");
+    }
+  };
+
+  const handleConfirmOrderSyncDays = async () => {
+    if (!pendingOrderSyncChange) return;
+    const { store, days } = pendingOrderSyncChange;
+    setOrderSyncUpdating(true);
+    try {
+      const result = await updateStoreOrderSyncDays(store.id, days);
+      setPendingOrderSyncChange(null);
+      message.success(`已切换为 ${days} 天，正在重新同步订单…`);
+      await refreshStores(true, true);
+      if (result.sync_job_id) {
+        beginStoreSyncTracking(store.id, result.sync_job_id, () =>
+          refreshStores(true, true),
+        );
+      }
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : "切换失败");
+    } finally {
+      setOrderSyncUpdating(false);
     }
   };
 
@@ -125,6 +168,23 @@ export default function StoresSettingsPage() {
                           ? new Date(s.last_sync_at).toLocaleString("zh-CN")
                           : "从未"}
                     </p>
+                    <div className="flex items-center gap-sm mt-xs flex-wrap">
+                      <span className="text-caption text-muted">订单回溯</span>
+                      <Select
+                        size="small"
+                        className="min-w-[88px]"
+                        value={(s.order_sync_initial_days ?? 30) as OrderSyncInitialDays}
+                        options={ORDER_SYNC_DAY_OPTIONS}
+                        disabled={
+                          syncingStoreIds.includes(s.id) || orderSyncUpdating
+                        }
+                        onChange={(value) => {
+                          const days = value as OrderSyncInitialDays;
+                          if (days === (s.order_sync_initial_days ?? 30)) return;
+                          setPendingOrderSyncChange({ store: s, days });
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="flex items-center h-8 gap-sm shrink-0">
                     <Tooltip title="校验">
@@ -180,6 +240,29 @@ export default function StoresSettingsPage() {
         onClose={() => setBindModalOpen(false)}
         onSuccess={() => refreshStores(true, true)}
       />
+
+      <Modal
+        title="切换订单回溯天数"
+        open={!!pendingOrderSyncChange}
+        okText="确认切换"
+        cancelText="取消"
+        confirmLoading={orderSyncUpdating}
+        onOk={() => void handleConfirmOrderSyncDays()}
+        onCancel={() => {
+          if (orderSyncUpdating) return;
+          setPendingOrderSyncChange(null);
+        }}
+        mask={{ closable: !orderSyncUpdating }}
+        closable={!orderSyncUpdating}
+      >
+        {pendingOrderSyncChange && (
+          <p className="text-body text-muted">
+            将订单回溯天数切换为{" "}
+            <strong className="text-ink">{pendingOrderSyncChange.days} 天</strong>
+            。切换后将清空本地订单缓存并立即重新同步，是否继续？
+          </p>
+        )}
+      </Modal>
     </div>
   );
 }

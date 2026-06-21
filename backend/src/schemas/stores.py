@@ -1,12 +1,17 @@
 """店铺管理 schemas"""
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
+
+OrderSyncInitialDays = Literal[7, 14, 30]
 
 
 class StoreSummary(BaseModel):
     id: str
     name: str
     is_active: bool
+    order_sync_initial_days: int = 30
     last_sync_at: str | None = None
     created_at: str
 
@@ -24,3 +29,11 @@ class StoreCreateRequest(BaseModel):
 class StoreVerifyResponse(BaseModel):
     valid: bool
     reason: str | None = None
+
+
+class StoreOrderSyncDaysRequest(BaseModel):
+    order_sync_initial_days: OrderSyncInitialDays
+
+
+class StoreOrderSyncDaysResponse(StoreSummary):
+    sync_job_id: str

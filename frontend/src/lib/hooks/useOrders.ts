@@ -83,8 +83,15 @@ export interface StoreSummary {
   id: string;
   name: string;
   is_active: boolean;
+  order_sync_initial_days: number;
   last_sync_at: string | null;
   created_at: string;
+}
+
+export type OrderSyncInitialDays = 7 | 14 | 30;
+
+export interface StoreOrderSyncDaysResult extends StoreSummary {
+  sync_job_id: string;
 }
 
 export interface StoreCreateResult extends StoreSummary {
@@ -127,5 +134,18 @@ export async function verifyStore(storeId: string) {
     `/stores/${storeId}/verify`,
     {},
   );
+  return res.data;
+}
+
+export async function updateStoreOrderSyncDays(
+  storeId: string,
+  orderSyncInitialDays: OrderSyncInitialDays,
+): Promise<StoreOrderSyncDaysResult> {
+  const res = await apiClient.patch<StoreOrderSyncDaysResult>(
+    `/stores/${storeId}/order-sync-days`,
+    { order_sync_initial_days: orderSyncInitialDays },
+  );
+  invalidateStoresFetchCache();
+  if (!res.data) throw new Error("更新订单回溯天数失败");
   return res.data;
 }

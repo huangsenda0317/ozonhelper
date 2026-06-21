@@ -288,9 +288,8 @@ async def sync_orders(
     config = await _get_alert_config(db, store.id)
     settings = get_settings()
     if since_dt is None:
-        since_dt = store.last_sync_at or (
-            datetime.now(UTC) - timedelta(days=settings.order_sync_initial_days)
-        )
+        initial_days = store.order_sync_initial_days or settings.order_sync_initial_days
+        since_dt = store.last_sync_at or (datetime.now(UTC) - timedelta(days=initial_days))
     since = since_dt.isoformat().replace('+00:00', 'Z')
     to = datetime.now(UTC).isoformat().replace('+00:00', 'Z')
     now = datetime.now(UTC)
@@ -458,7 +457,7 @@ async def run_sync_scope(db: AsyncSession, store: Store, scope: str) -> int:
     order_count = (
         await db.execute(select(func.count()).select_from(SyncedOrder).where(SyncedOrder.store_id == store.id))
     ).scalar_one()
-    initial_days = settings.order_sync_initial_days
+    initial_days = store.order_sync_initial_days or settings.order_sync_initial_days
     if order_count == 0:
         orders_since = datetime.now(UTC) - timedelta(days=initial_days)
     else:

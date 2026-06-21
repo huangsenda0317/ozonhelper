@@ -29,6 +29,12 @@ export const CHANGELOG: ChangelogDay[] = [
     date: "2026-06-21",
     items: [
       {
+        tag: "新功能",
+        title: "店铺订单回溯天数",
+        description:
+          "店铺管理支持按店选择 7 / 14 / 30 天订单回溯（默认 30 天）；切换前确认弹层，确认后清空本地订单并立即触发订单重同步。",
+      },
+      {
         tag: "改进",
         title: "商品中心价格展示",
         description:

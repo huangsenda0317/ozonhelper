@@ -4,7 +4,7 @@ import logging
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,10 +12,17 @@ from src.api.deps import get_current_user
 from src.api.exceptions import AppException, DuplicateException
 from src.database import get_db
 from src.models.store import Store
-from src.models.tracking_sync import SyncJob
+from src.models.tracking_sync import SyncJob, SyncedOrder
 from src.models.user import User
 from src.schemas.common import ApiResponse
-from src.schemas.stores import StoreCreateRequest, StoreCreateResponse, StoreSummary, StoreVerifyResponse
+from src.schemas.stores import (
+    StoreCreateRequest,
+    StoreCreateResponse,
+    StoreOrderSyncDaysRequest,
+    StoreOrderSyncDaysResponse,
+    StoreSummary,
+    StoreVerifyResponse,
+)
 from src.services.ozon.client import OzonSellerClient
 from src.services.stores.credentials import (
     decrypt_store_client_id,
@@ -34,6 +41,7 @@ def _to_summary(store: Store) -> StoreSummary:
         id=str(store.id),
         name=store.name,
         is_active=store.is_active,
+        order_sync_initial_days=store.order_sync_initial_days,
         last_sync_at=store.last_sync_at.isoformat() if store.last_sync_at else None,
         created_at=store.created_at.isoformat() if store.created_at else '',
     )
@@ -174,3 +182,45 @@ async def verify_store(
         )
     finally:
         await client.close()
+
+
+@router.patch('/{store_id}/order-sync-days', response_model=ApiResponse[StoreOrderSyncDaysResponse])
+async def update_store_order_sync_days(
+    store_id: uuid.UUID,
+    body: StoreOrderSyncDaysRequest,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = select(Store).where(Store.id == store_id, Store.user_id == current_user.id)
+    store = (await db.execute(stmt)).scalar_one_or_none()
+    if not store:
+        raise AppException(code='STORE_NOT_FOUND', message='店铺不存在', http_status=404)
+
+    new_days = body.order_sync_initial_days
+    if store.order_sync_initial_days == new_days:
+        summary = _to_summary(store)
+        return ApiResponse(
+            success=True,
+            data=StoreOrderSyncDaysResponse(**summary.model_dump(), sync_job_id=''),
+        )
+
+    store.order_sync_initial_days = new_days
+    await db.execute(delete(SyncedOrder).where(SyncedOrder.store_id == store.id))
+    job = SyncJob(store_id=store.id, job_type='manual', scope='orders', status='pending')
+    db.add(job)
+    await db.flush()
+    job_id = str(job.id)
+    await db.commit()
+    await db.refresh(store)
+
+    try:
+        dispatch_sync_job(job_id, background_tasks)
+    except Exception:
+        logger.exception('order sync days dispatch failed for job %s', job_id)
+
+    summary = _to_summary(store)
+    return ApiResponse(
+        success=True,
+        data=StoreOrderSyncDaysResponse(**summary.model_dump(), sync_job_id=job_id),
+    )
