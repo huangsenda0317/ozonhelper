@@ -14,6 +14,15 @@ def ozon_local_date() -> date:
     return datetime.now(_MOSCOW).date()
 
 
+def to_ozon_business_date(dt: datetime) -> date | None:
+    """将 UTC/aware datetime 转为 Ozon 莫斯科业务日。"""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=ZoneInfo('UTC'))
+    return dt.astimezone(_MOSCOW).date()
+
+
 def prompt_datetime_context() -> str:
     """供 AI 问答 system prompt 注入的当前时间（避免模型臆测日期）。"""
     now_cn = datetime.now(_SHANGHAI)

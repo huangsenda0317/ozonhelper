@@ -6,11 +6,13 @@ import uuid
 from decimal import Decimal
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.tracking_sync import Alert, PriceSnapshot, ProfitConfig, SyncedProduct
 from src.models.store import Store
 from src.services.stores.credentials import ozon_client_for_store
+from src.services.stores.currency import get_store_settlement_currency
 
 DEFAULT_OFFER = '__default__'
 
@@ -30,9 +32,14 @@ async def get_profit_config(db: AsyncSession, store_id: uuid.UUID, offer_id: str
     row = (await db.execute(stmt)).scalar_one_or_none()
     if row:
         return row
-    row = ProfitConfig(store_id=store_id, offer_id=offer_id)
-    db.add(row)
-    await db.flush()
+    await db.execute(
+        insert(ProfitConfig)
+        .values(store_id=store_id, offer_id=offer_id)
+        .on_conflict_do_nothing(constraint='uq_profit_configs_store_offer')
+    )
+    row = (await db.execute(stmt)).scalar_one_or_none()
+    if row is None:
+        raise RuntimeError(f'ProfitConfig 初始化失败: store={store_id} offer={offer_id}')
     return row
 
 
@@ -90,12 +97,13 @@ async def list_pricing(
 
 async def batch_update_prices(db: AsyncSession, store: Store, items: list[dict]) -> list[dict]:
     client = ozon_client_for_store(store)
+    currency_code = await get_store_settlement_currency(db, store.id)
     prices_payload = []
     for item in items:
         entry: dict = {
             'offer_id': item['offer_id'],
             'price': str(item['price']),
-            'currency_code': 'RUB',
+            'currency_code': currency_code,
         }
         if item.get('old_price') is not None:
             entry['old_price'] = str(item['old_price'])

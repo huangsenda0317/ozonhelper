@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.deps import get_current_user
+from src.api.exceptions import AppException
 from src.api.store_deps import get_user_store
 from src.database import get_db
 from src.models.store import Store
@@ -23,7 +24,7 @@ from src.schemas.inventory import (
     InventoryBatchUpdateRequest,
     InventoryItem,
 )
-from src.schemas.orders import OrderProductItem, OrderSummary
+from src.schemas.orders import OrderDetail, OrderProductItem, OrderSummary, TrackingEventItem
 from src.schemas.sync import SyncJobResponse, SyncTriggerRequest
 from src.schemas.tracking import (
     BatchVisibilityRequest,
@@ -38,6 +39,56 @@ from src.services.tracker.dashboard_service import get_dashboard_kpi, get_dashbo
 from src.services.tracker.product_service import tracking_product_service
 
 router = APIRouter(prefix='/api/v1/tracking', tags=['店铺跟踪'])
+
+
+def _iso_dt(value: datetime | None) -> str | None:
+    return value.isoformat() if value else None
+
+
+def _parse_tracking_events(raw: object) -> list[TrackingEventItem]:
+    if not isinstance(raw, list):
+        return []
+    events: list[TrackingEventItem] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        events.append(
+            TrackingEventItem(
+                at=item.get('at'),
+                status=item.get('status'),
+                tracking_number=item.get('tracking_number'),
+            )
+        )
+    return events
+
+
+def _row_to_order_summary(row: SyncedOrder) -> OrderSummary:
+    return OrderSummary(
+        posting_number=row.posting_number,
+        order_id=row.order_id,
+        status=row.status,
+        fulfillment_type=row.fulfillment_type,
+        created_at=_iso_dt(row.created_at),
+        shipment_date=_iso_dt(row.shipment_date),
+        products=[OrderProductItem(**p) for p in (row.products or [])],
+        total_price=float(row.total_price) if row.total_price is not None else None,
+        is_overdue=row.is_overdue,
+        synced_at=_iso_dt(row.synced_at),
+    )
+
+
+def _row_to_order_detail(row: SyncedOrder) -> OrderDetail:
+    summary = _row_to_order_summary(row)
+    return OrderDetail(
+        **summary.model_dump(),
+        packed_at=_iso_dt(row.packed_at),
+        shipped_at=_iso_dt(row.shipped_at),
+        last_tracking_at=_iso_dt(row.last_tracking_at),
+        delivered_at=_iso_dt(row.delivered_at),
+        tracking_status=row.tracking_status,
+        tracking_events=_parse_tracking_events(row.tracking_events),
+        seller_note=row.seller_note,
+    )
 
 
 def _sync_job_response(job: SyncJob) -> SyncJobResponse:
@@ -317,22 +368,25 @@ async def list_orders(
 
     count = (await db.execute(select(func.count()).select_from(stmt.subquery()))).scalar_one()
     rows = (await db.execute(stmt.offset((page - 1) * limit).limit(limit))).scalars().all()
-    items = [
-        OrderSummary(
-            posting_number=row.posting_number,
-            order_id=row.order_id,
-            status=row.status,
-            fulfillment_type=row.fulfillment_type,
-            created_at=row.created_at.isoformat() if row.created_at else None,
-            shipment_date=row.shipment_date.isoformat() if row.shipment_date else None,
-            products=[OrderProductItem(**p) for p in (row.products or [])],
-            total_price=float(row.total_price) if row.total_price is not None else None,
-            is_overdue=row.is_overdue,
-            synced_at=row.synced_at.isoformat() if row.synced_at else None,
-        )
-        for row in rows
-    ]
+    items = [_row_to_order_summary(row) for row in rows]
     return ApiResponse(success=True, data=items, meta=PaginationMeta(total=count, page=page, limit=limit))
+
+
+@router.get('/orders/{posting_number}', response_model=ApiResponse[OrderDetail])
+async def get_order_detail(
+    posting_number: str,
+    store: Store = Depends(get_user_store),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    stmt = select(SyncedOrder).where(
+        SyncedOrder.store_id == store.id,
+        SyncedOrder.posting_number == posting_number,
+    )
+    row = (await db.execute(stmt)).scalar_one_or_none()
+    if not row:
+        raise AppException(code='ORDER_NOT_FOUND', message='订单不存在', http_status=404)
+    return ApiResponse(success=True, data=_row_to_order_detail(row))
 
 
 @router.get('/alerts', response_model=ApiResponse[list[AlertItem]])

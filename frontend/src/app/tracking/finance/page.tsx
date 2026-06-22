@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { useStoreContext } from "@/lib/store-context";
 import { exportFinanceUrl, fetchFinanceSummary, FinanceSummary } from "@/lib/hooks/useFinance";
-import { formatRubMoney } from "@/lib/currency";
+import { formatSellerMoney, sellerMetricLabel } from "@/lib/currency";
 
 function formatPeriod(start: string | null, end: string | null): string {
   if (!start || !end) return "近 30 天";
@@ -26,6 +26,7 @@ function formatCount(value: number): string {
 
 export default function FinancePage() {
   const { activeStoreId, activeStore, dataRefreshKey } = useStoreContext();
+  const settlementCurrency = activeStore?.settlement_currency ?? "RUB";
   const [summary, setSummary] = useState<FinanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -58,7 +59,7 @@ export default function FinancePage() {
             「{storeName}」财务汇总 · {periodLabel}
           </p>
           <p className="text-caption text-muted">
-            基于 Ozon 交易流水同步。「财务入账笔数」按结算日落账，「实际送达订单」按下单日去重；流水笔数为平台原始条数（货款、平台费、物流等分项），不等于订单数。毛利为本地估算。
+            回款、手续费与净结算均按订单下单日归属统计周期；流水笔数含同一订单的货款、物流与平台费分项。毛利为本地估算。
           </p>
         </div>
         {activeStoreId && (
@@ -75,13 +76,13 @@ export default function FinancePage() {
         <>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-lg">
             {[
-              ["回款 (₽)", formatRubMoney(summary.total_revenue)],
-              ["手续费 (₽)", formatRubMoney(summary.total_fees)],
-              ["退款 (₽)", formatRubMoney(summary.total_refunds)],
-              ["净结算 (₽)", formatRubMoney(summary.net_settlement)],
-              ["毛利估算 (₽)", formatRubMoney(summary.gross_profit)],
+              [sellerMetricLabel("下单回款", settlementCurrency), formatSellerMoney(summary.total_revenue, settlementCurrency)],
+              [sellerMetricLabel("手续费", settlementCurrency), formatSellerMoney(summary.total_fees, settlementCurrency)],
+              [sellerMetricLabel("退款", settlementCurrency), formatSellerMoney(summary.total_refunds, settlementCurrency)],
+              [sellerMetricLabel("净结算", settlementCurrency), formatSellerMoney(summary.net_settlement, settlementCurrency)],
+              [sellerMetricLabel("毛利估算", settlementCurrency), formatSellerMoney(summary.gross_profit, settlementCurrency)],
               ["流水笔数", formatCount(summary.transaction_count)],
-              ["财务入账笔数", formatCount(summary.delivery_count)],
+              ["送达回款笔数", formatCount(summary.delivery_count)],
               ["实际送达订单", formatCount(summary.actual_delivered_order_count)],
               ["同期入库订单", formatCount(summary.synced_order_count)],
             ].map(([label, value]) => (
@@ -89,7 +90,7 @@ export default function FinancePage() {
                 <p className="text-micro-cap uppercase tracking-[0.25px] text-muted mb-xs">
                   {label}
                   {(label === "流水笔数" ||
-                    label === "财务入账笔数" ||
+                    label === "送达回款笔数" ||
                     label === "实际送达订单" ||
                     label === "同期入库订单") &&
                     `（${summary.range_days} 天）`}
@@ -97,12 +98,12 @@ export default function FinancePage() {
                 <p className="font-display text-heading-lg text-ink">{value}</p>
                 {label === "流水笔数" && (
                   <p className="text-caption text-muted mt-xs">
-                    Ozon 财务 operation 条数
+                    周期内关联订单的财务 operation 条数
                   </p>
                 )}
-                {label === "财务入账笔数" && (
+                {label === "送达回款笔数" && (
                   <p className="text-caption text-muted mt-xs">
-                    送达客户类流水，按结算日统计
+                    送达客户类回款，按下单日统计
                   </p>
                 )}
                 {label === "实际送达订单" && (
@@ -121,8 +122,7 @@ export default function FinancePage() {
 
           {needsFinanceResync && (
             <p className="text-caption text-muted">
-              正在回填财务订单元数据，若长时间仍为 0，请重启后端服务后刷新本页。财务入账笔数（
-              {formatCount(summary.delivery_count)}）含历史订单延迟结算，不等于同期新送达订单数。
+              正在回填财务订单元数据，若长时间仍为 0，请重启后端服务后刷新本页。
             </p>
           )}
 

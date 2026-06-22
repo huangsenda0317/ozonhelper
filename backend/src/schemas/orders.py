@@ -21,3 +21,19 @@ class OrderSummary(BaseModel):
     total_price: float | None = None
     is_overdue: bool = False
     synced_at: str | None = None
+
+
+class TrackingEventItem(BaseModel):
+    at: str | None = None
+    status: str | None = None
+    tracking_number: str | None = None
+
+
+class OrderDetail(OrderSummary):
+    packed_at: str | None = None
+    shipped_at: str | None = None
+    last_tracking_at: str | None = None
+    delivered_at: str | None = None
+    tracking_status: str | None = None
+    tracking_events: list[TrackingEventItem] = Field(default_factory=list)
+    seller_note: str | None = None

@@ -16,6 +16,16 @@ export interface OrderSummary {
   synced_at: string | null;
 }
 
+export interface OrderDetail extends OrderSummary {
+  packed_at: string | null;
+  shipped_at: string | null;
+  last_tracking_at: string | null;
+  delivered_at: string | null;
+  tracking_status: string | null;
+  tracking_events: { at: string | null; status: string | null; tracking_number: string | null }[];
+  seller_note: string | null;
+}
+
 export async function fetchOrders(
   storeId: string,
   params: {
@@ -34,6 +44,17 @@ export async function fetchOrders(
   qs.set("limit", String(params.limit ?? 20));
   const res = await apiClient.get<OrderSummary[]>(`/tracking/orders?${qs}`);
   return { items: res.data ?? [], total: res.meta?.total ?? 0 };
+}
+
+export async function fetchOrderDetail(
+  storeId: string,
+  postingNumber: string,
+): Promise<OrderDetail> {
+  const res = await apiClient.get<OrderDetail>(
+    `/tracking/orders/${encodeURIComponent(postingNumber)}?${storeQuery(storeId)}`,
+  );
+  if (!res.data) throw new Error("订单不存在");
+  return res.data;
 }
 
 /** 预警 API */
@@ -84,6 +105,7 @@ export interface StoreSummary {
   name: string;
   is_active: boolean;
   order_sync_initial_days: number;
+  settlement_currency: string;
   last_sync_at: string | null;
   created_at: string;
 }

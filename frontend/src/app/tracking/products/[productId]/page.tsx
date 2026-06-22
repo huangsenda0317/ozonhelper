@@ -20,7 +20,8 @@ import {
   getTrackingErrorMessage,
   TrackingProductDetail,
 } from "@/lib/hooks/useTracking";
-import { formatSellerPrice, SELLER_PRICE_NOTE } from "@/lib/currency";
+import { formatSellerPrice, sellerCurrencySuffix, sellerPriceNote } from "@/lib/currency";
+import { useStoreContext } from "@/lib/store-context";
 import {
   formatProductModerateStatus,
   formatProductStatusDescription,
@@ -99,6 +100,8 @@ function DetailStat({
 export default function TrackingProductDetailPage({ params }: PageProps) {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { activeStore } = useStoreContext();
+  const settlementCurrency = activeStore?.settlement_currency ?? "RUB";
   const [product, setProduct] = useState<TrackingProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -132,6 +135,7 @@ export default function TrackingProductDetailPage({ params }: PageProps) {
       : product?.has_stock === false
         ? "failed"
         : "pending";
+  const priceCurrency = product?.currency || settlementCurrency;
 
   return (
     <div className="max-w-7xl mx-auto px-xxl py-xxl">
@@ -182,8 +186,8 @@ export default function TrackingProductDetailPage({ params }: PageProps) {
           {/* KPI strip */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-lg mb-md">
             <DetailStat
-              label="价格"
-              value={formatSellerPrice(product.price, product.currency)}
+              label={`价格${sellerCurrencySuffix(priceCurrency)}`}
+              value={formatSellerPrice(product.price, priceCurrency)}
               highlight
             />
             <DetailStat
@@ -196,10 +200,10 @@ export default function TrackingProductDetailPage({ params }: PageProps) {
             />
             <DetailStat
               label="最低价"
-              value={formatSellerPrice(product.min_price, product.currency)}
+              value={formatSellerPrice(product.min_price, priceCurrency)}
             />
           </div>
-          <p className="text-caption text-muted mb-xl">{SELLER_PRICE_NOTE}</p>
+          <p className="text-caption text-muted mb-xl">{sellerPriceNote(settlementCurrency)}</p>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-xl">
             {/* Image column */}
@@ -248,7 +252,7 @@ export default function TrackingProductDetailPage({ params }: PageProps) {
                 {product.price != null && product.old_price != null &&
                   product.old_price > 0 && (
                     <span className="text-caption text-muted line-through">
-                      {formatSellerPrice(product.old_price, product.currency)}
+                      {formatSellerPrice(product.old_price, priceCurrency)}
                     </span>
                   )}
               </div>
@@ -272,7 +276,7 @@ export default function TrackingProductDetailPage({ params }: PageProps) {
                 </h2>
                 <InfoRow
                   label="价格"
-                  value={formatSellerPrice(product.price, product.currency)}
+                  value={formatSellerPrice(product.price, priceCurrency)}
                 />
                 <InfoRow
                   label="结算货币"

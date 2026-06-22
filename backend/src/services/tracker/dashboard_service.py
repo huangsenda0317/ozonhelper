@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import func, select
@@ -12,6 +11,7 @@ from src.models.store import Store
 from src.models.tracking_sync import Alert, AnalyticsDaily, SyncedOrder, SyncedProduct
 from src.schemas.dashboard import AlertCounts, DashboardKPI, TrendPoint
 from src.services.ozon.dates import ozon_local_date
+from src.services.tracker.order_metrics import aggregate_order_daily_stats, load_store_sku_prices
 
 
 async def get_dashboard_kpi(db: AsyncSession, store: Store) -> DashboardKPI:
@@ -139,32 +139,44 @@ async def get_dashboard_kpi(db: AsyncSession, store: Store) -> DashboardKPI:
 
 
 async def get_dashboard_trends(db: AsyncSession, store: Store, days: int = 7) -> list[TrendPoint]:
-    since = ozon_local_date() - timedelta(days=days - 1)
+    today = ozon_local_date()
+    since = today - timedelta(days=days - 1)
     stmt = (
         select(AnalyticsDaily)
         .where(AnalyticsDaily.store_id == store.id, AnalyticsDaily.day >= since)
         .order_by(AnalyticsDaily.day.asc())
     )
-    rows = (await db.execute(stmt)).scalars().all()
+    analytics_rows = (await db.execute(stmt)).scalars().all()
+    analytics_by_day = {row.day: row for row in analytics_rows}
 
-    order_stmt = (
-        select(func.date(SyncedOrder.created_at).label('day'), func.count().label('cnt'))
-        .where(
-            SyncedOrder.store_id == store.id,
-            SyncedOrder.created_at.isnot(None),
-            func.date(SyncedOrder.created_at) >= since,
+    order_rows = (
+        await db.execute(
+            select(SyncedOrder).where(
+                SyncedOrder.store_id == store.id,
+                SyncedOrder.created_at.isnot(None),
+                func.date(SyncedOrder.created_at) >= since - timedelta(days=1),
+            )
         )
-        .group_by(func.date(SyncedOrder.created_at))
-    )
-    order_rows = (await db.execute(order_stmt)).all()
-    orders_by_day = {row.day: int(row.cnt) for row in order_rows}
+    ).scalars().all()
+    sku_prices = await load_store_sku_prices(db, store.id)
+    order_stats = aggregate_order_daily_stats(list(order_rows), sku_prices=sku_prices)
 
-    return [
-        TrendPoint(
-            date=row.day.isoformat(),
-            orders=orders_by_day.get(row.day, row.orders),
-            units_sold=row.units_sold,
-            revenue=float(row.revenue) if row.revenue is not None else None,
+    all_days: set[date] = set(analytics_by_day) | set(order_stats)
+    for offset in range(days):
+        all_days.add(since + timedelta(days=offset))
+
+    points: list[TrendPoint] = []
+    for day in sorted(all_days):
+        if day < since or day > today:
+            continue
+        analytics = analytics_by_day.get(day)
+        orders, revenue = order_stats.get(day, (analytics.orders if analytics else 0, 0.0))
+        points.append(
+            TrendPoint(
+                date=day.isoformat(),
+                orders=orders,
+                units_sold=analytics.units_sold if analytics else 0,
+                revenue=revenue if revenue > 0 else None,
+            )
         )
-        for row in rows
-    ]
+    return points

@@ -17,7 +17,15 @@ export interface ChangelogDay {
 /** 展示用日期，如「2026 年 6 月 16 日 · 星期一」 */
 export function formatChangelogDate(isoDate: string): string {
   const d = new Date(`${isoDate}T12:00:00`);
-  const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+  const weekdays = [
+    "星期日",
+    "星期一",
+    "星期二",
+    "星期三",
+    "星期四",
+    "星期五",
+    "星期六",
+  ];
   const y = d.getFullYear();
   const m = d.getMonth() + 1;
   const day = d.getDate();
@@ -25,6 +33,71 @@ export function formatChangelogDate(isoDate: string): string {
 }
 
 export const CHANGELOG: ChangelogDay[] = [
+  {
+    date: "2026-06-22",
+    items: [
+      {
+        tag: "修复",
+        title: "新绑店铺概览报错 500",
+        description:
+          "首次进入概览时 profit_configs 默认配置并发写入触发唯一约束冲突，改为 upsert，避免 dashboard 500。",
+      },
+      {
+        tag: "修复",
+        title: "删除店铺同步中卡住",
+        description:
+          "删除时立即标记同步失败并缩短等待；前端删除前停止轮询，避免 60 秒超时 500 与「同步中」不消失。",
+      },
+      {
+        tag: "修复",
+        title: "删除店铺时终止同步",
+        description:
+          "删除进行中的店铺时先取消 Celery/内联同步任务并等待退出，避免 500 错误与脏数据写入。",
+      },
+      {
+        tag: "修复",
+        title: "财务页回款口径",
+        description:
+          "财务汇总改为按订单下单日统计送达回款，与看板一致；不再把结算日集中入账的历史订单计入近 30 天回款。",
+      },
+      {
+        tag: "修复",
+        title: "概览本月回款口径",
+        description:
+          "「本月下单回款」改为按订单下单日汇总送达类财务流水，不再把结算日集中入账的历史订单算入本月，避免显示 10 万+ 等虚高数字。",
+      },
+      {
+        tag: "修复",
+        title: "概览订单金额为空",
+        description:
+          "Ozon 订单 API 返回嵌套 price.amount 结构，旧数据 total_price 为空；同步时解析 financial_data，并用商品库 SKU 价回填，趋势图可正确显示订单金额。",
+      },
+      {
+        tag: "修复",
+        title: "概览销售趋势金额口径",
+        description:
+          "趋势图订单金额改为按本地订单卖家结算价汇总，不再使用 Ozon Analytics 卢布 GMV，避免 CNY 店显示 3 万+ 等数量级错误。",
+      },
+      {
+        tag: "改进",
+        title: "店铺结算货币自动识别",
+        description:
+          "从价格/财务同步数据探测店铺合同货币（CNY/USD/RUB），商品、价格中心、财务与概览按 ¥/$/₽ 统一展示；批量改价使用正确 currency_code。",
+      },
+      {
+        tag: "改进",
+        title: "价格中心货币展示",
+        description:
+          "卖家结算价为 CNY 时，列表列名改为「价格 (¥)」并按人民币格式化；RUB 店仍显示「当前价 (₽)」。",
+      },
+      {
+        tag: "新功能",
+        title: "订单详情",
+        description:
+          "订单列表点击订单号可查看详情，含商品明细、履约节点与物流轨迹；物流预警跳转支持自动打开对应订单。",
+      },
+    ],
+  },
   {
     date: "2026-06-21",
     items: [
@@ -73,7 +146,8 @@ export const CHANGELOG: ChangelogDay[] = [
       {
         tag: "修复",
         title: "保存物流预警配置超时",
-        description: "保存阈值时不再串行调用 Ozon 轨迹 API（原约 30s 易 500），改为仅本地重算；保存成功后自动刷新预警列表。",
+        description:
+          "保存阈值时不再串行调用 Ozon 轨迹 API（原约 30s 易 500），改为仅本地重算；保存成功后自动刷新预警列表。",
       },
       {
         tag: "修复",
@@ -90,12 +164,14 @@ export const CHANGELOG: ChangelogDay[] = [
       {
         tag: "改进",
         title: "订单与退货状态中文展示",
-        description: "订单列表与退货列表的状态字段改为中文可读文案，超时订单仍保留醒目标记。",
+        description:
+          "订单列表与退货列表的状态字段改为中文可读文案，超时订单仍保留醒目标记。",
       },
       {
         tag: "改进",
         title: "Ant Design 6 弃用 API 适配",
-        description: "Select 下拉改用 classNames.popup.root；Modal 遮罩关闭改用 mask.closable，消除控制台 deprecation 警告。",
+        description:
+          "Select 下拉改用 classNames.popup.root；Modal 遮罩关闭改用 mask.closable，消除控制台 deprecation 警告。",
       },
       {
         tag: "改进",
@@ -182,7 +258,8 @@ export const CHANGELOG: ChangelogDay[] = [
       {
         tag: "改进",
         title: "销售趋势 Tooltip",
-        description: "经营看板图表悬停提示精简为日期、销量与营收，移除不可靠的订单数展示。",
+        description:
+          "经营看板图表悬停提示精简为日期、销量与营收，移除不可靠的订单数展示。",
       },
     ],
   },
@@ -257,7 +334,8 @@ export const CHANGELOG: ChangelogDay[] = [
       {
         tag: "修复",
         title: "凭证加密与调度",
-        description: "修复 ENCRYPTION_KEY 配置问题；完善 Celery Beat 本地调度状态忽略规则。",
+        description:
+          "修复 ENCRYPTION_KEY 配置问题；完善 Celery Beat 本地调度状态忽略规则。",
       },
     ],
   },
@@ -273,7 +351,8 @@ export const CHANGELOG: ChangelogDay[] = [
       {
         tag: "改进",
         title: "UI/UX 设计规范",
-        description: "引入 UI 设计技能库，统一 Apple Design 风格组件与页面布局规范。",
+        description:
+          "引入 UI 设计技能库，统一 Apple Design 风格组件与页面布局规范。",
       },
       {
         tag: "其他",

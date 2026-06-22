@@ -16,7 +16,7 @@ import {
   verifyStore,
 } from "@/lib/hooks/useOrders";
 import { useSyncingStoreIds } from "@/lib/hooks/useSyncingStoreId";
-import { beginStoreSyncTracking } from "@/lib/store-sync-tracker";
+import { abortStoreSyncTracking, beginStoreSyncTracking } from "@/lib/store-sync-tracker";
 import { ACTIVE_STORE_STORAGE_KEY, useStoreContext } from "@/lib/store-context";
 
 const ORDER_SYNC_DAY_OPTIONS: { value: OrderSyncInitialDays; label: string }[] = [
@@ -79,6 +79,7 @@ export default function StoresSettingsPage() {
   };
 
   const handleDelete = async (store: StoreSummary) => {
+    abortStoreSyncTracking(store.id);
     try {
       await deleteStore(store.id);
       if (localStorage.getItem(ACTIVE_STORE_STORAGE_KEY) === store.id) {
@@ -173,14 +174,14 @@ export default function StoresSettingsPage() {
                       <Select
                         size="small"
                         className="min-w-[88px]"
-                        value={(s.order_sync_initial_days ?? 30) as OrderSyncInitialDays}
+                        value={(s.order_sync_initial_days ?? 7) as OrderSyncInitialDays}
                         options={ORDER_SYNC_DAY_OPTIONS}
                         disabled={
                           syncingStoreIds.includes(s.id) || orderSyncUpdating
                         }
                         onChange={(value) => {
                           const days = value as OrderSyncInitialDays;
-                          if (days === (s.order_sync_initial_days ?? 30)) return;
+                          if (days === (s.order_sync_initial_days ?? 7)) return;
                           setPendingOrderSyncChange({ store: s, days });
                         }}
                       />

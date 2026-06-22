@@ -11,7 +11,7 @@ export interface FinanceSummary {
   gross_profit: number;
   /** Ozon 财务流水条数（一笔订单通常对应多条流水） */
   transaction_count: number;
-  /** Ozon「送达客户」财务入账笔数（按 operation_date，含历史订单延迟结算） */
+  /** 送达客户类回款笔数（按 posting 下单日） */
   delivery_count: number;
   /** 近 N 天实际送达订单数（按 posting 下单日去重） */
   actual_delivered_order_count: number;

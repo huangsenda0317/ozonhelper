@@ -198,7 +198,10 @@ class OzonSellerClient:
         filt: dict = {'since': since, 'to': to}
         if status:
             filt['status'] = status
-        return await self._post('/v4/posting/fbs/list', {'filter': filt, 'limit': limit, 'offset': offset})
+        return await self._post(
+            '/v4/posting/fbs/list',
+            {'filter': filt, 'limit': limit, 'offset': offset, 'with': {'financial_data': True}},
+        )
 
     async def posting_fbo_list(
         self,
@@ -212,7 +215,10 @@ class OzonSellerClient:
         filt: dict = {'since': since, 'to': to}
         if status:
             filt['status'] = status
-        return await self._post('/v3/posting/fbo/list', {'filter': filt, 'limit': limit, 'offset': offset})
+        return await self._post(
+            '/v3/posting/fbo/list',
+            {'filter': filt, 'limit': limit, 'offset': offset, 'with': {'financial_data': True}},
+        )
 
     async def analytics_data(
         self,

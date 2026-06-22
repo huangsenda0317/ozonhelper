@@ -14,20 +14,21 @@ import {
   ProfitConfig,
   saveProfitConfig,
 } from "@/lib/hooks/usePricing";
-import { formatRubPrice, RUB_SUFFIX } from "@/lib/currency";
+import { formatSellerPrice, sellerCurrencySuffix, sellerBreakevenColumnLabel, sellerPriceColumnLabel } from "@/lib/currency";
 
 const PROFIT_CONFIG_LABELS: Record<string, string> = {
-  purchase_cost: `采购成本${RUB_SUFFIX}`,
-  logistics_cost: `物流成本${RUB_SUFFIX}`,
+  purchase_cost: "采购成本",
+  logistics_cost: "物流成本",
   platform_fee_rate: "平台费率",
   exchange_rate: "汇率",
   margin_buffer: "利润缓冲",
-  max_price_threshold: `最高限价${RUB_SUFFIX}`,
+  max_price_threshold: "最高限价",
 };
 
 export default function PricingPage() {
   const searchParams = useSearchParams();
-  const { activeStoreId, dataRefreshKey } = useStoreContext();
+  const { activeStoreId, dataRefreshKey, activeStore } = useStoreContext();
+  const settlementCurrency = activeStore?.settlement_currency ?? "RUB";
   const [items, setItems] = useState<PricingItem[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -84,6 +85,9 @@ export default function PricingPage() {
     );
   }
 
+  const listCurrency = settlementCurrency;
+  const newPricePlaceholder = `新价格${sellerCurrencySuffix(listCurrency)}`;
+
   return (
     <div className="space-y-md">
       <div className="flex flex-wrap gap-sm">
@@ -138,8 +142,8 @@ export default function PricingPage() {
                 <tr className="border-b border-hairline bg-surface-elevated">
                   <th className="px-lg py-md w-10" />
                   <th className="px-lg py-md text-micro-cap text-muted">商品</th>
-                  <th className="px-lg py-md text-micro-cap text-muted">当前价{RUB_SUFFIX}</th>
-                  <th className="px-lg py-md text-micro-cap text-muted">保本价{RUB_SUFFIX}</th>
+                  <th className="px-lg py-md text-micro-cap text-muted">{sellerPriceColumnLabel(listCurrency)}</th>
+                  <th className="px-lg py-md text-micro-cap text-muted">{sellerBreakevenColumnLabel(listCurrency)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -160,9 +164,9 @@ export default function PricingPage() {
                       <p className="text-body">{item.name ?? item.offer_id}</p>
                       <p className="text-caption text-muted">{item.offer_id}</p>
                     </td>
-                    <td className="px-lg py-md">{formatRubPrice(item.price)}</td>
+                    <td className="px-lg py-md">{formatSellerPrice(item.price, item.currency || settlementCurrency)}</td>
                     <td className={`px-lg py-md ${item.is_price_anomaly ? "text-accent-pink font-medium" : ""}`}>
-                      {formatRubPrice(item.suggested_min_price)}
+                      {formatSellerPrice(item.suggested_min_price, settlementCurrency)}
                     </td>
                   </tr>
                 ))}
@@ -174,7 +178,7 @@ export default function PricingPage() {
               <span className="text-caption">已选 {selected.size} 项</span>
               <input
                 type="number"
-                placeholder={`新价格${RUB_SUFFIX}`}
+                placeholder={newPricePlaceholder}
                 value={newPrice}
                 onChange={(e) => setNewPrice(e.target.value)}
                 className="w-28 px-sm py-xs rounded text-ink"

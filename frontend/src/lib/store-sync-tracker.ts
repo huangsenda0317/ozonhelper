@@ -19,3 +19,8 @@ export function beginStoreSyncTracking(
     }
   })();
 }
+
+/** 删除店铺或用户主动中止时，立即停止前端同步轮询 */
+export function abortStoreSyncTracking(storeId: string): void {
+  clearPendingSyncJob(storeId);
+}

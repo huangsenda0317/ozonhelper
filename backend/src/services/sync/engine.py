@@ -26,6 +26,12 @@ from src.models.tracking_sync import (
 from src.services.ozon.client import OzonSellerClient
 from src.services.ozon.dates import ozon_local_date
 from src.services.stores.credentials import ozon_client_for_store
+from src.services.sync.cancel import SyncCancelledError, ensure_store_sync_active, is_store_sync_cancelled
+from src.services.tracker.order_metrics import (
+    aggregate_order_daily_stats,
+    backfill_order_prices_from_catalog,
+    load_store_sku_prices,
+)
 from src.services.tracker.product_service import detect_exception, map_to_summary
 
 logger = logging.getLogger(__name__)
@@ -68,6 +74,7 @@ async def sync_products(db: AsyncSession, store: Store, client: OzonSellerClient
     last_id = ''
     product_ids: list[str] = []
     while True:
+        await ensure_store_sync_active(store.id)
         resp = await client.product_list(last_id=last_id, limit=100)
         result = resp.get('result') or {}
         items = result.get('items') or []
@@ -82,6 +89,7 @@ async def sync_products(db: AsyncSession, store: Store, client: OzonSellerClient
     processed = 0
     now = datetime.now(UTC)
     for i in range(0, len(product_ids), INFO_BATCH):
+        await ensure_store_sync_active(store.id)
         batch = product_ids[i : i + INFO_BATCH]
         info_resp = await client.product_info_list(product_ids=batch)
         for raw in info_resp.get('items') or info_resp.get('result', {}).get('items') or []:
@@ -133,6 +141,7 @@ async def sync_inventory(db: AsyncSession, store: Store, client: OzonSellerClien
     processed = 0
     now = datetime.now(UTC)
     for i in range(0, len(product_ids), STOCK_BATCH):
+        await ensure_store_sync_active(store.id)
         batch = product_ids[i : i + STOCK_BATCH]
         resp = await client.product_stocks_info(product_ids=batch, limit=len(batch))
         items = resp.get('items') or (resp.get('result') or {}).get('items') or []
@@ -166,7 +175,11 @@ def _parse_price_value(value: object) -> float | None:
     if value is None:
         return None
     if isinstance(value, dict):
-        value = value.get('price') or value.get('total_price')
+        nested = value.get('price')
+        if isinstance(nested, dict):
+            value = nested.get('amount') or nested.get('price')
+        else:
+            value = nested or value.get('total_price') or value.get('amount') or value.get('payout')
     try:
         return float(value)  # type: ignore[arg-type]
     except (TypeError, ValueError):
@@ -178,17 +191,41 @@ def _parse_decimal_price(value: object) -> Decimal | None:
     return Decimal(str(parsed)) if parsed is not None else None
 
 
+def _financial_product_index(financial_data: dict | None) -> dict[str, dict]:
+    if not financial_data:
+        return {}
+    index: dict[str, dict] = {}
+    for item in financial_data.get('products') or []:
+        if not isinstance(item, dict):
+            continue
+        for key in (item.get('product_id'), item.get('sku')):
+            if key is not None and str(key):
+                index[str(key)] = item
+    return index
+
+
 def _map_order_posting(posting: dict, fulfillment_type: str) -> dict:
+    fin_index = _financial_product_index(posting.get('financial_data'))
     products = []
+    line_total = Decimal('0')
     for p in posting.get('products') or []:
+        sku = str(p.get('sku') or '')
+        fin = fin_index.get(sku) or fin_index.get(str(p.get('product_id') or '')) or {}
+        unit_price = _parse_price_value(p.get('price') or fin.get('price') or fin.get('payout'))
+        qty = int(p.get('quantity') or fin.get('quantity') or 0)
+        if unit_price is not None and qty > 0:
+            line_total += Decimal(str(unit_price)) * qty
         products.append(
             {
-                'sku': str(p.get('sku') or ''),
+                'sku': sku,
                 'name': p.get('name'),
-                'quantity': int(p.get('quantity') or 0),
-                'price': _parse_price_value(p.get('price')),
+                'quantity': qty,
+                'price': unit_price,
             }
         )
+    total_price = _parse_decimal_price(posting.get('total_price'))
+    if total_price is None and line_total > 0:
+        total_price = line_total
     return {
         'posting_number': posting.get('posting_number') or '',
         'order_id': str(posting.get('order_id') or posting.get('order_number') or ''),
@@ -197,7 +234,7 @@ def _map_order_posting(posting: dict, fulfillment_type: str) -> dict:
         'created_at': _parse_dt(posting.get('in_process_at') or posting.get('created_at')),
         'shipment_date': _parse_dt(posting.get('shipment_date')),
         'products': products,
-        'total_price': _parse_decimal_price(posting.get('total_price')),
+        'total_price': total_price,
     }
 
 
@@ -254,6 +291,7 @@ async def _sync_posting_pages(
     processed = 0
     offset = 0
     while True:
+        await ensure_store_sync_active(store.id)
         resp = await fetch(since=since, to=to, limit=100, offset=offset, status=status)
         result = resp.get('result') or resp
         postings = result.get('postings') or result.get('posting') or []
@@ -298,6 +336,7 @@ async def sync_orders(
 
     if fbs_active_only:
         for status in FBS_ACTIVE_STATUSES:
+            await ensure_store_sync_active(store.id)
             processed += await _sync_posting_pages(
                 db,
                 store,
@@ -334,6 +373,7 @@ async def sync_orders(
         now=now,
         overdue_delta=overdue_delta,
     )
+    await backfill_order_prices_from_catalog(db, store.id)
     return processed
 
 
@@ -365,6 +405,16 @@ async def sync_analytics(db: AsyncSession, store: Store, client: OzonSellerClien
     )
     order_rows = (await db.execute(order_stmt)).all()
     orders_by_day = {row.day: int(row.cnt) for row in order_rows}
+
+    order_detail_stmt = select(SyncedOrder).where(
+        SyncedOrder.store_id == store.id,
+        SyncedOrder.created_at.isnot(None),
+        func.date(SyncedOrder.created_at) >= date_from_day - timedelta(days=1),
+    )
+    order_details = (await db.execute(order_detail_stmt)).scalars().all()
+    sku_prices = await load_store_sku_prices(db, store.id)
+    revenue_by_day = aggregate_order_daily_stats(list(order_details), sku_prices=sku_prices)
+
     for row in data:
         dims = row.get('dimensions') or []
         metrics = row.get('metrics') or []
@@ -376,7 +426,8 @@ async def sync_analytics(db: AsyncSession, store: Store, client: OzonSellerClien
         except ValueError:
             continue
         units = int(metrics[0]) if len(metrics) > 0 else 0
-        revenue = Decimal(str(metrics[1])) if len(metrics) > 1 and metrics[1] is not None else None
+        order_revenue = revenue_by_day.get(day, (0, 0.0))[1]
+        revenue = Decimal(str(order_revenue)) if order_revenue > 0 else None
         hits = int(metrics[2]) if len(metrics) > 2 else 0
         values = {
             'store_id': store.id,
@@ -450,6 +501,13 @@ async def rebuild_alerts(db: AsyncSession, store: Store) -> int:
     return count
 
 
+async def _ensure_sync_not_cancelled(db: AsyncSession, store: Store) -> None:
+    if await is_store_sync_cancelled(store.id):
+        raise SyncCancelledError()
+    if (await db.execute(select(Store.id).where(Store.id == store.id))).scalar_one_or_none() is None:
+        raise SyncCancelledError()
+
+
 async def run_sync_scope(db: AsyncSession, store: Store, scope: str) -> int:
     total = 0
     client = ozon_client_for_store(store)
@@ -464,14 +522,18 @@ async def run_sync_scope(db: AsyncSession, store: Store, scope: str) -> int:
         orders_since = store.last_sync_at or (datetime.now(UTC) - timedelta(days=initial_days))
     fbs_active_only = order_count > 0
 
+    await _ensure_sync_not_cancelled(db, store)
     if scope in ('products', 'all', 'quick'):
         total += await sync_products(db, store, client)
+    await _ensure_sync_not_cancelled(db, store)
     if scope in ('inventory', 'all', 'quick'):
         total += await sync_inventory(db, store, client)
+    await _ensure_sync_not_cancelled(db, store)
     if scope in ('orders', 'all'):
         total += await sync_orders(
             db, store, client, since_dt=orders_since, fbs_active_only=fbs_active_only
         )
+    await _ensure_sync_not_cancelled(db, store)
     if scope in ('all', 'quick'):
         try:
             total += await sync_analytics(db, store, client)
@@ -495,14 +557,15 @@ async def run_sync_scope(db: AsyncSession, store: Store, scope: str) -> int:
                 total += await run_logistics_alert_check(db, store)
             except Exception as exc:
                 logger.warning('phase2 sync skipped: %s', exc)
+    await _ensure_sync_not_cancelled(db, store)
     store.last_sync_at = datetime.now(UTC)
     return total
 
 
 async def fail_sync_job(db: AsyncSession, job_id: uuid.UUID, message: str) -> None:
-    """将未开始的同步任务标记为失败（派发/重试耗尽时调用）。"""
+    """将未开始或进行中的同步任务标记为失败（派发/重试耗尽/取消时调用）。"""
     job = (await db.execute(select(SyncJob).where(SyncJob.id == job_id))).scalar_one_or_none()
-    if job is None or job.status != 'pending':
+    if job is None or job.status not in ('pending', 'running'):
         return
     job.status = 'failed'
     job.error_message = message[:500]
@@ -522,6 +585,13 @@ async def execute_sync_job(db: AsyncSession, job_id: uuid.UUID) -> None:
         await db.commit()
         return
 
+    if await is_store_sync_cancelled(store.id):
+        job.status = 'failed'
+        job.error_message = '同步已取消'
+        job.finished_at = datetime.now(UTC)
+        await db.commit()
+        return
+
     job.status = 'running'
     job.started_at = datetime.now(UTC)
     await db.flush()
@@ -529,12 +599,21 @@ async def execute_sync_job(db: AsyncSession, job_id: uuid.UUID) -> None:
     await db.commit()
     try:
         job.records_processed = await run_sync_scope(db, store, job.scope)
-        job.status = 'succeeded'
+        if await is_store_sync_cancelled(store.id):
+            job.status = 'failed'
+            job.error_message = '店铺已删除，同步已取消'
+        elif job.status != 'failed':
+            job.status = 'succeeded'
+    except SyncCancelledError:
+        job.status = 'failed'
+        job.error_message = '店铺已删除，同步已取消'
     except Exception as exc:
         logger.exception('sync job failed: %s', job_id)
-        job.status = 'failed'
-        if isinstance(exc, AppException):
-            job.error_message = exc.message[:500]
-        else:
-            job.error_message = str(exc)[:500] or repr(exc)[:500]
+        if job.status != 'failed':
+            job.status = 'failed'
+        if not job.error_message:
+            if isinstance(exc, AppException):
+                job.error_message = exc.message[:500]
+            else:
+                job.error_message = str(exc)[:500] or repr(exc)[:500]
     job.finished_at = datetime.now(UTC)

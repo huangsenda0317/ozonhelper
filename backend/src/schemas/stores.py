@@ -11,7 +11,8 @@ class StoreSummary(BaseModel):
     id: str
     name: str
     is_active: bool
-    order_sync_initial_days: int = 30
+    order_sync_initial_days: int = 7
+    settlement_currency: str = 'RUB'
     last_sync_at: str | None = None
     created_at: str
 

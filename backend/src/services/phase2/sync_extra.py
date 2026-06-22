@@ -12,6 +12,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.store import Store
+from src.services.sync.cancel import ensure_store_sync_active
 from src.models.tracking_sync import (
     Alert,
     FinanceTransaction,
@@ -223,6 +224,7 @@ async def sync_finance(db: AsyncSession, store: Store, client: OzonSellerClient 
     now = datetime.now(UTC)
     page = 1
     while True:
+        await ensure_store_sync_active(store.id)
         resp = await client.finance_transaction_list(date_from=since, date_to=to, page=page, page_size=100)
         result = resp.get('result') or resp
         operations = result.get('operations') or []

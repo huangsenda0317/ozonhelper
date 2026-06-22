@@ -5,6 +5,7 @@ import uuid
 from celery.exceptions import MaxRetriesExceededError
 
 from src.models.tracking_sync import SyncJob
+from src.services.sync.cancel import SyncCancelledError, register_sync_celery_task_sync
 from src.services.sync.engine import execute_sync_job, fail_sync_job
 from src.worker.app import celery_app
 from src.worker.async_runner import run_async_task
@@ -29,6 +30,8 @@ def sync_store_job(self, job_id: str):
 
     try:
         run_async_task(_run)
+    except SyncCancelledError:
+        pass
     except LookupError as exc:
         try:
             raise self.retry(exc=exc, countdown=2, max_retries=5) from exc
@@ -61,4 +64,5 @@ def sync_all_active_stores():
 
     job_ids = run_async_task(_run)
     for job_id in job_ids:
-        sync_store_job.delay(job_id)
+        result = sync_store_job.delay(job_id)
+        register_sync_celery_task_sync(job_id, result.id)

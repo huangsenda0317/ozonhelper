@@ -29,19 +29,28 @@ from src.services.stores.credentials import (
     encrypt_store_credentials,
     ozon_client_for_store,
 )
+from src.services.stores.currency import get_store_settlement_currency
 from src.services.stores.lifecycle import delete_store_with_data
+from src.services.sync.cancel import (
+    cancel_store_sync_jobs,
+    clear_store_sync_cancel,
+    force_fail_running_sync_jobs,
+    revoke_sync_celery_tasks_for_jobs,
+    wait_store_sync_quiescent,
+)
 from src.services.sync.dispatch import dispatch_sync_job
 
 router = APIRouter(prefix='/api/v1/stores', tags=['店铺管理'])
 logger = logging.getLogger(__name__)
 
 
-def _to_summary(store: Store) -> StoreSummary:
+def _to_summary(store: Store, *, settlement_currency: str = 'RUB') -> StoreSummary:
     return StoreSummary(
         id=str(store.id),
         name=store.name,
         is_active=store.is_active,
         order_sync_initial_days=store.order_sync_initial_days,
+        settlement_currency=settlement_currency,
         last_sync_at=store.last_sync_at.isoformat() if store.last_sync_at else None,
         created_at=store.created_at.isoformat() if store.created_at else '',
     )
@@ -72,7 +81,11 @@ async def list_stores(
 ):
     stmt = select(Store).where(Store.user_id == current_user.id).order_by(Store.created_at.desc())
     stores = (await db.execute(stmt)).scalars().all()
-    return ApiResponse(success=True, data=[_to_summary(s) for s in stores])
+    summaries: list[StoreSummary] = []
+    for store in stores:
+        currency = await get_store_settlement_currency(db, store.id)
+        summaries.append(_to_summary(store, settlement_currency=currency))
+    return ApiResponse(success=True, data=summaries)
 
 
 @router.post('', response_model=ApiResponse[StoreCreateResponse], status_code=status.HTTP_201_CREATED)
@@ -197,17 +210,46 @@ async def update_store_order_sync_days(
     if not store:
         raise AppException(code='STORE_NOT_FOUND', message='店铺不存在', http_status=404)
 
+    store_id = store.id
     new_days = body.order_sync_initial_days
     if store.order_sync_initial_days == new_days:
-        summary = _to_summary(store)
+        currency = await get_store_settlement_currency(db, store_id)
+        summary = _to_summary(store, settlement_currency=currency)
         return ApiResponse(
             success=True,
             data=StoreOrderSyncDaysResponse(**summary.model_dump(), sync_job_id=''),
         )
 
+    # 清空订单前须停止进行中的同步，否则 DELETE 与 worker 写入争锁会导致请求长时间挂起
+    await cancel_store_sync_jobs(
+        db,
+        store_id,
+        reason='订单回溯天数已变更，重新同步',
+    )
+    await db.commit()
+    await wait_store_sync_quiescent(db, store_id, timeout=5.0)
+    revoke_sync_celery_tasks_for_jobs(
+        [
+            str(jid)
+            for jid in (
+                await db.execute(
+                    select(SyncJob.id).where(
+                        SyncJob.store_id == store_id,
+                        SyncJob.status.in_(('pending', 'running')),
+                    )
+                )
+            ).scalars().all()
+        ],
+        terminate=True,
+    )
+    await force_fail_running_sync_jobs(db, store_id)
+    await db.commit()
+    await clear_store_sync_cancel(store_id)
+    await db.refresh(store)
+
     store.order_sync_initial_days = new_days
-    await db.execute(delete(SyncedOrder).where(SyncedOrder.store_id == store.id))
-    job = SyncJob(store_id=store.id, job_type='manual', scope='orders', status='pending')
+    await db.execute(delete(SyncedOrder).where(SyncedOrder.store_id == store_id))
+    job = SyncJob(store_id=store_id, job_type='manual', scope='orders', status='pending')
     db.add(job)
     await db.flush()
     job_id = str(job.id)
@@ -219,7 +261,8 @@ async def update_store_order_sync_days(
     except Exception:
         logger.exception('order sync days dispatch failed for job %s', job_id)
 
-    summary = _to_summary(store)
+    currency = await get_store_settlement_currency(db, store.id)
+    summary = _to_summary(store, settlement_currency=currency)
     return ApiResponse(
         success=True,
         data=StoreOrderSyncDaysResponse(**summary.model_dump(), sync_job_id=job_id),

@@ -97,6 +97,12 @@ export function useStoreContext() {
   return ctx;
 }
 
+/** 当前店铺 Ozon 合同结算货币（CNY / USD / RUB） */
+export function useSettlementCurrency(): string {
+  const { activeStore } = useStoreContext();
+  return activeStore?.settlement_currency ?? "RUB";
+}
+
 export function storeQuery(storeId: string | null): string {
   return storeId ? `store_id=${encodeURIComponent(storeId)}` : "";
 }

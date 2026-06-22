@@ -14,7 +14,7 @@ type LoginMode = "password" | "sms";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<LoginMode>("sms");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [smsCode, setSmsCode] = useState("");
@@ -39,7 +39,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
+      await login(username, password);
       router.push("/tracking");
     } catch (err: unknown) {
       const message =
@@ -173,16 +173,16 @@ export default function LoginPage() {
             <form onSubmit={handlePasswordSubmit} className="space-y-lg">
               <div>
                 <label
-                  htmlFor="login-email"
+                  htmlFor="ozonhelper-login-name"
                   className="block text-caption font-medium text-body mb-xs"
                 >
                   账号
                 </label>
                 <input
-                  id="login-email"
+                  id="ozonhelper-login-name"
                   type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   autoComplete="username"
                   className="input-sentry"

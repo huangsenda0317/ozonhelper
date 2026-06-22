@@ -363,12 +363,14 @@ async def finance_export(
     from src.models.tracking_sync import FinanceTransaction
 
     summary = await finance_summary(db, store, range)
-    since = datetime.now(UTC) - __import__('datetime').timedelta(days=int(range) if range.isdigit() else 30)
+    since = datetime.fromisoformat(summary['period_start'])
+    period_end = datetime.fromisoformat(summary['period_end'])
     txs = (
         await db.execute(
             select(FinanceTransaction).where(
                 FinanceTransaction.store_id == store.id,
-                FinanceTransaction.operation_date >= since,
+                FinanceTransaction.posting_order_date >= since,
+                FinanceTransaction.posting_order_date <= period_end,
             )
         )
     ).scalars().all()

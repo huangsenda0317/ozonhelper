@@ -79,7 +79,7 @@ class Settings(BaseSettings):
     sync_inline: bool = True
 
     # 店铺首次订单同步回溯天数（空库时）
-    order_sync_initial_days: int = 30
+    order_sync_initial_days: int = 7
 
 
 @lru_cache()

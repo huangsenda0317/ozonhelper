@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { BarChart, LineChart } from "echarts/charts";
 import {
   GridComponent,
+  LegendComponent,
   TooltipComponent,
   type TooltipComponentOption,
 } from "echarts/components";
@@ -12,15 +13,14 @@ import type { EChartsOption } from "echarts";
 import { CanvasRenderer } from "echarts/renderers";
 
 import { TrendPoint } from "@/lib/hooks/useDashboard";
-import { formatRubCompact, formatRubPrice } from "@/lib/currency";
+import { formatSellerCompact, formatSellerMoney, sellerCurrencySuffix } from "@/lib/currency";
 import { useTheme } from "@/lib/theme-context";
 
-echarts.use([LineChart, BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
+echarts.use([LineChart, BarChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer]);
 
 export type SalesChartType = "line" | "bar";
-export type SalesMetric = "units" | "revenue";
 
-const SERIES_COLOR = "#6a5fc1";
+const UNITS_COLOR = "#6a5fc1";
 const REVENUE_COLOR = "#79628c";
 
 const THEME_COLORS = {
@@ -48,15 +48,14 @@ function formatDateLabel(date: string): string {
 function buildOption(
   data: TrendPoint[],
   chartType: SalesChartType,
-  metric: SalesMetric,
   isDark: boolean,
+  currency: string,
 ): EChartsOption {
   const colors = isDark ? THEME_COLORS.dark : THEME_COLORS.light;
   const categories = data.map((d) => formatDateLabel(d.date));
-  const isRevenue = metric === "revenue";
-  const values = data.map((d) => (isRevenue ? d.revenue ?? 0 : d.units_sold));
-  const seriesColor = isRevenue ? REVENUE_COLOR : SERIES_COLOR;
-  const seriesName = isRevenue ? "营收" : "销量";
+  const unitsData = data.map((d) => d.units_sold);
+  const revenueData = data.map((d) => d.revenue ?? 0);
+  const revenueLabel = `订单金额${sellerCurrencySuffix(currency)}`;
 
   const tooltip: TooltipComponentOption = {
     trigger: "axis",
@@ -73,67 +72,83 @@ function buildOption(
       const point = data[idx];
       if (!point) return "";
       const lines = [`<div style="font-weight:600;margin-bottom:4px">${point.date}</div>`];
-      if (isRevenue) {
-        lines.push(
-          point.revenue != null
-            ? `营收：${formatRubPrice(point.revenue)}`
-            : "营收：暂无",
-        );
-        lines.push(`销量：${point.units_sold} 件`);
-      } else {
-        lines.push(`销量：${point.units_sold} 件`);
-        if (point.revenue != null) {
-          lines.push(`营收：${formatRubPrice(point.revenue)}`);
-        }
-      }
+      lines.push(`销量：${point.units_sold} 件`);
+      lines.push(
+        point.revenue != null
+          ? `${revenueLabel}：${formatSellerMoney(point.revenue, currency)}`
+          : `${revenueLabel}：暂无`,
+      );
       return lines.join("<br/>");
     },
   };
 
-  const seriesBase = {
-    name: seriesName,
-    type: chartType,
-    data: values,
-    itemStyle: { color: seriesColor },
-  };
-
-  const series =
+  const unitsSeries =
     chartType === "line"
       ? {
-          ...seriesBase,
+          name: "销量",
+          type: "line" as const,
+          yAxisIndex: 0,
+          data: unitsData,
           smooth: true,
           symbol: "circle",
           symbolSize: 6,
-          lineStyle: { width: 2, color: seriesColor },
+          lineStyle: { width: 2, color: UNITS_COLOR },
+          itemStyle: { color: UNITS_COLOR },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              {
-                offset: 0,
-                color: isRevenue
-                  ? "rgba(121, 98, 140, 0.25)"
-                  : "rgba(106, 95, 193, 0.25)",
-              },
-              {
-                offset: 1,
-                color: isRevenue
-                  ? "rgba(121, 98, 140, 0.02)"
-                  : "rgba(106, 95, 193, 0.02)",
-              },
+              { offset: 0, color: "rgba(106, 95, 193, 0.25)" },
+              { offset: 1, color: "rgba(106, 95, 193, 0.02)" },
             ]),
           },
         }
       : {
-          ...seriesBase,
-          barMaxWidth: 32,
-          itemStyle: {
-            color: seriesColor,
-            borderRadius: [4, 4, 0, 0],
+          name: "销量",
+          type: "bar" as const,
+          yAxisIndex: 0,
+          data: unitsData,
+          barMaxWidth: 18,
+          itemStyle: { color: UNITS_COLOR, borderRadius: [4, 4, 0, 0] },
+        };
+
+  const revenueSeries =
+    chartType === "line"
+      ? {
+          name: revenueLabel,
+          type: "line" as const,
+          yAxisIndex: 1,
+          data: revenueData,
+          smooth: true,
+          symbol: "circle",
+          symbolSize: 6,
+          lineStyle: { width: 2, color: REVENUE_COLOR },
+          itemStyle: { color: REVENUE_COLOR },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: "rgba(121, 98, 140, 0.2)" },
+              { offset: 1, color: "rgba(121, 98, 140, 0.02)" },
+            ]),
           },
+        }
+      : {
+          name: revenueLabel,
+          type: "bar" as const,
+          yAxisIndex: 1,
+          data: revenueData,
+          barMaxWidth: 18,
+          itemStyle: { color: REVENUE_COLOR, borderRadius: [4, 4, 0, 0] },
         };
 
   return {
     animationDuration: 300,
-    grid: { left: isRevenue ? 56 : 48, right: 16, top: 16, bottom: 28 },
+    legend: {
+      data: ["销量", revenueLabel],
+      top: 0,
+      right: 0,
+      itemWidth: 12,
+      itemHeight: 8,
+      textStyle: { color: colors.axis, fontSize: 11 },
+    },
+    grid: { left: 48, right: 56, top: 36, bottom: 28 },
     tooltip,
     xAxis: {
       type: "category",
@@ -142,19 +157,25 @@ function buildOption(
       axisTick: { show: false },
       axisLabel: { color: colors.axis, fontSize: 11 },
     },
-    yAxis: {
-      type: "value",
-      minInterval: isRevenue ? undefined : 1,
-      splitLine: { lineStyle: { color: colors.splitLine, type: "dashed" } },
-      axisLabel: {
-        color: colors.axis,
-        fontSize: 11,
-        formatter: isRevenue
-          ? (v: number) => formatRubCompact(v)
-          : undefined,
+    yAxis: [
+      {
+        type: "value",
+        minInterval: 1,
+        splitLine: { lineStyle: { color: colors.splitLine, type: "dashed" } },
+        axisLabel: { color: colors.axis, fontSize: 11 },
       },
-    },
-    series: [series],
+      {
+        type: "value",
+        position: "right",
+        splitLine: { show: false },
+        axisLabel: {
+          color: colors.axis,
+          fontSize: 11,
+          formatter: (v: number) => formatSellerCompact(v, currency),
+        },
+      },
+    ],
+    series: [unitsSeries, revenueSeries],
   };
 }
 
@@ -206,36 +227,17 @@ export function ChartTypeSwitch({
   );
 }
 
-export function MetricSwitch({
-  value,
-  onChange,
-}: {
-  value: SalesMetric;
-  onChange: (metric: SalesMetric) => void;
-}) {
-  return (
-    <PillSwitch
-      value={value}
-      onChange={onChange}
-      options={[
-        { id: "units", label: "销量" },
-        { id: "revenue", label: "营收 (₽)" },
-      ]}
-    />
-  );
-}
-
 export interface SalesTrendChartProps {
   data: TrendPoint[];
   chartType: SalesChartType;
-  metric: SalesMetric;
+  currency?: string;
   loading?: boolean;
 }
 
 export function SalesTrendChart({
   data,
   chartType,
-  metric,
+  currency = "RUB",
   loading = false,
 }: SalesTrendChartProps) {
   const { resolvedTheme } = useTheme();
@@ -243,16 +245,9 @@ export function SalesTrendChart({
   const chartRef = useRef<echarts.ECharts | null>(null);
 
   const isDark = resolvedTheme === "dark";
-  const hasRevenue = useMemo(
-    () => data.some((d) => d.revenue != null && d.revenue > 0),
-    [data],
-  );
   const option = useMemo(
-    () =>
-      data.length > 0 && (metric === "units" || hasRevenue)
-        ? buildOption(data, chartType, metric, isDark)
-        : null,
-    [data, chartType, metric, isDark, hasRevenue],
+    () => (data.length > 0 ? buildOption(data, chartType, isDark, currency) : null),
+    [data, chartType, isDark, currency],
   );
 
   const initOrUpdate = useCallback(() => {
@@ -295,10 +290,10 @@ export function SalesTrendChart({
     };
   }, []);
 
-  if (!loading && (data.length === 0 || (metric === "revenue" && !hasRevenue))) {
+  if (!loading && data.length === 0) {
     return (
       <p className="text-caption text-muted py-lg text-center min-h-[240px] flex items-center justify-center">
-        {metric === "revenue" && data.length > 0 ? "暂无营收数据" : "暂无趋势数据"}
+        暂无趋势数据
       </p>
     );
   }

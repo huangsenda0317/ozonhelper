@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { ApiError } from "@/lib/api-client";
 import { fetchSyncJob } from "@/lib/hooks/useDashboard";
 import {
   clearPendingSyncJob,
@@ -31,8 +32,11 @@ export function useSyncingStoreIds(): string[] {
             return;
           }
           clearPendingSyncJob(storeId);
-        } catch {
+        } catch (err) {
           clearPendingSyncJob(storeId);
+          if (err instanceof ApiError && err.status === 404) {
+            return;
+          }
         }
       }),
     );

@@ -35,6 +35,25 @@ export interface TrendPoint {
   revenue: number | null;
 }
 
+export type TrendRangeDays = 7 | 14 | 30;
+
+/** 销售趋势可选天数：不超过店铺订单回溯窗口 */
+export function trendRangeOptions(orderSyncDays: number): TrendRangeDays[] {
+  if (orderSyncDays >= 30) return [7, 30];
+  if (orderSyncDays >= 14) return [7, 14];
+  return [7];
+}
+
+export async function fetchTrends(
+  storeId: string,
+  range: TrendRangeDays = 7,
+): Promise<TrendPoint[]> {
+  const res = await apiClient.get<TrendPoint[]>(
+    `/tracking/dashboard/trends?${qs(storeId, `range=${range}`)}`,
+  );
+  return res.data ?? [];
+}
+
 export type SyncScope = "quick" | "all" | "products" | "inventory" | "orders";
 
 export interface SyncJob {
@@ -53,13 +72,6 @@ export async function fetchDashboard(storeId: string): Promise<DashboardKPI> {
   const res = await apiClient.get<DashboardKPI>(`/tracking/dashboard?${qs(storeId)}`);
   if (!res.data) throw new ApiError("DASHBOARD_ERROR", "看板加载失败", 500);
   return res.data;
-}
-
-export async function fetchTrends(storeId: string, range: 7 | 30 = 7): Promise<TrendPoint[]> {
-  const res = await apiClient.get<TrendPoint[]>(
-    `/tracking/dashboard/trends?${qs(storeId, `range=${range}`)}`,
-  );
-  return res.data ?? [];
 }
 
 export async function triggerSync(storeId: string, scope: SyncScope = "all"): Promise<SyncJob> {
@@ -81,10 +93,21 @@ export async function pollSyncJob(
 ): Promise<SyncJob> {
   let last: SyncJob | null = null;
   for (let i = 0; i < maxAttempts; i++) {
-    const job = await fetchSyncJob(storeId, jobId);
+    let job: SyncJob;
+    try {
+      job = await fetchSyncJob(storeId, jobId);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        throw new ApiError("SYNC_JOB_GONE", "同步任务已结束", 404);
+      }
+      throw err;
+    }
     last = job;
     if (job.status === "succeeded") return job;
     if (job.status === "failed") {
+      if (job.error_message?.includes("店铺已删除")) {
+        throw new ApiError("SYNC_CANCELLED", job.error_message, 200);
+      }
       throw new ApiError(
         "SYNC_FAILED",
         job.error_message || "同步失败",

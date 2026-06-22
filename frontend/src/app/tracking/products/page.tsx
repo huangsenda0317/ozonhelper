@@ -28,7 +28,7 @@ import {
   getTrackingErrorMessage,
   TrackingProductSummary,
 } from "@/lib/hooks/useTracking";
-import { formatSellerPrice, SELLER_PRICE_NOTE } from "@/lib/currency";
+import { formatSellerPrice, sellerCurrencySuffix, sellerPriceNote } from "@/lib/currency";
 import { formatProductStatusName } from "@/lib/product-status";
 
 function StatCard({
@@ -150,7 +150,8 @@ function StockOverviewChart({
 export default function TrackingProductsPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { activeStoreId, dataRefreshKey } = useStoreContext();
+  const { activeStoreId, dataRefreshKey, activeStore } = useStoreContext();
+  const settlementCurrency = activeStore?.settlement_currency ?? "RUB";
   const [selected, setSelected] = useState<string[]>([]);
   const [products, setProducts] = useState<TrackingProductSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -354,7 +355,7 @@ export default function TrackingProductsPage() {
         </Card>
       ) : (
         <>
-          <p className="text-caption text-muted mb-md">{SELLER_PRICE_NOTE}</p>
+          <p className="text-caption text-muted mb-md">{sellerPriceNote(settlementCurrency)}</p>
           <Card variant="default" padding="none" className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[640px]">
@@ -370,7 +371,7 @@ export default function TrackingProductsPage() {
                       销量
                     </th>
                     <th className="px-lg py-md text-micro-cap uppercase tracking-[0.25px] text-muted whitespace-nowrap">
-                      价格
+                      价格{sellerCurrencySuffix(settlementCurrency)}
                     </th>
                     <th className="px-lg py-md text-micro-cap uppercase tracking-[0.25px] text-muted whitespace-nowrap">
                       库存
@@ -425,7 +426,7 @@ export default function TrackingProductsPage() {
                         {p.ordered_units}
                       </td>
                       <td className="px-lg py-md align-middle text-body whitespace-nowrap">
-                        {formatSellerPrice(p.price, p.currency)}
+                        {formatSellerPrice(p.price, p.currency || settlementCurrency)}
                       </td>
                       <td className="px-lg py-md align-middle text-body whitespace-nowrap">
                         <span

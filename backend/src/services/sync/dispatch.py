@@ -7,6 +7,7 @@ import uuid
 from fastapi import BackgroundTasks
 
 from src.config import get_settings
+from src.services.sync.cancel import SyncCancelledError, register_sync_celery_task_sync
 from src.services.sync.engine import execute_sync_job, fail_sync_job
 from src.worker.async_runner import run_async_task
 from src.worker.sync_tasks import sync_store_job
@@ -42,6 +43,9 @@ def run_sync_job_blocking(job_id: str) -> None:
                 continue
             logger.error('SyncJob %s 在重试后仍不存在，跳过执行', job_id)
             _fail_sync_job_blocking(job_id, '同步任务未找到，请重试')
+        except SyncCancelledError:
+            logger.info('SyncJob %s 已取消', job_id)
+            return
         except Exception:
             logger.exception('SyncJob %s 内联同步失败', job_id)
             _fail_sync_job_blocking(job_id, _INLINE_FAIL_MSG)
@@ -54,4 +58,5 @@ def dispatch_sync_job(job_id: str, background_tasks: BackgroundTasks | None = No
     if settings.sync_inline and background_tasks is not None:
         background_tasks.add_task(run_sync_job_blocking, job_id)
         return
-    sync_store_job.apply_async(args=[job_id], countdown=1)
+    result = sync_store_job.apply_async(args=[job_id], countdown=1)
+    register_sync_celery_task_sync(job_id, result.id)

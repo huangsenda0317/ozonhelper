@@ -11,9 +11,7 @@ import {
 
 import {
   ChartTypeSwitch,
-  MetricSwitch,
   SalesChartType,
-  SalesMetric,
   SalesTrendChart,
 } from "@/components/features/SalesTrendChart";
 import { Button } from "@/components/ui/Button";
@@ -24,8 +22,10 @@ import {
   fetchDashboard,
   fetchTrends,
   TrendPoint,
+  trendRangeOptions,
+  TrendRangeDays,
 } from "@/lib/hooks/useDashboard";
-import { formatRub } from "@/lib/currency";
+import { formatSellerMoney } from "@/lib/currency";
 
 function KpiCard({ label, value }: { label: string; value: string | number }) {
   return (
@@ -37,12 +37,17 @@ function KpiCard({ label, value }: { label: string; value: string | number }) {
 }
 
 export default function TrackingDashboardPage() {
-  const { activeStoreId, dataRefreshKey } = useStoreContext();
+  const { activeStoreId, dataRefreshKey, activeStore } = useStoreContext();
+  const settlementCurrency = activeStore?.settlement_currency ?? "RUB";
   const [kpi, setKpi] = useState<DashboardKPI | null>(null);
   const [trends, setTrends] = useState<TrendPoint[]>([]);
-  const [range, setRange] = useState<7 | 30>(7);
+  const [range, setRange] = useState<TrendRangeDays>(7);
+  const orderSyncDays = activeStore?.order_sync_initial_days ?? 7;
+  const trendRanges = useMemo(
+    () => trendRangeOptions(orderSyncDays),
+    [orderSyncDays],
+  );
   const [chartType, setChartType] = useState<SalesChartType>("line");
-  const [metric, setMetric] = useState<SalesMetric>("units");
   const [loading, setLoading] = useState(true);
   const [trendsLoading, setTrendsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,6 +83,12 @@ export default function TrackingDashboardPage() {
       setTrendsLoading(false);
     }
   }, [activeStoreId, range, dataRefreshKey]);
+
+  useEffect(() => {
+    if (!trendRanges.includes(range)) {
+      setRange(trendRanges[0]);
+    }
+  }, [trendRanges, range]);
 
   useEffect(() => {
     loadKpi();
@@ -139,10 +150,15 @@ export default function TrackingDashboardPage() {
       </div>
 
       {(kpi.revenue_month != null || kpi.gross_profit_month != null) && (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-lg">
-          <KpiCard label="本月回款" value={kpi.revenue_month != null ? formatRub(kpi.revenue_month, { decimals: 0 }) : "-"} />
-          <KpiCard label="本月手续费" value={kpi.fees_month != null ? formatRub(kpi.fees_month, { decimals: 0 }) : "-"} />
-          <KpiCard label="本月毛利估算" value={kpi.gross_profit_month != null ? formatRub(kpi.gross_profit_month, { decimals: 0 }) : "-"} />
+        <div className="space-y-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-lg">
+            <KpiCard label="本月下单回款" value={kpi.revenue_month != null ? formatSellerMoney(kpi.revenue_month, settlementCurrency) : "-"} />
+            <KpiCard label="本月手续费" value={kpi.fees_month != null ? formatSellerMoney(kpi.fees_month, settlementCurrency) : "-"} />
+            <KpiCard label="本月毛利估算" value={kpi.gross_profit_month != null ? formatSellerMoney(kpi.gross_profit_month, settlementCurrency) : "-"} />
+          </div>
+          <p className="text-caption text-muted">
+            财务 KPI 按订单下单日归属当月，与 Ozon 结算日落账（常含历史订单集中入账）不同。
+          </p>
         </div>
       )}
 
@@ -153,10 +169,9 @@ export default function TrackingDashboardPage() {
               销售趋势
             </p>
             <div className="flex flex-wrap items-center gap-sm">
-              <MetricSwitch value={metric} onChange={setMetric} />
               <ChartTypeSwitch value={chartType} onChange={setChartType} />
               <div className="flex gap-xs">
-                {([7, 30] as const).map((d) => (
+                {trendRanges.map((d) => (
                   <button
                     key={d}
                     type="button"
@@ -173,10 +188,13 @@ export default function TrackingDashboardPage() {
               </div>
             </div>
           </div>
+          <p className="text-caption text-muted mb-sm">
+            订单金额按本地同步订单卖家结算价按日汇总，与「今日订单」口径一致；销量仍来自 Ozon 分析。
+          </p>
           <SalesTrendChart
             data={trends}
             chartType={chartType}
-            metric={metric}
+            currency={settlementCurrency}
             loading={trendsLoading}
           />
         </UiCard>
