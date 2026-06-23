@@ -1,5 +1,17 @@
 {
   "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest"]
+    },
+    "io-github-woyaxnini-ozon-seller": {
+      "command": "/usr/local/bin/npx",
+      "args": ["-y", "@woyax/mcp-ozon-seller"],
+      "env": {
+        "OZON_API_KEY": "e147dd6c-6b4f-4b5f-bb35-b8b78979a149",
+        "OZON_CLIENT_ID": "4290942"
+      }
+    },
     "ozon-seller": {
       "command": "python3",
       "args": ["-m", "ozon_mcp.server"],
