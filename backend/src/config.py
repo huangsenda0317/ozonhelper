@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # JWT
     jwt_secret_key: str = 'change-me-in-production'
     jwt_algorithm: str = 'HS256'
-    jwt_expire_seconds: int = 86400
+    jwt_expire_seconds: int = 604800 # 7 天
 
     # Ozon Seller API（凭证仅通过店铺管理页面绑定，不再从环境变量读取）
     ozon_api_base_url: str = 'https://api-seller.ozon.ru'
