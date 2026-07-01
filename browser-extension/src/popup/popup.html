@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OzonHelper 采集</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header class="header">
+    <h1>OzonHelper</h1>
+    <button id="settings-btn" class="icon-btn" title="设置">⚙</button>
+  </header>
+
+  <main>
+    <p id="page-hint" class="hint">请在 Ozon 商品详情页使用</p>
+
+    <button id="extract-btn" class="primary-btn">提取商品信息</button>
+
+    <div id="preview" class="preview hidden">
+      <img id="preview-image" alt="" class="preview-image hidden" />
+      <div class="preview-body">
+        <h2 id="preview-title"></h2>
+        <p id="preview-meta" class="meta"></p>
+        <p id="preview-price" class="price"></p>
+      </div>
+    </div>
+
+    <div id="actions" class="actions hidden">
+      <button id="copy-btn" class="secondary-btn">复制 JSON</button>
+      <button id="download-btn" class="secondary-btn">下载 JSON</button>
+      <button id="sync-btn" class="secondary-btn">同步到平台</button>
+    </div>
+
+    <p id="status" class="status"></p>
+  </main>
+
+  <section id="settings-panel" class="settings hidden">
+    <label for="server-url">平台 API 地址</label>
+    <input id="server-url" type="url" placeholder="http://localhost:8000/api/v1" />
+
+    <label for="api-key">API 密钥（可选）</label>
+    <input id="api-key" type="password" placeholder="留空则仅本地提取" />
+
+    <button id="save-settings" class="secondary-btn">保存设置</button>
+  </section>
+
+  <script src="popup.js"></script>
+</body>
+</html>
