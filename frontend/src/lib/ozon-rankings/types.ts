@@ -147,13 +147,11 @@ export function isProductItem(
   view: RankingView,
 ): item is ProductRankingItem {
   if (!isProductView(view)) return false;
-  const agg = item as AggregatedRankingItem;
-  if (agg.total_gmv != null) return false;
-  const product = item as ProductRankingItem;
+  if ("total_gmv" in item) return false;
   return (
-    product.gmv_sum != null ||
-    product.sku != null ||
-    product.photo_url != null ||
-    product.product_url != null
+    item.gmv_sum != null ||
+    item.sku != null ||
+    item.photo_url != null ||
+    item.product_url != null
   );
 }
