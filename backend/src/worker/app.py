@@ -16,6 +16,7 @@ celery_app = Celery(
         'src.worker.ai_tasks',
         'src.worker.sync_tasks',
         'src.worker.phase2_tasks',
+        'src.worker.deeppick_tasks',
     ],
 )
 
@@ -27,6 +28,10 @@ celery_app.conf.beat_schedule = {
     'phase2-sync-every-30-min': {
         'task': 'phase2_sync_all_stores',
         'schedule': 1800.0,
+    },
+    'warmup-deeppick-rankings-every-6h': {
+        'task': 'warmup_deeppick_rankings',
+        'schedule': 21600.0,
     },
 }
 

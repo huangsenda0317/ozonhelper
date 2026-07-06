@@ -42,10 +42,15 @@ class ValidationException(AppException):
 
 
 class ServiceUnavailableException(AppException):
-    def __init__(self, service: str = '服务', code: str = 'SERVICE_UNAVAILABLE'):
+    def __init__(
+        self,
+        service: str = '服务',
+        code: str = 'SERVICE_UNAVAILABLE',
+        message: str | None = None,
+    ):
         super().__init__(
             code=code,
-            message=f'{service}暂时不可用，请稍后重试',
+            message=message or f'{service}暂时不可用，请稍后重试',
             http_status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 

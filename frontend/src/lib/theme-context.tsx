@@ -107,6 +107,13 @@ function buildAntdTheme(resolved: ResolvedTheme) {
         borderRadius: 6,
         fontSize: 14,
       },
+      Cascader: {
+        optionSelectedBg: isDark
+          ? "rgba(121, 98, 140, 0.22)"
+          : "rgba(21, 15, 35, 0.08)",
+        optionSelectedColor: isDark ? SENTRY.onPrimary : SENTRY.inkDeep,
+        optionSelectedFontWeight: 500,
+      },
     },
   };
 }

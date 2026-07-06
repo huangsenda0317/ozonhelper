@@ -12,6 +12,7 @@ import { UserMenu } from "@/components/layout/UserMenu";
 //! todo: 暂时隐藏榜单发现、选品池、已采集商品、1688 比价、批量上架
 const NAV_ITEMS = [
   { href: "/tracking", label: "店铺跟踪" },
+  { href: "/ozon-assistant", label: "OZON助手" },
   // { href: "/rankings", label: "榜单发现" },
   // { href: "/selection-pool", label: "选品池" },
   // { href: "/products", label: "已采集商品" },
@@ -30,7 +31,11 @@ function isNavActive(pathname: string, item: NavItem) {
     : pathname === item.href || pathname.startsWith(item.href + "/");
 }
 
-function navLinkClass(isActive: boolean, isDark: boolean, variant: "bar" | "drawer") {
+function navLinkClass(
+  isActive: boolean,
+  isDark: boolean,
+  variant: "bar" | "drawer",
+) {
   if (variant === "bar") {
     return `px-3 py-1 text-caption rounded-md whitespace-nowrap cursor-pointer ${
       isActive

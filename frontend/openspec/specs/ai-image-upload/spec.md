@@ -5,17 +5,22 @@ TBD - created by archiving change ai-edit-page-optimization. Update Purpose afte
 ## Requirements
 ### Requirement: 用户可上传本地图片
 
-系统 SHALL 在 AI 改图页提供图片上传区域，支持点击选择和拖拽上传，接受 JPG、PNG、WebP 格式，单文件不超过 10MB，单次最多 10 张。
+系统 SHALL 在 AI 改图页左侧工作区提供 Ant Design Upload 照片墙（`listType="picture-card"`），支持点击选择上传，接受 JPG、PNG、WebP 格式，单文件不超过 10MB，最多 10 张。照片墙 SHALL 置于固定比例的方形容器内，超出内容可滚动查看。
 
 #### Scenario: 点击上传单张图片
 
-- **WHEN** 用户点击上传区域并选择一张 JPG 图片（≤10MB）
-- **THEN** 图片上传至后端并显示缩略图预览
+- **WHEN** 用户点击照片墙上传按钮并选择一张 JPG 图片（≤10MB）
+- **THEN** 图片上传至后端并在照片墙中显示缩略图预览
 
-#### Scenario: 拖拽上传多张图片
+#### Scenario: 上传多张图片
 
-- **WHEN** 用户拖拽 3 张 PNG 图片到上传区域
-- **THEN** 3 张图片依次上传并显示在缩略图网格中
+- **WHEN** 用户连续上传 3 张 PNG 图片
+- **THEN** 3 张图片均显示在照片墙中，总数不超过 10 张
+
+#### Scenario: 方形容器内滚动
+
+- **WHEN** 用户已上传超过容器可视区域的图片数量
+- **THEN** 用户可在方形容器内滚动查看全部缩略图
 
 #### Scenario: 拒绝超大文件
 
@@ -29,8 +34,13 @@ TBD - created by archiving change ai-edit-page-optimization. Update Purpose afte
 
 #### Scenario: 删除已上传图片
 
-- **WHEN** 用户点击某张缩略图的删除按钮
-- **THEN** 该图片从预览列表中移除，不再参与改图提交
+- **WHEN** 用户点击照片墙中某张图片的删除按钮
+- **THEN** 该图片从列表中移除，不再参与改图提交
+
+#### Scenario: 达到上限禁止继续上传
+
+- **WHEN** 用户已上传 10 张图片
+- **THEN** 照片墙不再显示上传按钮，无法继续添加
 
 ### Requirement: 上传 API 存储图片并返回 URL
 

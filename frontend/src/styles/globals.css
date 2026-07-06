@@ -267,6 +267,96 @@ body {
     background-color: rgba(121, 98, 140, 0.22) !important;
   }
 
+  /* Cascader — subtle selected path (match select-sentry dropdown) */
+  .select-sentry-dropdown
+    .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled),
+  .select-sentry-dropdown
+    .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled):hover {
+    @apply !font-medium;
+    background-color: rgba(21, 15, 35, 0.08) !important;
+    color: var(--color-ink) !important;
+  }
+
+  .select-sentry-dropdown
+    .ant-cascader-menu-item:not(.ant-cascader-menu-item-disabled):not(
+      .ant-cascader-menu-item-active
+    ):hover {
+    background-color: var(--color-surface-elevated) !important;
+  }
+
+  .dark
+    .select-sentry-dropdown
+    .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled),
+  .dark
+    .select-sentry-dropdown
+    .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled):hover {
+    background-color: rgba(121, 98, 140, 0.22) !important;
+    color: var(--color-ink) !important;
+  }
+
+  .dark
+    .select-sentry-dropdown
+    .ant-cascader-menu-item:not(.ant-cascader-menu-item-disabled):not(
+      .ant-cascader-menu-item-active
+    ):hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  /* Compact filter fields — unified input / select / cascader (Data-Dense toolbar) */
+  .filter-field-sentry {
+    @apply box-border h-8 min-h-8 max-h-8 text-caption;
+  }
+
+  .filter-field-sentry.input-sentry {
+    @apply py-0 px-sm leading-[1.875rem] text-ink-deep;
+  }
+
+  .filter-field-sentry.input-sentry::placeholder {
+    @apply text-muted;
+  }
+
+  .filter-field-sentry.select-sentry.ant-select,
+  .filter-field-sentry.ant-cascader.ant-select {
+    @apply h-8 min-h-8 max-h-8;
+  }
+
+  .filter-field-sentry.select-sentry .ant-select-selector,
+  .filter-field-sentry.ant-cascader .ant-select-selector {
+    @apply !box-border !h-8 !min-h-8 !max-h-8 !py-0 !px-sm
+      !border !border-hairline-cool !rounded-sm
+      !bg-surface-canvas-light !text-ink-deep
+      !shadow-none transition-colors duration-200;
+  }
+
+  .filter-field-sentry.select-sentry.ant-select-focused .ant-select-selector,
+  .filter-field-sentry.ant-cascader.ant-select-focused .ant-select-selector {
+    @apply !border-transparent !ring-2 !ring-ring-focus;
+    box-shadow: rgba(0, 0, 0, 0.15) 0 2px 10px inset !important;
+  }
+
+  .filter-field-sentry.select-sentry .ant-select-selection-item,
+  .filter-field-sentry.select-sentry .ant-select-selection-placeholder,
+  .filter-field-sentry.ant-cascader .ant-select-selection-item,
+  .filter-field-sentry.ant-cascader .ant-select-selection-placeholder {
+    @apply !text-caption;
+    line-height: 1.875rem !important;
+  }
+
+  .filter-field-sentry.select-sentry .ant-select-selection-search-input,
+  .filter-field-sentry.ant-cascader .ant-select-selection-search-input {
+    @apply !h-[1.875rem];
+  }
+
+  .dark .filter-field-sentry.select-sentry .ant-select-selector,
+  .dark .filter-field-sentry.ant-cascader .ant-select-selector {
+    @apply !border-hairline-violet !bg-surface-night !text-on-primary;
+  }
+
+  .dark .filter-field-sentry.select-sentry.ant-select-focused .ant-select-selector,
+  .dark .filter-field-sentry.ant-cascader.ant-select-focused .ant-select-selector {
+    box-shadow: rgba(0, 0, 0, 0.35) 0 2px 10px inset !important;
+  }
+
   .eyebrow-cap {
     @apply font-text text-eyebrow uppercase tracking-[0.2px] text-muted;
   }

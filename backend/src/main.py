@@ -64,6 +64,7 @@ async def health_check():
 
 # 路由注册
 from src.api.auth import router as auth_router
+from src.api.ozon_rankings import router as ozon_rankings_router
 from src.api.rankings import router as rankings_router
 from src.api.selection_pool import router as selection_pool_router
 from src.api.ai_endpoints import router as ai_router
@@ -76,6 +77,7 @@ from src.api.tracking_phase2 import router as tracking_phase2_router
 app.include_router(auth_router, tags=['认证'])
 app.include_router(stores_router, tags=['店铺管理'])
 app.include_router(rankings_router, tags=['榜单发现'])
+app.include_router(ozon_rankings_router, tags=['选品排行榜'])
 app.include_router(selection_pool_router, tags=['选品池'])
 app.include_router(ai_router, tags=['AI 处理'])
 app.include_router(products_router, tags=['商品采集'])

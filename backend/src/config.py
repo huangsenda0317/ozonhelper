@@ -81,6 +81,13 @@ class Settings(BaseSettings):
     # 店铺首次订单同步回溯天数（空库时）
     order_sync_initial_days: int = 7
 
+    # DeepPick 选品排行榜 API
+    deeppick_base_url: str = 'http://www.test.cn' #! todo: http://www.deeppick.cn
+    deeppick_access_token: str = ''
+    deeppick_refresh_token: str = ''
+    deeppick_device_id: str = ''
+    deeppick_cache_ttl: int = 1800  # 30 分钟
+
 
 @lru_cache()
 def get_settings() -> Settings:
