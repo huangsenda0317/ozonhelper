@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
-  Download,
+  Inbox,
   Package,
   Wrench,
   type LucideIcon,
@@ -26,7 +26,7 @@ const NAV: {
   {
     href: "/ozon-assistant/collection",
     label: "商品采集",
-    icon: Download,
+    icon: Inbox,
   },
   {
     href: "/ozon-assistant/processing",

@@ -1,12 +1,23 @@
-import React from "react";
+"use client";
 
-import { ComingSoonPanel } from "@/components/features/ComingSoonPanel";
+import React, { Suspense } from "react";
+
+import { CollectionShell } from "@/components/features/ozon-collection/CollectionShell";
+
+function CollectionLoading() {
+  return (
+    <div className="space-y-lg animate-pulse" aria-hidden="true">
+      <div className="h-8 w-48 rounded bg-surface-elevated" />
+      <div className="h-24 rounded-xl bg-surface-elevated" />
+      <div className="h-96 rounded-xl bg-surface-elevated" />
+    </div>
+  );
+}
 
 export default function OzonAssistantCollectionPage() {
   return (
-    <ComingSoonPanel
-      title="商品采集"
-      description="浏览器插件采集与采集任务管理功能开发中，敬请期待。"
-    />
+    <Suspense fallback={<CollectionLoading />}>
+      <CollectionShell />
+    </Suspense>
   );
 }

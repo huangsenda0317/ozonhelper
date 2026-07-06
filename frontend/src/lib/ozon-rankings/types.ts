@@ -58,6 +58,7 @@ export interface AggregatedRankingItem {
   sku_count: number | null;
   top_product_name: string | null;
   top_product_url: string | null;
+  top_product_sku: string | null;
   top_photo_url: string | null;
   sample_brands: string[] | null;
   sample_sellers: string[] | null;
@@ -146,11 +147,13 @@ export function isProductItem(
   view: RankingView,
 ): item is ProductRankingItem {
   if (!isProductView(view)) return false;
-  if ("total_gmv" in item && item.total_gmv != null) return false;
+  const agg = item as AggregatedRankingItem;
+  if (agg.total_gmv != null) return false;
+  const product = item as ProductRankingItem;
   return (
-    item.gmv_sum != null ||
-    item.sku != null ||
-    item.photo_url != null ||
-    item.product_url != null
+    product.gmv_sum != null ||
+    product.sku != null ||
+    product.photo_url != null ||
+    product.product_url != null
   );
 }

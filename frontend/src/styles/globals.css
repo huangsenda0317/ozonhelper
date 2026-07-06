@@ -483,4 +483,146 @@ body {
   .ai-qa-process pre {
     scrollbar-width: thin;
   }
+
+  /* ── Ozon data table (rankings / collection) ── */
+  /* Fixed/sticky cells must stay opaque — semi-transparent bg causes scroll bleed-through */
+  .ozon-data-table .ant-table-thead > tr > th.ant-table-cell-fix,
+  .ozon-data-table .ant-table-thead > tr > th.ant-table-cell-fix-start,
+  .ozon-data-table .ant-table-thead > tr > th.ant-table-cell-fix-end,
+  .ozon-data-table .ant-table-thead > tr > th.ant-table-cell-fix-left,
+  .ozon-data-table .ant-table-thead > tr > th.ant-table-cell-fix-right {
+    background: var(--color-surface-card) !important;
+  }
+
+  .ozon-data-table .ant-table-tbody > tr > td.ant-table-cell-fix,
+  .ozon-data-table .ant-table-tbody > tr > td.ant-table-cell-fix-start,
+  .ozon-data-table .ant-table-tbody > tr > td.ant-table-cell-fix-end,
+  .ozon-data-table .ant-table-tbody > tr > td.ant-table-cell-fix-left,
+  .ozon-data-table .ant-table-tbody > tr > td.ant-table-cell-fix-right {
+    background: var(--color-surface-card) !important;
+  }
+
+  .ozon-data-table .ant-table-tbody > tr:hover > td.ant-table-cell-fix,
+  .ozon-data-table .ant-table-tbody > tr:hover > td.ant-table-cell-fix-start,
+  .ozon-data-table .ant-table-tbody > tr:hover > td.ant-table-cell-fix-end,
+  .ozon-data-table .ant-table-tbody > tr:hover > td.ant-table-cell-fix-left,
+  .ozon-data-table .ant-table-tbody > tr:hover > td.ant-table-cell-fix-right,
+  .ozon-data-table .ant-table-tbody > tr.ant-table-row-hover > td.ant-table-cell-fix,
+  .ozon-data-table .ant-table-tbody > tr.ant-table-row-hover > td.ant-table-cell-fix-start,
+  .ozon-data-table .ant-table-tbody > tr.ant-table-row-hover > td.ant-table-cell-fix-end,
+  .ozon-data-table .ant-table-tbody > tr.ant-table-row-hover > td.ant-table-cell-fix-left,
+  .ozon-data-table .ant-table-tbody > tr.ant-table-row-hover > td.ant-table-cell-fix-right {
+    background: color-mix(
+      in srgb,
+      var(--color-surface-card) 40%,
+      var(--color-surface-elevated) 60%
+    ) !important;
+  }
+
+  /* Opaque equivalent of rgba(21, 15, 35, 0.08) on surface-card */
+  .ozon-data-table .ant-table-tbody > tr.ant-table-row-selected > td {
+    background: color-mix(
+      in srgb,
+      var(--color-surface-card) 92%,
+      rgb(21 15 35) 8%
+    ) !important;
+  }
+
+  .ozon-data-table .ant-table-tbody > tr.ant-table-row-selected:hover > td,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected.ant-table-row-hover
+    > td {
+    background: color-mix(
+      in srgb,
+      var(--color-surface-card) 92%,
+      rgb(21 15 35) 8%
+    ) !important;
+  }
+
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected
+    > td.ant-table-cell-fix,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected
+    > td.ant-table-cell-fix-start,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected
+    > td.ant-table-cell-fix-end,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected
+    > td.ant-table-cell-fix-left,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected
+    > td.ant-table-cell-fix-right,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected:hover
+    > td.ant-table-cell-fix,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected:hover
+    > td.ant-table-cell-fix-start,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected:hover
+    > td.ant-table-cell-fix-end,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected:hover
+    > td.ant-table-cell-fix-left,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected:hover
+    > td.ant-table-cell-fix-right,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected.ant-table-row-hover
+    > td.ant-table-cell-fix,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected.ant-table-row-hover
+    > td.ant-table-cell-fix-start,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected.ant-table-row-hover
+    > td.ant-table-cell-fix-end,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected.ant-table-row-hover
+    > td.ant-table-cell-fix-left,
+  .ozon-data-table
+    .ant-table-tbody
+    > tr.ant-table-row-selected.ant-table-row-hover
+    > td.ant-table-cell-fix-right {
+    background: color-mix(
+      in srgb,
+      var(--color-surface-card) 92%,
+      rgb(21 15 35) 8%
+    ) !important;
+  }
+
+  /* Bulk action toolbar — unified radius & compact icons */
+  .bulk-action-btn {
+    @apply inline-flex items-center gap-1 min-h-8 h-8 px-md text-caption font-medium rounded-md cursor-pointer transition-all duration-200;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply focus-visible:outline-none focus-visible:ring-2;
+  }
+
+  .bulk-action-btn--amber {
+    @apply bg-[#F59E0B] text-ink-deep hover:opacity-90 active:opacity-80 focus-visible:ring-[#F59E0B]/50;
+  }
+
+  .bulk-action-btn--violet {
+    @apply bg-accent-violet-mid text-on-primary hover:opacity-90 active:opacity-80 focus-visible:ring-accent-violet-mid/40;
+  }
+
+  .bulk-action-btn--danger {
+    @apply bg-accent-pink text-ink-deep hover:opacity-90 active:opacity-80 focus-visible:ring-accent-pink/40;
+  }
 }

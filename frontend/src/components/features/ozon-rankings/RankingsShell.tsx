@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { message } from "antd";
 
 import { KpiSummaryBar } from "@/components/features/ozon-rankings/KpiSummaryBar";
 import { RankingsFilterBar } from "@/components/features/ozon-rankings/RankingsFilterBar";
@@ -10,6 +11,12 @@ import {
   RankingsTableError,
 } from "@/components/features/ozon-rankings/RankingsTable";
 import { RankingsTabs } from "@/components/features/ozon-rankings/RankingsTabs";
+import { mapRankingItemToCollection } from "@/lib/ozon-collection/mappers";
+import { useCollection } from "@/lib/ozon-collection/collection-context";
+import {
+  getRankingRowKey,
+  isRankingRowCollectable,
+} from "@/lib/ozon-collection/utils";
 import {
   fetchMockRankings,
   USE_OZON_RANKINGS_MOCK,
@@ -17,6 +24,7 @@ import {
 import { apiClient } from "@/lib/api-client";
 import type {
   RankingFilters,
+  RankingItem,
   RankingListData,
   RankingListMeta,
   RankingView,
@@ -42,9 +50,28 @@ function parseView(raw: string | null): RankingView {
   return views.includes(raw as RankingView) ? (raw as RankingView) : "product";
 }
 
+function formatCollectFeedback(result: {
+  added: { length: number };
+  duplicateSkus: string[];
+  skipped: number;
+}) {
+  const parts: string[] = [];
+  if (result.added.length > 0) {
+    parts.push(`成功采集 ${result.added.length} 件商品`);
+  }
+  if (result.duplicateSkus.length > 0) {
+    parts.push(`${result.duplicateSkus.length} 件已在采集箱`);
+  }
+  if (result.skipped > 0) {
+    parts.push(`跳过 ${result.skipped} 件不可采集项`);
+  }
+  return parts.join("，") || "未添加新商品";
+}
+
 export function RankingsShell() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { addItems } = useCollection();
 
   const view = parseView(searchParams.get("view"));
   const page = Math.max(1, Number(searchParams.get("page") || "1") || 1);
@@ -57,6 +84,17 @@ export function RankingsShell() {
   const [meta, setMeta] = useState<RankingListMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+  const items = useMemo(() => data?.items ?? [], [data?.items]);
+
+  const itemKeyMap = useMemo(() => {
+    const map = new Map<string, RankingItem>();
+    items.forEach((item, index) => {
+      map.set(getRankingRowKey(item, view, index), item);
+    });
+    return map;
+  }, [items, view]);
 
   const updateUrl = useCallback(
     (next: { view?: RankingView; page?: number }) => {
@@ -114,11 +152,50 @@ export function RankingsShell() {
   useEffect(() => {
     setData(null);
     setMeta(null);
+    setSelectedRowKeys([]);
   }, [view]);
 
   useEffect(() => {
     fetchRankings();
   }, [fetchRankings]);
+
+  const collectRecords = useCallback(
+    (records: RankingItem[], navigateAfter = false) => {
+      const mappable = records.filter((r) => isRankingRowCollectable(r, view));
+      const skipped = records.length - mappable.length;
+      const toAdd = mappable
+        .map((r) => mapRankingItemToCollection(r, view))
+        .filter((item): item is NonNullable<typeof item> => item != null);
+
+      const result = addItems(toAdd);
+      const feedback = formatCollectFeedback({ ...result, skipped });
+      if (result.added.length > 0) {
+        message.success(feedback);
+      } else {
+        message.info(feedback);
+      }
+
+      if (navigateAfter && result.added.length > 0) {
+        router.push("/ozon-assistant/collection");
+      }
+    },
+    [addItems, router, view],
+  );
+
+  const handleCollectOne = useCallback(
+    (record: RankingItem) => {
+      collectRecords([record], false);
+    },
+    [collectRecords],
+  );
+
+  const handleBatchCollect = useCallback(() => {
+    const records = selectedRowKeys
+      .map((key) => itemKeyMap.get(String(key)))
+      .filter((r): r is RankingItem => r != null);
+    collectRecords(records, true);
+    setSelectedRowKeys([]);
+  }, [collectRecords, itemKeyMap, selectedRowKeys]);
 
   const handleViewChange = (nextView: RankingView) => {
     updateUrl({ view: nextView, page: 1 });
@@ -136,6 +213,7 @@ export function RankingsShell() {
   };
 
   const handlePageChange = (nextPage: number) => {
+    setSelectedRowKeys([]);
     updateUrl({ page: nextPage });
   };
 
@@ -150,12 +228,6 @@ export function RankingsShell() {
         </p>
       </header>
 
-      {/* <KpiSummaryBar
-        summary={data?.summary ?? null}
-        loading={loading && !data}
-        stale={meta?.stale}
-      /> */}
-
       <RankingsFilterBar
         filters={filters}
         onChange={setFilters}
@@ -163,19 +235,27 @@ export function RankingsShell() {
         onReset={handleReset}
       />
 
-      <RankingsTabs view={view} onChange={handleViewChange} />
+      <RankingsTabs
+        view={view}
+        onChange={handleViewChange}
+        selectedCount={selectedRowKeys.length}
+        onBatchCollect={handleBatchCollect}
+      />
 
       {error ? (
         <RankingsTableError message={error} onRetry={fetchRankings} />
       ) : (
         <RankingsTable
           view={view}
-          items={data?.items ?? []}
+          items={items}
           loading={loading}
           page={page}
           total={meta?.total ?? 0}
           pageSize={PAGE_SIZE}
           onPageChange={handlePageChange}
+          selectedRowKeys={selectedRowKeys}
+          onSelectionChange={setSelectedRowKeys}
+          onCollectOne={handleCollectOne}
         />
       )}
     </div>

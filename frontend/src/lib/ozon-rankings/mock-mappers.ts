@@ -127,6 +127,8 @@ export function mapAggregatedItem(
       item.top_product_name != null ? String(item.top_product_name) : null,
     top_product_url:
       item.top_product_url != null ? String(item.top_product_url) : null,
+    top_product_sku:
+      item.top_product_sku != null ? String(item.top_product_sku) : null,
     top_photo_url: item.top_photo_url != null ? String(item.top_photo_url) : null,
     sample_brands: toStringList(item.sample_brands),
     sample_sellers: toStringList(item.sample_sellers),

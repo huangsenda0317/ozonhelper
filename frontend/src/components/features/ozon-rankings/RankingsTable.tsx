@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { ExternalLink } from "lucide-react";
-import { Table, type TableColumnsType } from "antd";
+import { ExternalLink, Plus } from "lucide-react";
+import { Table, type TableColumnsType, type TableProps } from "antd";
 
 import { Button } from "@/components/ui/Button";
 import {
@@ -11,6 +11,10 @@ import {
   formatNumber,
   formatPercent,
 } from "@/lib/ozon-rankings/format";
+import {
+  isRankingRowCollectable,
+  getRankingRowKey,
+} from "@/lib/ozon-collection/utils";
 import {
   isProductItem,
   isProductView,
@@ -28,6 +32,9 @@ interface RankingsTableProps {
   total: number;
   pageSize: number;
   onPageChange: (page: number) => void;
+  selectedRowKeys?: React.Key[];
+  onSelectionChange?: (keys: React.Key[]) => void;
+  onCollectOne?: (record: RankingItem) => void;
 }
 
 function ProductCell({ item }: { item: ProductRankingItem }) {
@@ -49,7 +56,7 @@ function ProductCell({ item }: { item: ProductRankingItem }) {
             href={item.product_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-body font-medium text-ink hover:text-accent-violet-mid line-clamp-2 cursor-pointer"
+            className="text-body font-medium text-ink hover:text-accent-violet-mid line-clamp-2 cursor-pointer transition-colors duration-200"
           >
             {item.name || item.sku || "—"}
           </a>
@@ -94,6 +101,29 @@ function AggregatedCell({ item }: { item: AggregatedRankingItem }) {
   );
 }
 
+function CollectAction({
+  record,
+  view,
+  onCollectOne,
+}: {
+  record: RankingItem;
+  view: RankingView;
+  onCollectOne?: (record: RankingItem) => void;
+}) {
+  if (!onCollectOne || !isRankingRowCollectable(record, view)) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onCollectOne(record)}
+      className="inline-flex items-center gap-0.5 text-caption text-accent-violet-mid hover:underline cursor-pointer transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40 rounded-sm"
+    >
+      <Plus className="h-3 w-3 shrink-0" aria-hidden="true" />
+      添加采集
+    </button>
+  );
+}
+
 export function RankingsTable({
   view,
   items,
@@ -102,8 +132,41 @@ export function RankingsTable({
   total,
   pageSize,
   onPageChange,
+  selectedRowKeys = [],
+  onSelectionChange,
+  onCollectOne,
 }: RankingsTableProps) {
+  const rowSelection = useMemo((): TableProps<RankingItem>["rowSelection"] => {
+    if (!onSelectionChange) return undefined;
+    return {
+      selectedRowKeys,
+      onChange: (keys: React.Key[]) => onSelectionChange(keys),
+      getCheckboxProps: (record: RankingItem) => ({
+        disabled: !isRankingRowCollectable(record, view),
+      }),
+    };
+  }, [selectedRowKeys, onSelectionChange, view]);
+
   const columns = useMemo((): TableColumnsType<RankingItem> => {
+    const actionWidth = onCollectOne ? 120 : 72;
+
+    const renderAction = (record: RankingItem, externalUrl?: string | null) => (
+      <div className="flex flex-col gap-0.5 items-start">
+        <CollectAction record={record} view={view} onCollectOne={onCollectOne} />
+        {externalUrl ? (
+          <a
+            href={externalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-xs text-caption text-muted hover:text-accent-violet-mid hover:underline cursor-pointer transition-colors duration-200"
+          >
+            <ExternalLink className="h-3 w-3 shrink-0" aria-hidden="true" />
+            Ozon
+          </a>
+        ) : null}
+      </div>
+    );
+
     if (isProductView(view)) {
       const cols: TableColumnsType<RankingItem> = [
         {
@@ -262,20 +325,12 @@ export function RankingsTable({
       cols.push({
         title: "操作",
         key: "action",
-        width: 72,
+        width: actionWidth,
         fixed: "right",
         render: (_, record) =>
-          isProductItem(record, view) && record.product_url ? (
-            <a
-              href={record.product_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-xs text-caption text-accent-violet-mid hover:underline cursor-pointer"
-            >
-              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-              Ozon
-            </a>
-          ) : null,
+          isProductItem(record, view)
+            ? renderAction(record, record.product_url)
+            : null,
       });
 
       return cols;
@@ -378,7 +433,7 @@ export function RankingsTable({
               href={agg.top_product_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-accent-violet-mid hover:underline cursor-pointer"
+              className="text-accent-violet-mid hover:underline cursor-pointer transition-colors duration-200"
             >
               {agg.top_product_name || "—"}
             </a>
@@ -388,43 +443,26 @@ export function RankingsTable({
       {
         title: "操作",
         key: "action",
-        width: 72,
+        width: actionWidth,
         fixed: "right",
         render: (_, record) => {
           if (isProductItem(record, view)) return null;
-          const url = (record as AggregatedRankingItem).top_product_url;
-          if (!url) return null;
-          return (
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-xs text-caption text-accent-violet-mid hover:underline cursor-pointer"
-            >
-              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-              Ozon
-            </a>
-          );
+          const agg = record as AggregatedRankingItem;
+          return renderAction(record, agg.top_product_url);
         },
       },
     ];
-  }, [view]);
+  }, [view, onCollectOne]);
 
   return (
-    <div className="rounded-xl border border-hairline bg-surface-card overflow-hidden">
+    <div className="ozon-data-table rounded-xl border border-hairline bg-surface-card overflow-x-auto">
       <Table<RankingItem>
         key={`${view}-${page}`}
-        rowKey={(record, index) => {
-          if (isProductItem(record, view)) {
-            const product = record as ProductRankingItem;
-            return `${view}:product:${product.sku ?? product.rank_no ?? index}`;
-          }
-          const aggregated = record as AggregatedRankingItem;
-          return `${view}:agg:${aggregated.label ?? aggregated.rank_no ?? index}`;
-        }}
+        rowKey={(record, index) => getRankingRowKey(record, view, index ?? 0)}
         columns={columns}
         dataSource={items}
         loading={loading}
+        rowSelection={rowSelection}
         pagination={{
           current: page,
           pageSize,
@@ -433,7 +471,7 @@ export function RankingsTable({
           showTotal: (t) => `共 ${t} 条`,
           onChange: onPageChange,
         }}
-        scroll={{ x: isProductView(view) ? 1600 : 1200 }}
+        scroll={{ x: isProductView(view) ? 1680 : 1280 }}
         size="small"
         rowClassName={() =>
           "transition-colors duration-200 hover:bg-surface-elevated/60 cursor-default"
