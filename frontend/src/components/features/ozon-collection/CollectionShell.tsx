@@ -16,6 +16,7 @@ import {
   filterCollectionItems,
   useCollection,
 } from "@/lib/ozon-collection/collection-context";
+import { useProcessing } from "@/lib/ozon-processing/processing-context";
 import type {
   CollectionFilters,
   CollectionItem,
@@ -32,6 +33,7 @@ export function CollectionShell() {
   const searchParams = useSearchParams();
   const { items, removeItems, updateItem, setProcessingStatus, getItemById } =
     useCollection();
+  const { createFromCollection } = useProcessing();
 
   const [filters, setFilters] = useState<CollectionFilters>(
     DEFAULT_COLLECTION_FILTERS,
@@ -97,9 +99,26 @@ export function CollectionShell() {
   const handleBatchProcess = () => {
     if (selectedRowKeys.length === 0) return;
     const ids = selectedRowKeys.map(String);
-    setProcessingStatus(ids, "created");
+    const targets = items.filter((item) => ids.includes(item.id));
+    const pending = targets.filter((item) => item.processing_status === "pending");
+    if (pending.length === 0) {
+      message.info("选中项均已创建加工单");
+      return;
+    }
+    const { created, duplicateIds } = createFromCollection(pending);
+    setProcessingStatus(
+      pending.map((item) => item.id),
+      "created",
+    );
     setSelectedRowKeys([]);
-    message.success("已创建加工单，请前往「商品加工」查看");
+    if (duplicateIds.length) {
+      message.info(`${duplicateIds.length} 条已在加工池中，已跳过`);
+    }
+    if (created.length) {
+      message.success(`已创建 ${created.length} 条加工单，请前往「商品加工」查看`);
+    } else if (!duplicateIds.length) {
+      message.success("已创建加工单，请前往「商品加工」查看");
+    }
   };
 
   const handleDeleteOne = (item: CollectionItem) => {

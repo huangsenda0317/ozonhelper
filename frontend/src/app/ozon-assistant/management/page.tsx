@@ -1,12 +1,23 @@
-import React from "react";
+"use client";
 
-import { ComingSoonPanel } from "@/components/features/ComingSoonPanel";
+import React, { Suspense } from "react";
+
+import { ManagementShell } from "@/components/features/ozon-management/ManagementShell";
+
+function ManagementLoading() {
+  return (
+    <div className="space-y-lg animate-pulse" aria-hidden="true">
+      <div className="h-8 w-48 rounded bg-surface-elevated" />
+      <div className="h-24 rounded-xl bg-surface-elevated" />
+      <div className="h-96 rounded-xl bg-surface-elevated" />
+    </div>
+  );
+}
 
 export default function OzonAssistantManagementPage() {
   return (
-    <ComingSoonPanel
-      title="商品管理"
-      description="已采集商品管理与批量上架功能开发中，敬请期待。"
-    />
+    <Suspense fallback={<ManagementLoading />}>
+      <ManagementShell />
+    </Suspense>
   );
 }

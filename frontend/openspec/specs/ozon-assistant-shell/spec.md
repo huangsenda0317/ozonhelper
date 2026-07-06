@@ -51,7 +51,7 @@ OzonAssistantShell SHALL 在 OZON 助手模块内提供二级 Tab：选品排行
 
 ### Requirement: 未实现模块占位页
 
-商品加工、商品管理路由在功能未就绪时 SHALL 展示占位页，说明功能开发中，不得出现 404。商品采集路由 SHALL 展示完整采集箱页面（见 `product-collection-inbox` capability），不再使用 ComingSoon 占位。
+商品加工、商品管理路由 SHALL 展示完整功能页面，不得出现 404 或 ComingSoon 占位。商品采集路由 SHALL 展示完整采集箱页面（见 `product-collection-inbox` capability）。
 
 #### Scenario: 商品采集页
 
@@ -60,15 +60,31 @@ OzonAssistantShell SHALL 在 OZON 助手模块内提供二级 Tab：选品排行
 - **AND** OzonAssistantShell 二级 Tab 正常显示
 - **AND** 「商品采集」Tab 处于 active 状态
 
-#### Scenario: 商品加工占位
+#### Scenario: 商品加工页
 
 - **WHEN** 用户访问 `/ozon-assistant/processing`
-- **THEN** 展示占位内容（非 404 错误页）
+- **THEN** 展示商品加工列表页（见 `product-processing-workbench`）
+- **AND** 「商品加工」Tab 处于 active 状态
 
-#### Scenario: 商品管理占位
+#### Scenario: 商品管理页
 
 - **WHEN** 用户访问 `/ozon-assistant/management`
-- **THEN** 展示占位内容（非 404 错误页）
+- **THEN** 展示商品管理待上架列表页（见 `product-management-listing`）
+- **AND** 「商品管理」Tab 处于 active 状态
+
+### Requirement: 加工与管理子路由 Tab 高亮
+
+访问 `/ozon-assistant/processing/*` 或 `/ozon-assistant/management/*` 子路由时，OzonAssistantShell SHALL 保持对应二级 Tab 的 active 状态。
+
+#### Scenario: 编辑加工子路由
+
+- **WHEN** 用户访问 `/ozon-assistant/processing/[id]`
+- **THEN** 「商品加工」Tab 处于 active 状态
+
+#### Scenario: 待上架详情子路由
+
+- **WHEN** 用户访问 `/ozon-assistant/management/[id]`
+- **THEN** 「商品管理」Tab 处于 active 状态
 
 ### Requirement: 壳层样式与 TrackingShell 一致
 
