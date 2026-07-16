@@ -17,7 +17,13 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 export interface AITask {
   id: string;
   task_type: string;
-  status: "pending" | "running" | "success" | "failed" | "cancelled";
+  status:
+    | "pending"
+    | "running"
+    | "success"
+    | "failed"
+    | "cancelled"
+    | "awaiting_annotation";
   input_data: {
     prompt: string;
     seed: number;
@@ -208,6 +214,9 @@ function AITaskRow({
 }) {
   const inputUrls = task.input_data?.image_urls || [];
   const prompt = task.input_data?.prompt || "-";
+  // StatusBadge 尚未收录 awaiting_annotation；本任务仅扩类型，徽章暂映射为 pending
+  const badgeStatus =
+    task.status === "awaiting_annotation" ? "pending" : task.status;
 
   return (
     <article className="rounded-lg border border-hairline p-md hover:bg-surface-elevated/50 transition-colors duration-200">
@@ -226,7 +235,7 @@ function AITaskRow({
               {prompt}
             </p>
             <StatusBadge
-              status={task.status}
+              status={badgeStatus}
               label={getStatusLabel(task)}
               className="shrink-0"
             />

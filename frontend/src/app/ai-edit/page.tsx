@@ -2,22 +2,16 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImagePlus, Sparkles, Wand2 } from "lucide-react";
+import { Construction } from "lucide-react";
 
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import {
-  EditOptionsCollapse,
-  PromptInput,
-} from "@/components/features/PromptEditor";
 import { ImagePreview } from "@/components/features/ImageCompare";
-import {
-  ImageUploader,
-  UploadedImage,
-} from "@/components/features/ImageUploader";
 import { AITaskList, type AITask } from "@/components/features/AITaskList";
+import { FreeformEditPanel } from "@/components/features/ai-edit/FreeformEditPanel";
+
+type EditMode = "workflow" | "freeform";
 
 interface ImagePreviewState {
   images: string[];
@@ -25,6 +19,11 @@ interface ImagePreviewState {
   compareImages?: string[];
   initialIndex?: number;
 }
+
+const MODE_TABS: { value: EditMode; label: string }[] = [
+  { value: "workflow", label: "工作流" },
+  { value: "freeform", label: "自由改图" },
+];
 
 function TaskStatsSkeleton() {
   return (
@@ -83,40 +82,36 @@ function TaskStats({ tasks }: { tasks: AITask[] }) {
   );
 }
 
+function WorkflowPlaceholder() {
+  return (
+    <Card
+      variant="default"
+      padding="lg"
+      className="flex flex-col items-center justify-center gap-md py-xxl text-center min-h-[320px]"
+    >
+      <Construction
+        className="h-10 w-10 text-muted"
+        aria-hidden="true"
+      />
+      <div className="space-y-xs max-w-sm">
+        <h2 className="text-heading-sm font-display text-ink">工作流</h2>
+        <p className="text-caption text-muted">即将接入</p>
+      </div>
+    </Card>
+  );
+}
+
 export default function AIEditPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const [mode, setMode] = useState<EditMode>("workflow");
   const [tasks, setTasks] = useState<AITask[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [prompt, setPrompt] = useState(
-    "去除图片中的所有中文水印和文字，把背景换成白色纯色背景",
-  );
-  const [seed, setSeed] = useState(-1);
-  const [scale, setScale] = useState(0.5);
-  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
-  const [submitModalOpen, setSubmitModalOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState<ImagePreviewState | null>(
     null,
   );
-
-  const revokeUploadedPreviews = useCallback((images: UploadedImage[]) => {
-    images.forEach((img) => {
-      if (img.preview.startsWith("blob:")) {
-        URL.revokeObjectURL(img.preview);
-      }
-    });
-  }, []);
-
-  const closeSubmitModal = useCallback(() => {
-    setSubmitModalOpen(false);
-    setUploadedImages((prev) => {
-      revokeUploadedPreviews(prev);
-      return [];
-    });
-  }, [revokeUploadedPreviews]);
 
   const fetchTasks = useCallback(
     async (options?: { keepLoading?: boolean }) => {
@@ -164,6 +159,9 @@ export default function AIEditPage() {
     if (task.status === "pending") {
       return "排队中";
     }
+    if (task.status === "awaiting_annotation") {
+      return "待注解";
+    }
     if (task.status === "running") {
       const total =
         task.input_data?.items_total ?? task.output_data?.items_total;
@@ -201,36 +199,13 @@ export default function AIEditPage() {
       task.output_data.processed_images.length > 0,
     );
 
-  const handleSubmit = async () => {
-    if (uploadedImages.length === 0) return;
-    setSubmitting(true);
-    try {
-      const response = await apiClient.post<{ task_id: string }>(
-        "/ai/image-edit",
-        {
-          prompt,
-          seed,
-          scale,
-          image_urls: uploadedImages.map((img) => img.url),
-          object_names: uploadedImages.map((img) => img.object_name),
-        },
-      );
-      if (response.success) {
-        fetchTasks();
-        closeSubmitModal();
-      }
-    } catch (err) {
-      console.error("Failed to submit image edit:", err);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleRetry = async (task: AITask) => {
     try {
       await apiClient.post(`/ai/image-edit/${task.id}/retry`, {
-        prompt: task.input_data?.prompt ?? prompt,
-        scale: task.input_data?.scale ?? scale,
+        prompt:
+          task.input_data?.prompt ??
+          "去除图片中的所有中文水印和文字，把背景换成白色纯色背景",
+        scale: task.input_data?.scale ?? 0.5,
       });
       fetchTasks();
     } catch (err) {
@@ -271,12 +246,13 @@ export default function AIEditPage() {
   };
 
   const scrollToForm = () => {
-    document
-      .getElementById("ai-edit-form")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setMode("freeform");
+    requestAnimationFrame(() => {
+      document
+        .getElementById("ai-edit-form")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
-
-  const canSubmit = uploadedImages.length > 0 && !submitting;
 
   const handleManualRefresh = () => {
     setRefreshing(true);
@@ -297,7 +273,7 @@ export default function AIEditPage() {
               </span>
             </h1>
             <p className="text-caption text-muted mt-xs">
-              上传商品图并填写提示词，异步批量改图
+              工作流一键改图，或自由填写提示词批量改图
             </p>
           </div>
           <div className="min-w-[200px] shrink-0">
@@ -306,69 +282,40 @@ export default function AIEditPage() {
         </div>
       </header>
 
+      {/* Mode tabs — mirrors RankingsTabs / nav-tab patterns */}
+      <div
+        role="tablist"
+        aria-label="改图模式"
+        className="flex flex-wrap gap-xs border-b border-hairline pb-sm mb-xl"
+      >
+        {MODE_TABS.map((tab) => {
+          const active = mode === tab.value;
+          return (
+            <button
+              key={tab.value}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setMode(tab.value)}
+              className={`px-md py-xs text-caption rounded-md whitespace-nowrap cursor-pointer transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet-mid/40 ${
+                active ? "nav-tab-active font-medium" : "interactive-muted-soft"
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Bento dual-column */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-xl">
-        {/* Left: upload + prompt */}
+        {/* Left: mode panel */}
         <div id="ai-edit-form">
-          <Card variant="default" padding="lg" className="space-y-xl">
-            <div>
-              <h2 className="text-heading-sm font-display text-ink mb-xs flex items-center gap-sm">
-                <ImagePlus
-                  className="h-5 w-5 text-accent-violet-mid shrink-0"
-                  aria-hidden="true"
-                />
-                上传与提示词
-              </h2>
-              <p className="text-caption text-body">
-                支持 JPG / PNG / WebP，单文件 ≤10MB，最多 10 张
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-lg w-full">
-              <ImageUploader
-                images={uploadedImages}
-                onChange={setUploadedImages}
-              />
-              <div className="min-h-[220px] w-full flex">
-                <PromptInput prompt={prompt} onPromptChange={setPrompt} />
-              </div>
-            </div>
-
-            <EditOptionsCollapse
-              prompt={prompt}
-              seed={seed}
-              scale={scale}
-              onPromptChange={setPrompt}
-              onSeedChange={setSeed}
-              onScaleChange={setScale}
-            />
-
-            {uploadedImages.length === 0 && (
-              <p className="text-caption text-muted flex items-center gap-xs">
-                <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                请先上传至少一张图片
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-sm pt-xs border-t border-hairline">
-              <Button
-                variant="primary"
-                onClick={handleSubmit}
-                disabled={!canSubmit}
-                loading={submitting}
-                title={uploadedImages.length === 0 ? "请先上传图片" : undefined}
-                className="gap-sm"
-              >
-                <Wand2 className="h-4 w-4" aria-hidden="true" />
-                确认发起
-              </Button>
-              {uploadedImages.length > 0 && (
-                <Button variant="ghost" onClick={closeSubmitModal}>
-                  清空图片
-                </Button>
-              )}
-            </div>
-          </Card>
+          {mode === "workflow" ? (
+            <WorkflowPlaceholder />
+          ) : (
+            <FreeformEditPanel onTasksRefresh={() => fetchTasks()} />
+          )}
         </div>
 
         {/* Right: task list */}
