@@ -28,8 +28,11 @@ from src.schemas.ai import (
     ImageEditRequest,
     OutputOverrideRequest,
     RetryRequest,
+    SuggestTextLayoutRequest,
+    SuggestTextLayoutResponse,
     TaskProgressResponse,
     TaskResponse,
+    TextLayoutSuggestion,
     TranslateRequest,
     TranslateTextRequest,
     TranslateTextResponse,
@@ -39,6 +42,7 @@ from src.schemas.ai import (
 from src.schemas.common import ApiResponse
 from src.services.ai_processor.chat_service import stream_chat
 from src.services.ai_processor.image_resizer import resize_to_ozon_spec
+from src.services.ai_processor.moonshot_vision import moonshot_vision_client
 from src.services.ai_processor.tmt_translator import TMTError, tmt_translator
 from src.services.ai_processor.workflow_planner import (
     WorkflowStep,
@@ -529,6 +533,28 @@ async def retry_workflow(
     return ApiResponse(
         success=True,
         data={'task_id': str(t.id), 'status': 'pending'},
+    )
+
+
+@router.post(
+    '/workflow/suggest-text-layout',
+    response_model=ApiResponse[SuggestTextLayoutResponse],
+)
+async def suggest_text_layout(
+    request: SuggestTextLayoutRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """Moonshot Vision 文字定位建议（不改任务状态）。"""
+    items = [{'id': i.id, 'text': i.text} for i in request.items]
+    suggestions = await moonshot_vision_client.suggest_layout(
+        image_url=request.image_url,
+        items=items,
+    )
+    return ApiResponse(
+        success=True,
+        data=SuggestTextLayoutResponse(
+            suggestions=[TextLayoutSuggestion(**s) for s in suggestions],
+        ),
     )
 
 
