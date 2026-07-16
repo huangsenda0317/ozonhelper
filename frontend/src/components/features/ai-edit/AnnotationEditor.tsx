@@ -31,6 +31,8 @@ import {
   CYRILLIC_FONT_OPTIONS,
   createAnnotationItem,
   buildFontStyle,
+  getPreviewAnchorTransform,
+  normalizeAnnotationText,
 } from "./annotationTypes";
 
 interface TextLayoutSuggestion {
@@ -362,15 +364,14 @@ export function AnnotationEditor({
                   style={{
                     left: `${item.x * 100}%`,
                     top: `${item.y * 100}%`,
-                    transform: "translate(-50%, -50%)",
+                    transform: getPreviewAnchorTransform(item.align),
                     font: buildFontStyle({
                       ...item,
                       fontSize: displaySize,
                     }),
                     color: item.color,
                     textAlign: item.align,
-                    whiteSpace: "pre-wrap",
-                    maxWidth: "90%",
+                    whiteSpace: "nowrap",
                   }}
                   onPointerDown={(e) => handlePointerDown(e, item.id)}
                   onClick={() => setSelectedId(item.id)}
@@ -380,7 +381,7 @@ export function AnnotationEditor({
                     }
                   }}
                 >
-                  {item.text || (
+                  {normalizeAnnotationText(item.text) || (
                     <span className="opacity-50 text-caption">（空文案）</span>
                   )}
                 </div>
@@ -461,17 +462,19 @@ export function AnnotationEditor({
 
                     <div>
                       <label className="block text-micro-cap text-muted mb-xxs">
-                        俄文
+                        俄文（单行）
                       </label>
-                      <textarea
+                      <input
+                        type="text"
                         value={item.text}
                         onChange={(e) =>
-                          updateItem(item.id, { text: e.target.value })
+                          updateItem(item.id, {
+                            text: normalizeAnnotationText(e.target.value),
+                          })
                         }
                         onClick={(e) => e.stopPropagation()}
-                        rows={2}
-                        className="w-full text-caption rounded-md border border-hairline bg-surface-card px-sm py-xs resize-y focus:outline-none focus:ring-2 focus:ring-accent-violet-mid/40"
-                        placeholder="输入俄文商品文案"
+                        className="w-full text-caption rounded-md border border-hairline bg-surface-card px-sm py-xs focus:outline-none focus:ring-2 focus:ring-accent-violet-mid/40"
+                        placeholder="输入俄文商品文案（单行）"
                       />
                     </div>
 

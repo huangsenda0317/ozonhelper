@@ -2,6 +2,7 @@ import {
   ANNOTATION_EXPORT_SIZE,
   type AnnotationTextItem,
   buildFontStyle,
+  normalizeAnnotationText,
 } from "./annotationTypes";
 
 function loadImage(url: string): Promise<HTMLImageElement> {
@@ -51,8 +52,11 @@ export async function bakeAnnotationToBlob(
 
   ctx.drawImage(img, 0, 0, exportSize, exportSize);
 
-  const drawable = items.filter((item) => item.text.trim());
+  const drawable = items.filter(
+    (item) => normalizeAnnotationText(item.text).length > 0,
+  );
   for (const item of drawable) {
+    const text = normalizeAnnotationText(item.text);
     ctx.save();
     ctx.font = buildFontStyle(item);
     ctx.fillStyle = item.color;
@@ -61,7 +65,7 @@ export async function bakeAnnotationToBlob(
 
     const x = item.x * exportSize;
     const y = item.y * exportSize;
-    ctx.fillText(item.text, x, y);
+    ctx.fillText(text, x, y);
     ctx.restore();
   }
 

@@ -57,3 +57,25 @@ export function buildFontStyle(item: AnnotationTextItem): string {
   const style = item.italic ? "italic" : "normal";
   return `${style} ${weight} ${item.fontSize}px ${item.fontFamily}`;
 }
+
+/**
+ * 注解文案仅支持单行：canvas fillText 不处理换行。
+ * 输入中的换行/连续空白折叠为单个空格，与预览 nowrap 一致。
+ */
+export function normalizeAnnotationText(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+/**
+ * 预览 CSS transform，使 (x,y) 锚点与 canvas textAlign + textBaseline middle 一致。
+ */
+export function getPreviewAnchorTransform(align: TextAlign): string {
+  switch (align) {
+    case "left":
+      return "translateY(-50%)";
+    case "center":
+      return "translate(-50%, -50%)";
+    case "right":
+      return "translate(-100%, -50%)";
+  }
+}
