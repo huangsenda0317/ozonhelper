@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ImagePreview } from "@/components/features/ImageCompare";
 import { AITaskList, type AITask } from "@/components/features/AITaskList";
+import { AnnotationEditor } from "@/components/features/ai-edit/AnnotationEditor";
 import { FreeformEditPanel } from "@/components/features/ai-edit/FreeformEditPanel";
 import { WorkflowEditPanel } from "@/components/features/ai-edit/WorkflowEditPanel";
 
@@ -348,41 +348,21 @@ export default function AIEditPage() {
         </Card>
       </div>
 
-      {/* Task 9 将替换为完整 AnnotationEditor；此处为占位入口 */}
       {annotationTask && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-surface-night/40 p-lg"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-surface-night/40 p-lg backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="annotation-editor-placeholder-title"
+          aria-labelledby="annotation-editor-title"
         >
-          <Card variant="default" padding="lg" className="w-full max-w-md">
-            <h2
-              id="annotation-editor-placeholder-title"
-              className="text-heading-sm font-display text-ink mb-sm"
-            >
-              注解编辑器（占位）
-            </h2>
-            <p className="text-caption text-muted mb-xs">
-              Task 9 将接入完整画布编辑器。当前任务：
-            </p>
-            <p className="text-caption text-ink font-mono break-all mb-lg">
-              {annotationTask.id}
-            </p>
-            <p className="text-micro-cap text-muted mb-lg">
-              状态：{annotationTask.status}
-              {annotationTask.output_data?.ai_base_image_url
-                ? " · 已有 AI 底图"
-                : ""}
-            </p>
-            <Button
-              variant="primary"
-              onClick={() => setAnnotationTask(null)}
-              className="w-full"
-            >
-              关闭
-            </Button>
-          </Card>
+          <AnnotationEditor
+            task={annotationTask}
+            onClose={() => setAnnotationTask(null)}
+            onComplete={() => {
+              setAnnotationTask(null);
+              fetchTasks();
+            }}
+          />
         </div>
       )}
 
