@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.processing_task import ProcessingTask
 from src.services.ai_processor.image_edit_service import image_edit_service
+from src.services.ai_processor.image_workflow_service import image_workflow_service
 from src.services.ai_processor.tmt_translator import TMTError, tmt_translator
 from src.worker.app import celery_app
 from src.worker.async_runner import run_async_task
@@ -60,6 +61,23 @@ def process_image_edit_task(
             scale=resolved_scale,
             db=db,
         )
+
+    try:
+        run_async_task(_handle)
+    except Exception as exc:
+        try:
+            raise self.retry(exc=exc, countdown=30) from exc
+        except MaxRetriesExceededError:
+            _run_mark_failed(task_id, str(exc))
+            raise
+
+
+@celery_app.task(name='process_image_workflow', bind=True, max_retries=3)
+def process_image_workflow_task(self, task_id: str):
+    """AI 主图工作流 Celery 任务: 链式 SeedEdit → awaiting_annotation / success。"""
+
+    async def _handle(db: AsyncSession) -> None:
+        await image_workflow_service.process_workflow(task_id, db)
 
     try:
         run_async_task(_handle)
