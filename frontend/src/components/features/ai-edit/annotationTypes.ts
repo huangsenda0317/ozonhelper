@@ -34,11 +34,19 @@ export const DEFAULT_ALIGN: TextAlign = "center";
 /** Ozon 主图标准尺寸，编辑器与烘烤共用 */
 export const ANNOTATION_EXPORT_SIZE = 1200;
 
+/** 兼容非安全上下文 / 旧浏览器（生产 HTTP 下 crypto.randomUUID 可能不可用） */
+function newAnnotationId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `anno_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+}
+
 export function createAnnotationItem(
   partial?: Partial<AnnotationTextItem>,
 ): AnnotationTextItem {
   return {
-    id: crypto.randomUUID(),
+    id: newAnnotationId(),
     text: "",
     x: 0.5,
     y: 0.5,
