@@ -10,7 +10,8 @@ type StatusType =
   | "failed"
   | "cancelled"
   | "draft"
-  | "submitting";
+  | "submitting"
+  | "awaiting_annotation";
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -56,6 +57,11 @@ const statusConfig: Record<
     bg: "bg-accent-violet-deep/30",
     text: "text-accent-violet-mid dark:text-on-primary",
     defaultLabel: "提交中",
+  },
+  awaiting_annotation: {
+    bg: "bg-accent-violet-mid/20",
+    text: "text-accent-violet-mid dark:text-on-primary",
+    defaultLabel: "待注解",
   },
 };
 

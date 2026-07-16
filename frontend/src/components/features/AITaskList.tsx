@@ -35,7 +35,9 @@ export interface AITask {
     items_in_progress?: number;
   } | null;
   output_data: {
-    processed_images: string[];
+    processed_images?: string[];
+    ai_base_image_url?: string;
+    final_image_url?: string;
     items_total?: number;
     items_completed?: number;
   } | null;
@@ -60,6 +62,7 @@ interface AITaskListProps {
   onRetry: (task: AITask) => void;
   onDelete: (task: AITask) => void;
   onStartEmpty: () => void;
+  onContinueAnnotation?: (task: AITask) => void;
 }
 
 function formatTime(iso: string) {
@@ -202,6 +205,7 @@ function AITaskRow({
   onCancel,
   onRetry,
   onDelete,
+  onContinueAnnotation,
 }: {
   task: AITask;
   getStatusLabel: (task: AITask) => string | undefined;
@@ -211,12 +215,10 @@ function AITaskRow({
   onCancel: (taskId: string) => void;
   onRetry: (task: AITask) => void;
   onDelete: (task: AITask) => void;
+  onContinueAnnotation?: (task: AITask) => void;
 }) {
   const inputUrls = task.input_data?.image_urls || [];
   const prompt = task.input_data?.prompt || "-";
-  // StatusBadge 尚未收录 awaiting_annotation；本任务仅扩类型，徽章暂映射为 pending
-  const badgeStatus =
-    task.status === "awaiting_annotation" ? "pending" : task.status;
 
   return (
     <article className="rounded-lg border border-hairline p-md hover:bg-surface-elevated/50 transition-colors duration-200">
@@ -235,7 +237,7 @@ function AITaskRow({
               {prompt}
             </p>
             <StatusBadge
-              status={badgeStatus}
+              status={task.status}
               label={getStatusLabel(task)}
               className="shrink-0"
             />
@@ -265,7 +267,18 @@ function AITaskRow({
               )}
             </p>
 
-            <div className="flex items-center shrink-0 h-8">
+            <div className="flex items-center shrink-0 gap-xs h-8">
+              {task.status === "awaiting_annotation" && onContinueAnnotation && (
+                <Button
+                  variant="secondary"
+                  size="xs"
+                  onClick={() => onContinueAnnotation(task)}
+                  className="shrink-0"
+                >
+                  继续注解
+                </Button>
+              )}
+
               {hasViewableResults(task) && (
                 <TaskIconButton
                   label="查看结果"
@@ -339,6 +352,7 @@ export function AITaskList({
   onRetry,
   onDelete,
   onStartEmpty,
+  onContinueAnnotation,
 }: AITaskListProps) {
   return (
     <>
@@ -392,6 +406,7 @@ export function AITaskList({
                 onCancel={onCancel}
                 onRetry={onRetry}
                 onDelete={onDelete}
+                onContinueAnnotation={onContinueAnnotation}
               />
             </li>
           ))}

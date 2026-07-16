@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ImagePreview } from "@/components/features/ImageCompare";
 import { AITaskList, type AITask } from "@/components/features/AITaskList";
@@ -18,6 +19,15 @@ interface ImagePreviewState {
   title: string;
   compareImages?: string[];
   initialIndex?: number;
+}
+
+/** 预览优先 final → ai_base → processed_images */
+function getTaskResultImages(task: AITask): string[] {
+  const out = task.output_data;
+  if (!out) return [];
+  if (out.final_image_url) return [out.final_image_url];
+  if (out.ai_base_image_url) return [out.ai_base_image_url];
+  return out.processed_images ?? [];
 }
 
 const MODE_TABS: { value: EditMode; label: string }[] = [
@@ -93,17 +103,29 @@ export default function AIEditPage() {
   const [imagePreview, setImagePreview] = useState<ImagePreviewState | null>(
     null,
   );
+  const [annotationTask, setAnnotationTask] = useState<AITask | null>(null);
 
   const fetchTasks = useCallback(
     async (options?: { keepLoading?: boolean }) => {
       try {
-        const response = await apiClient.get<AITask[]>(
-          "/ai/tasks?task_type=image_edit&limit=50",
-        );
-        if (response.success && response.data) {
-          setTasks(response.data);
-          setLastRefreshedAt(new Date());
+        // 列表需同时展示自由改图与工作流（含 awaiting_annotation）
+        const [editRes, workflowRes] = await Promise.all([
+          apiClient.get<AITask[]>("/ai/tasks?task_type=image_edit&limit=50"),
+          apiClient.get<AITask[]>(
+            "/ai/tasks?task_type=image_workflow&limit=50",
+          ),
+        ]);
+        const merged: AITask[] = [];
+        if (editRes.success && editRes.data) merged.push(...editRes.data);
+        if (workflowRes.success && workflowRes.data) {
+          merged.push(...workflowRes.data);
         }
+        merged.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
+        setTasks(merged);
+        setLastRefreshedAt(new Date());
       } catch (err) {
         console.error("Failed to fetch AI tasks:", err);
       } finally {
@@ -175,10 +197,7 @@ export default function AIEditPage() {
   };
 
   const hasViewableResults = (task: AITask) =>
-    Boolean(
-      task.output_data?.processed_images &&
-      task.output_data.processed_images.length > 0,
-    );
+    getTaskResultImages(task).length > 0;
 
   const handleRetry = async (task: AITask) => {
     try {
@@ -207,6 +226,9 @@ export default function AIEditPage() {
     try {
       await apiClient.delete(`/ai/tasks/${task.id}`);
       setImagePreview(null);
+      setAnnotationTask((current) =>
+        current?.id === task.id ? null : current,
+      );
       fetchTasks();
     } catch (err) {
       console.error("Failed to delete task:", err);
@@ -218,9 +240,10 @@ export default function AIEditPage() {
   };
 
   const openResultPreview = (task: AITask) => {
-    if (!task.output_data?.processed_images?.length) return;
+    const images = getTaskResultImages(task);
+    if (images.length === 0) return;
     setImagePreview({
-      images: task.output_data.processed_images,
+      images,
       title: "改图结果",
       compareImages: task.input_data?.image_urls,
     });
@@ -320,9 +343,48 @@ export default function AIEditPage() {
             onRetry={handleRetry}
             onDelete={deleteTask}
             onStartEmpty={scrollToForm}
+            onContinueAnnotation={setAnnotationTask}
           />
         </Card>
       </div>
+
+      {/* Task 9 将替换为完整 AnnotationEditor；此处为占位入口 */}
+      {annotationTask && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-surface-night/40 p-lg"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="annotation-editor-placeholder-title"
+        >
+          <Card variant="default" padding="lg" className="w-full max-w-md">
+            <h2
+              id="annotation-editor-placeholder-title"
+              className="text-heading-sm font-display text-ink mb-sm"
+            >
+              注解编辑器（占位）
+            </h2>
+            <p className="text-caption text-muted mb-xs">
+              Task 9 将接入完整画布编辑器。当前任务：
+            </p>
+            <p className="text-caption text-ink font-mono break-all mb-lg">
+              {annotationTask.id}
+            </p>
+            <p className="text-micro-cap text-muted mb-lg">
+              状态：{annotationTask.status}
+              {annotationTask.output_data?.ai_base_image_url
+                ? " · 已有 AI 底图"
+                : ""}
+            </p>
+            <Button
+              variant="primary"
+              onClick={() => setAnnotationTask(null)}
+              className="w-full"
+            >
+              关闭
+            </Button>
+          </Card>
+        </div>
+      )}
 
       {imagePreview && (
         <ImagePreview
