@@ -549,6 +549,7 @@ async def suggest_text_layout(
     suggestions = await moonshot_vision_client.suggest_layout(
         image_url=request.image_url,
         items=items,
+        object_name=request.object_name,
     )
     return ApiResponse(
         success=True,
@@ -580,12 +581,22 @@ async def complete_annotation(
     if request.skip:
         object_names = list(out.get('object_names') or [])
         if object_names:
-            final_url = storage.get_presigned_url(object_names[-1])
+            final_obj = object_names[-1]
+            final_url = storage.get_presigned_url(final_obj)
+            out['final_object_name'] = final_obj
         else:
             final_url = out.get('ai_base_image_url')
+            extracted = (
+                storage._extract_object_name(final_url)  # noqa: SLF001
+                if isinstance(final_url, str)
+                else None
+            )
+            if extracted:
+                out['final_object_name'] = extracted
         if not final_url:
             raise ValidationException('缺少 AI 底图，无法 skip 完成注解')
         out['final_image_url'] = final_url
+        out['processed_images'] = [final_url]
         out['annotation_skipped'] = True
     else:
         assert request.object_name  # validated by CompleteAnnotationRequest
@@ -608,6 +619,7 @@ async def complete_annotation(
         final_url = storage.get_presigned_url(final_obj)
         out['final_image_url'] = final_url
         out['final_object_name'] = final_obj
+        out['processed_images'] = [final_url]
         out['annotation_skipped'] = False
 
     t.output_data = out

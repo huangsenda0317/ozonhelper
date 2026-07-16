@@ -7,7 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
 import { Card } from "@/components/ui/Card";
 import { ImagePreview } from "@/components/features/ImageCompare";
-import { AITaskList, type AITask } from "@/components/features/AITaskList";
+import { AITaskList, type AITask, getTaskInputUrls } from "@/components/features/AITaskList";
 import { AnnotationEditor } from "@/components/features/ai-edit/AnnotationEditor";
 import { FreeformEditPanel } from "@/components/features/ai-edit/FreeformEditPanel";
 import { WorkflowEditPanel } from "@/components/features/ai-edit/WorkflowEditPanel";
@@ -245,7 +245,7 @@ export default function AIEditPage() {
     setImagePreview({
       images,
       title: "改图结果",
-      compareImages: task.input_data?.image_urls,
+      compareImages: getTaskInputUrls(task),
     });
   };
 

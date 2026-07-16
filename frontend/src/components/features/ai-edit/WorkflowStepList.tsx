@@ -107,10 +107,6 @@ export function WorkflowStepList({ steps, onChange }: WorkflowStepListProps) {
           );
         })}
       </ul>
-
-      <p className="text-caption text-muted leading-relaxed">
-        预计 SeedEdit 次数将在提交后由服务端确认；常用组合约 1 次（¥0.2）。
-      </p>
     </div>
   );
 }

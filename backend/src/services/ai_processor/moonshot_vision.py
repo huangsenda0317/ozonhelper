@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import base64
 import json
 import re
 from typing import Any
@@ -10,6 +12,14 @@ import httpx
 
 from src.api.exceptions import AppException
 from src.config import get_settings
+
+_ALLOWED_IMAGE_TYPES = frozenset({
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+})
 
 _SYSTEM_PROMPT = """你是电商主图俄文文案排版助手。根据商品底图与待放置文字，给出每条文案在画布上的位置建议。
 
@@ -98,16 +108,78 @@ class MoonshotVisionClient:
         base = (self._settings.moonshot_api_base or '').rstrip('/')
         return f'{base}/chat/completions'
 
+    async def _to_data_uri(self, image_url: str, object_name: str | None = None) -> str:
+        """Moonshot Vision 不接受远程 URL，需转为 data URI。
+
+        对本库 MinIO 对象优先走 storage.get_bytes，避免预签名 URL 经 localhost:9000
+        二次 HTTP 拉取失败（常见 502）。
+        """
+        if image_url.startswith('data:'):
+            return image_url
+
+        from src.storage import storage
+
+        resolved_name = object_name
+        if not resolved_name:
+            resolved_name = storage._extract_object_name(image_url)  # noqa: SLF001
+
+        raw: bytes | None = None
+        content_type = 'image/jpeg'
+
+        if resolved_name:
+            try:
+                raw = await asyncio.to_thread(storage.get_bytes, resolved_name)
+                lower = resolved_name.lower()
+                if lower.endswith('.png'):
+                    content_type = 'image/png'
+                elif lower.endswith('.webp'):
+                    content_type = 'image/webp'
+                elif lower.endswith('.gif'):
+                    content_type = 'image/gif'
+                else:
+                    content_type = 'image/jpeg'
+            except Exception:
+                raw = None
+
+        if raw is None:
+            try:
+                async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
+                    response = await client.get(image_url)
+                    response.raise_for_status()
+            except httpx.HTTPError as exc:
+                raise AppException(
+                    code='MOONSHOT_API_ERROR',
+                    message=f'下载底图失败，无法提交 Moonshot Vision: {exc}',
+                    http_status=502,
+                ) from exc
+            raw = response.content
+            content_type = (
+                (response.headers.get('content-type') or 'image/jpeg')
+                .split(';')[0]
+                .strip()
+                .lower()
+            )
+
+        if content_type == 'image/jpg':
+            content_type = 'image/jpeg'
+        if content_type not in _ALLOWED_IMAGE_TYPES:
+            content_type = 'image/jpeg'
+
+        b64 = base64.b64encode(raw).decode('ascii')
+        return f'data:{content_type};base64,{b64}'
+
     async def suggest_layout(
         self,
         image_url: str,
         items: list[dict],
+        object_name: str | None = None,
     ) -> list[dict]:
         """根据底图与文字列表，返回布局建议列表。items 为空时直接返回 []。"""
         if not items:
             return []
 
         api_key = self._ensure_configured()
+        data_uri = await self._to_data_uri(image_url, object_name=object_name)
         valid_ids = {str(it['id']) for it in items if 'id' in it}
         items_payload = [
             {'id': str(it['id']), 'text': str(it.get('text', ''))}
@@ -125,7 +197,7 @@ class MoonshotVisionClient:
                 {
                     'role': 'user',
                     'content': [
-                        {'type': 'image_url', 'image_url': {'url': image_url}},
+                        {'type': 'image_url', 'image_url': {'url': data_uri}},
                         {'type': 'text', 'text': user_text},
                     ],
                 },

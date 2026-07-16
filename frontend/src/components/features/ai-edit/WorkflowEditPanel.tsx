@@ -35,7 +35,9 @@ export function WorkflowEditPanel({ onTasksRefresh }: WorkflowEditPanelProps) {
   const [submitting, setSubmitting] = useState(false);
   const [seed, setSeed] = useState(-1);
   const [scale, setScale] = useState(0.5);
-  const [steps, setSteps] = useState<WorkflowStepState[]>(DEFAULT_WORKFLOW_STEPS);
+  const [steps, setSteps] = useState<WorkflowStepState[]>(
+    DEFAULT_WORKFLOW_STEPS,
+  );
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
 
   const revokeUploadedPreviews = useCallback((images: UploadedImage[]) => {
@@ -75,10 +77,7 @@ export function WorkflowEditPanel({ onTasksRefresh }: WorkflowEditPanelProps) {
       );
 
       if (response.success && response.data) {
-        const { estimated_seededit_count, estimated_cost_yuan } = response.data;
-        message.success(
-          `工作流已提交：预计 SeedEdit ${estimated_seededit_count} 次，约 ¥${estimated_cost_yuan.toFixed(1)}`,
-        );
+        message.success(`工作流已提交`);
         onTasksRefresh();
         clearUploadedImages();
       }
@@ -113,7 +112,10 @@ export function WorkflowEditPanel({ onTasksRefresh }: WorkflowEditPanelProps) {
 
       <div className="space-y-sm">
         <div className="flex items-center gap-sm text-caption font-medium text-ink">
-          <ImagePlus className="h-4 w-4 text-muted shrink-0" aria-hidden="true" />
+          <ImagePlus
+            className="h-4 w-4 text-muted shrink-0"
+            aria-hidden="true"
+          />
           主图
         </div>
         <p className="text-caption text-muted">

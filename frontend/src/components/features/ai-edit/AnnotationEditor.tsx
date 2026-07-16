@@ -1,11 +1,6 @@
 "use client";
 
-import React, {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlignCenter,
   AlignLeft,
@@ -68,6 +63,7 @@ export function AnnotationEditor({
   onClose,
 }: AnnotationEditorProps) {
   const baseImageUrl = task.output_data?.ai_base_image_url;
+  const baseObjectName = task.output_data?.object_names?.at(-1) ?? undefined;
   const canvasRef = useRef<HTMLDivElement>(null);
   const [items, setItems] = useState<AnnotationTextItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -126,6 +122,7 @@ export function AnnotationEditor({
           "/ai/workflow/suggest-text-layout",
           {
             image_url: baseImageUrl,
+            object_name: baseObjectName,
             items: textItems.map((i) => ({ id: i.id, text: i.text })),
           },
         );
@@ -145,7 +142,7 @@ export function AnnotationEditor({
         setLayoutLoading(false);
       }
     },
-    [applySuggestions, baseImageUrl, items],
+    [applySuggestions, baseImageUrl, baseObjectName, items],
   );
 
   useEffect(() => {
@@ -306,10 +303,10 @@ export function AnnotationEditor({
   return (
     <Card
       variant="default"
-      padding="lg"
+      padding="md"
       className="w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden"
     >
-      <div className="flex items-start justify-between gap-md mb-lg shrink-0">
+      <div className="flex items-start justify-between gap-sm mb-md shrink-0">
         <div>
           <h2 className="text-heading-sm font-display text-ink">
             俄文注解编辑器
@@ -328,15 +325,15 @@ export function AnnotationEditor({
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-lg flex-1 min-h-0 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-md flex-1 min-h-0 overflow-hidden">
         {/* 左：画布 */}
         <div className="flex flex-col min-h-0">
-          <p className="text-micro-cap uppercase tracking-[0.25px] text-muted mb-sm">
+          <p className="text-micro-cap uppercase tracking-[0.25px] text-muted mb-xs">
             画布预览
           </p>
           <div
             ref={canvasRef}
-            className="relative aspect-square w-full bg-surface-elevated rounded-lg overflow-hidden border border-hairline select-none touch-none"
+            className="relative aspect-square w-full bg-surface-elevated rounded-md overflow-hidden border border-hairline select-none touch-none"
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
@@ -356,7 +353,7 @@ export function AnnotationEditor({
                   key={item.id}
                   role="button"
                   tabIndex={0}
-                  className={`absolute cursor-grab active:cursor-grabbing px-xs py-xxs rounded-xs transition-shadow ${
+                  className={`absolute cursor-grab active:cursor-grabbing px-xxs py-px rounded-xs transition-shadow duration-200 ${
                     isSelected
                       ? "ring-2 ring-accent-violet-mid shadow-md"
                       : "hover:ring-1 hover:ring-hairline"
@@ -388,8 +385,8 @@ export function AnnotationEditor({
               );
             })}
           </div>
-          <div className="flex flex-wrap gap-sm mt-md">
-            <Button
+          <div className="flex flex-wrap gap-xs mt-sm">
+            {/* <Button
               variant="ghost"
               size="sm"
               onClick={() => void runSuggestLayout()}
@@ -397,242 +394,316 @@ export function AnnotationEditor({
               disabled={items.length === 0}
               className="gap-xs normal-case"
             >
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
               重新 AI 定位
-            </Button>
+            </Button> */}
           </div>
         </div>
 
-        {/* 右：列表与样式 */}
-        <div className="flex flex-col min-h-0 overflow-y-auto">
-          <div className="flex items-center justify-between mb-sm">
-            <p className="text-micro-cap uppercase tracking-[0.25px] text-muted">
-              文字列表 ({items.length})
-            </p>
-            <Button
-              variant="ghost"
-              size="xs"
-              onClick={handleAddItem}
-              className="gap-xs normal-case"
-            >
-              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-              添加
-            </Button>
-          </div>
+        {/* 右：紧凑文字列表（渐进披露） */}
+        <div className="flex flex-col min-h-0">
+          <p className="text-micro-cap uppercase tracking-[0.25px] text-muted mb-xs shrink-0">
+            文字列表 · {items.length}
+          </p>
 
-          {items.length === 0 ? (
-            <p className="text-caption text-muted py-lg text-center border border-dashed border-hairline rounded-lg">
-              暂无文案。可直接「导出并完成」跳过注解，或添加俄文文字。
-            </p>
-          ) : (
-            <div className="space-y-md">
-              {items.map((item, index) => {
-                const isSelected = item.id === selectedId;
-                return (
-                  <div
-                    key={item.id}
-                    className={`rounded-lg border p-md space-y-sm cursor-pointer transition-colors ${
-                      isSelected
-                        ? "border-accent-violet-mid bg-surface-elevated"
-                        : "border-hairline hover:border-hairline-violet"
-                    }`}
-                    onClick={() => setSelectedId(item.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") setSelectedId(item.id);
-                    }}
-                    role="button"
-                    tabIndex={0}
-                  >
-                    <div className="flex items-center justify-between gap-sm">
-                      <span className="text-caption font-medium text-ink">
-                        文案 {index + 1}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveItem(item.id);
-                        }}
-                        className="p-xxs rounded interactive-muted-soft text-muted hover:text-accent-pink cursor-pointer"
-                        aria-label={`删除文案 ${index + 1}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+          <div className="flex-1 min-h-0 overflow-y-auto pr-xxs">
+            {items.length === 0 ? (
+              <p className="text-caption text-muted py-md px-sm text-center border border-dashed border-hairline rounded-md">
+                暂无文案。可直接导出跳过，或点下方添加。
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-xs list-none m-0 p-0">
+                {items.map((item, index) => {
+                  const isSelected = item.id === selectedId;
+                  const preview =
+                    normalizeAnnotationText(item.text) || "（空文案）";
+                  const ruId = `anno-ru-${item.id}`;
+                  const zhId = `anno-zh-${item.id}`;
 
-                    <div>
-                      <label className="block text-micro-cap text-muted mb-xxs">
-                        俄文（单行）
-                      </label>
-                      <input
-                        type="text"
-                        value={item.text}
-                        onChange={(e) =>
-                          updateItem(item.id, {
-                            text: normalizeAnnotationText(e.target.value),
-                          })
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-full text-caption rounded-md border border-hairline bg-surface-card px-sm py-xs focus:outline-none focus:ring-2 focus:ring-accent-violet-mid/40"
-                        placeholder="输入俄文商品文案（单行）"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-micro-cap text-muted mb-xxs">
-                        中文草稿
-                      </label>
-                      <textarea
-                        value={item.draftZh ?? ""}
-                        onChange={(e) =>
-                          updateItem(item.id, { draftZh: e.target.value })
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                        rows={2}
-                        className="w-full text-caption rounded-md border border-hairline bg-surface-card px-sm py-xs resize-y focus:outline-none focus:ring-2 focus:ring-accent-violet-mid/40"
-                        placeholder="填写中文后翻译填入俄文"
-                      />
-                      <Button
-                        variant="ghost"
-                        size="xs"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void handleTranslate(item.id);
-                        }}
-                        loading={translatingId === item.id}
-                        disabled={!item.draftZh?.trim()}
-                        className="mt-xs gap-xs normal-case"
-                      >
-                        <Languages className="h-3.5 w-3.5" aria-hidden="true" />
-                        从中文翻译填入
-                      </Button>
-                    </div>
-
-                    {isSelected && (
+                  return (
+                    <li key={item.id}>
                       <div
-                        className="grid grid-cols-2 gap-sm pt-sm border-t border-hairline"
-                        onClick={(e) => e.stopPropagation()}
+                        className={`rounded-md border transition-colors duration-200 ${
+                          isSelected
+                            ? "border-accent-violet-mid bg-surface-elevated"
+                            : "border-hairline hover:border-hairline-violet bg-surface-card"
+                        }`}
                       >
-                        <div>
-                          <label className="block text-micro-cap text-muted mb-xxs">
-                            字体
-                          </label>
-                          <select
-                            value={item.fontFamily}
-                            onChange={(e) =>
-                              updateItem(item.id, {
-                                fontFamily: e.target.value,
-                              })
+                        {/* 摘要行：始终显示 */}
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          className="flex items-center gap-xs px-sm py-xs cursor-pointer min-h-[36px]"
+                          onClick={() => setSelectedId(item.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setSelectedId(item.id);
                             }
-                            className="w-full text-caption rounded-md border border-hairline bg-surface-card px-sm py-xs"
+                          }}
+                          aria-expanded={isSelected}
+                          aria-controls={`anno-detail-${item.id}`}
+                        >
+                          <span className="text-micro-cap text-muted tabular-nums w-5 shrink-0">
+                            {index + 1}
+                          </span>
+                          <span
+                            className="flex-1 min-w-0 text-caption text-ink truncate"
+                            title={preview}
                           >
-                            {CYRILLIC_FONT_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-micro-cap text-muted mb-xxs">
-                            字号 {item.fontSize}
-                          </label>
-                          <input
-                            type="range"
-                            min={16}
-                            max={120}
-                            value={item.fontSize}
-                            onChange={(e) =>
-                              updateItem(item.id, {
-                                fontSize: parseInt(e.target.value, 10),
-                              })
-                            }
-                            className="w-full accent-primary"
+                            {preview}
+                          </span>
+                          <span
+                            className="h-3 w-3 rounded-full border border-hairline shrink-0"
+                            style={{ backgroundColor: item.color }}
+                            aria-hidden="true"
                           />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveItem(item.id);
+                            }}
+                            className="p-xxs rounded interactive-muted-soft text-muted hover:text-accent-pink cursor-pointer shrink-0"
+                            aria-label={`删除文案 ${index + 1}`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
-                        <div>
-                          <label className="block text-micro-cap text-muted mb-xxs">
-                            颜色
-                          </label>
-                          <input
-                            type="color"
-                            value={item.color}
-                            onChange={(e) =>
-                              updateItem(item.id, { color: e.target.value })
-                            }
-                            className="w-full h-8 rounded-md border border-hairline cursor-pointer"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-micro-cap text-muted mb-xxs">
-                            样式
-                          </label>
-                          <div className="flex flex-wrap gap-xs">
-                            <label className="flex items-center gap-xxs text-caption cursor-pointer">
+
+                        {/* 详情：仅选中展开 */}
+                        {isSelected && (
+                          <div
+                            id={`anno-detail-${item.id}`}
+                            className="px-sm pb-sm pt-xxs space-y-xs border-t border-hairline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div>
+                              <label
+                                htmlFor={ruId}
+                                className="block text-micro-cap text-muted mb-px"
+                              >
+                                俄文
+                              </label>
                               <input
-                                type="checkbox"
-                                checked={item.bold}
-                                onChange={(e) =>
-                                  updateItem(item.id, { bold: e.target.checked })
-                                }
-                              />
-                              粗体
-                            </label>
-                            <label className="flex items-center gap-xxs text-caption cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={item.italic}
+                                id={ruId}
+                                type="text"
+                                value={item.text}
                                 onChange={(e) =>
                                   updateItem(item.id, {
-                                    italic: e.target.checked,
+                                    text: normalizeAnnotationText(
+                                      e.target.value,
+                                    ),
                                   })
                                 }
+                                className="w-full text-caption rounded-md border border-hairline bg-surface-card px-sm py-xxs h-8 focus:outline-none focus:ring-2 focus:ring-accent-violet-mid/40"
+                                placeholder="俄文商品文案"
                               />
-                              斜体
-                            </label>
-                          </div>
-                        </div>
-                        <div className="col-span-2">
-                          <label className="block text-micro-cap text-muted mb-xxs">
-                            对齐
-                          </label>
-                          <div className="flex gap-xs">
-                            {(
-                              [
-                                { value: "left" as const, icon: AlignLeft },
-                                { value: "center" as const, icon: AlignCenter },
-                                { value: "right" as const, icon: AlignRight },
-                              ] as const
-                            ).map(({ value, icon: Icon }) => (
-                              <button
-                                key={value}
-                                type="button"
-                                onClick={() =>
-                                  updateItem(item.id, { align: value })
-                                }
-                                className={`p-xs rounded-md border cursor-pointer transition-colors ${
-                                  item.align === value
-                                    ? "border-accent-violet-mid bg-surface-elevated"
-                                    : "border-hairline interactive-muted-soft"
-                                }`}
-                                aria-label={`${value} 对齐`}
+                            </div>
+
+                            <div className="flex items-end gap-xs">
+                              <div className="flex-1 min-w-0">
+                                <label
+                                  htmlFor={zhId}
+                                  className="block text-micro-cap text-muted mb-px"
+                                >
+                                  中文草稿
+                                </label>
+                                <input
+                                  id={zhId}
+                                  type="text"
+                                  value={item.draftZh ?? ""}
+                                  onChange={(e) =>
+                                    updateItem(item.id, {
+                                      draftZh: e.target.value,
+                                    })
+                                  }
+                                  className="w-full text-caption rounded-md border border-hairline bg-surface-card px-sm py-xxs h-8 focus:outline-none focus:ring-2 focus:ring-accent-violet-mid/40"
+                                  placeholder="中文 → 翻译"
+                                />
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="xs"
+                                onClick={() => void handleTranslate(item.id)}
+                                loading={translatingId === item.id}
+                                disabled={!item.draftZh?.trim()}
+                                className="shrink-0 gap-xxs normal-case h-8 px-sm"
+                                title="从中文翻译填入"
+                                aria-label="从中文翻译填入"
                               >
-                                <Icon className="h-4 w-4" />
-                              </button>
-                            ))}
+                                <Languages
+                                  className="h-3.5 w-3.5"
+                                  aria-hidden="true"
+                                />
+                              </Button>
+                            </div>
+
+                            <div
+                              className="flex flex-wrap items-center gap-xs pt-xs"
+                              role="toolbar"
+                              aria-label="文字样式"
+                            >
+                              <select
+                                value={item.fontFamily}
+                                onChange={(e) =>
+                                  updateItem(item.id, {
+                                    fontFamily: e.target.value,
+                                  })
+                                }
+                                className="h-8 min-w-[6.5rem] flex-1 text-caption rounded-md border border-hairline bg-surface-card px-sm leading-none focus:outline-none focus:ring-2 focus:ring-accent-violet-mid/40"
+                                aria-label="字体"
+                              >
+                                {CYRILLIC_FONT_OPTIONS.map((opt) => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </select>
+
+                              <div className="inline-flex h-8 items-center gap-xs rounded-md border border-hairline bg-surface-card px-sm shrink-0">
+                                <span
+                                  className="text-micro-cap text-muted tabular-nums w-6 text-center"
+                                  aria-hidden="true"
+                                >
+                                  {item.fontSize}
+                                </span>
+                                <input
+                                  type="range"
+                                  min={16}
+                                  max={120}
+                                  value={item.fontSize}
+                                  onChange={(e) =>
+                                    updateItem(item.id, {
+                                      fontSize: parseInt(e.target.value, 10),
+                                    })
+                                  }
+                                  className="w-20 h-8 accent-primary cursor-pointer"
+                                  aria-label={`字号 ${item.fontSize}`}
+                                />
+                              </div>
+
+                              <label className="relative inline-flex h-8 w-8 shrink-0 cursor-pointer overflow-hidden rounded-md border border-hairline bg-surface-card">
+                                <span className="sr-only">颜色</span>
+                                <input
+                                  type="color"
+                                  value={item.color}
+                                  onChange={(e) =>
+                                    updateItem(item.id, {
+                                      color: e.target.value,
+                                    })
+                                  }
+                                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                                  aria-label="文字颜色"
+                                />
+                                <span
+                                  className="pointer-events-none m-auto h-4 w-4 rounded-full border border-hairline"
+                                  style={{ backgroundColor: item.color }}
+                                  aria-hidden="true"
+                                />
+                              </label>
+
+                              <div className="inline-flex h-8 items-stretch rounded-md border border-hairline overflow-hidden shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateItem(item.id, { bold: !item.bold })
+                                  }
+                                  className={`inline-flex h-8 w-8 items-center justify-center text-caption font-bold cursor-pointer transition-colors duration-200 ${
+                                    item.bold
+                                      ? "bg-accent-violet-mid/15 text-ink"
+                                      : "bg-surface-card text-muted hover:bg-surface-elevated"
+                                  }`}
+                                  aria-pressed={item.bold}
+                                  aria-label="粗体"
+                                >
+                                  B
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateItem(item.id, {
+                                      italic: !item.italic,
+                                    })
+                                  }
+                                  className={`inline-flex h-8 w-8 items-center justify-center text-caption italic border-l border-hairline cursor-pointer transition-colors duration-200 ${
+                                    item.italic
+                                      ? "bg-accent-violet-mid/15 text-ink"
+                                      : "bg-surface-card text-muted hover:bg-surface-elevated"
+                                  }`}
+                                  aria-pressed={item.italic}
+                                  aria-label="斜体"
+                                >
+                                  I
+                                </button>
+                              </div>
+
+                              <div className="inline-flex h-8 items-stretch rounded-md border border-hairline overflow-hidden shrink-0 ml-auto">
+                                {(
+                                  [
+                                    {
+                                      value: "left" as const,
+                                      icon: AlignLeft,
+                                    },
+                                    {
+                                      value: "center" as const,
+                                      icon: AlignCenter,
+                                    },
+                                    {
+                                      value: "right" as const,
+                                      icon: AlignRight,
+                                    },
+                                  ] as const
+                                ).map(({ value, icon: Icon }, idx) => (
+                                  <button
+                                    key={value}
+                                    type="button"
+                                    onClick={() =>
+                                      updateItem(item.id, { align: value })
+                                    }
+                                    className={`inline-flex h-8 w-8 items-center justify-center cursor-pointer transition-colors duration-200 ${
+                                      idx > 0 ? "border-l border-hairline" : ""
+                                    } ${
+                                      item.align === value
+                                        ? "bg-accent-violet-mid/15 text-ink"
+                                        : "bg-surface-card text-muted hover:bg-surface-elevated"
+                                    }`}
+                                    aria-pressed={item.align === value}
+                                    aria-label={`${value} 对齐`}
+                                  >
+                                    <Icon
+                                      className="h-3.5 w-3.5"
+                                      aria-hidden="true"
+                                    />
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          <div className="shrink-0 pt-sm mt-sm border-t border-hairline">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleAddItem}
+              className="w-full gap-xs normal-case"
+            >
+              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+              添加文案
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-sm pt-lg mt-lg border-t border-hairline shrink-0">
+      <div className="flex flex-wrap gap-sm pt-md mt-md border-t border-hairline shrink-0">
         <Button
           variant="primary"
           onClick={() => void handleExport()}

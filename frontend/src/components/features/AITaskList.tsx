@@ -25,11 +25,19 @@ export interface AITask {
     | "cancelled"
     | "awaiting_annotation";
   input_data: {
-    prompt: string;
-    seed: number;
-    scale: number;
+    prompt?: string;
+    seed?: number;
+    scale?: number;
     image_urls?: string[];
     object_names?: string[];
+    images?: Array<{ url?: string; object_name?: string }>;
+    steps?: Array<{
+      id: string;
+      enabled?: boolean;
+      order?: number;
+      prompt?: string;
+    }>;
+    mode?: string;
     items_total?: number;
     items_completed?: number;
     items_in_progress?: number;
@@ -38,6 +46,7 @@ export interface AITask {
     processed_images?: string[];
     ai_base_image_url?: string;
     final_image_url?: string;
+    object_names?: string[];
     items_total?: number;
     items_completed?: number;
   } | null;
@@ -81,6 +90,43 @@ function formatLastUpdated(date: Date) {
     minute: "2-digit",
     second: "2-digit",
   });
+}
+
+const WORKFLOW_STEP_LABELS: Record<string, string> = {
+  remove_watermark: "去水印",
+  cutout: "抠主体",
+  add_scene: "加场景",
+  annotate_ru: "俄文注解",
+};
+
+/** 输入图：自由改图用 image_urls；工作流用 images[].url（列表接口会回填 image_urls） */
+export function getTaskInputUrls(task: AITask): string[] {
+  const data = task.input_data;
+  if (!data) return [];
+  if (data.image_urls?.length) return data.image_urls;
+  const fromImages = (data.images || [])
+    .map((img) => img.url)
+    .filter((url): url is string => Boolean(url));
+  return fromImages;
+}
+
+/** 列表标题：自由改图用 prompt；工作流用启用步骤摘要 */
+export function getTaskSummary(task: AITask): string {
+  const data = task.input_data;
+  if (!data) return "-";
+  if (data.prompt?.trim()) return data.prompt.trim();
+
+  const steps = data.steps;
+  if (steps?.length) {
+    const labels = [...steps]
+      .filter((s) => s.enabled !== false)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .map((s) => WORKFLOW_STEP_LABELS[s.id] || s.id);
+    if (labels.length) return labels.join(" → ");
+  }
+
+  if (task.task_type === "image_workflow") return "主图工作流";
+  return "-";
 }
 
 function TaskListSkeleton() {
@@ -217,8 +263,8 @@ function AITaskRow({
   onDelete: (task: AITask) => void;
   onContinueAnnotation?: (task: AITask) => void;
 }) {
-  const inputUrls = task.input_data?.image_urls || [];
-  const prompt = task.input_data?.prompt || "-";
+  const inputUrls = getTaskInputUrls(task);
+  const prompt = getTaskSummary(task);
 
   return (
     <article className="rounded-lg border border-hairline p-md hover:bg-surface-elevated/50 transition-colors duration-200">

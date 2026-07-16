@@ -93,17 +93,35 @@ class StorageClient:
             response.release_conn()
 
     def resolve_input_image_urls(self, input_data: dict | None, expires: int = 86400) -> list[str]:
-        """从任务 input_data 解析输入图 URL，优先 object_names 生成预签名链接。"""
+        """从任务 input_data 解析输入图 URL，优先 object_names 生成预签名链接。
+
+        兼容自由改图的 image_urls/object_names，以及工作流的 images[{url, object_name}]。
+        """
         if not input_data:
             return []
         object_names: list[str] = list(input_data.get('object_names') or [])
+        if not object_names:
+            for item in input_data.get('images') or []:
+                if not isinstance(item, dict):
+                    continue
+                name = item.get('object_name')
+                if isinstance(name, str) and name:
+                    object_names.append(name)
         if object_names:
             return [self.get_presigned_url(name, expires=expires) for name in object_names]
+
         stored_urls = list(input_data.get('image_urls') or [])
+        if not stored_urls:
+            for item in input_data.get('images') or []:
+                if not isinstance(item, dict):
+                    continue
+                url = item.get('url')
+                if isinstance(url, str) and url:
+                    stored_urls.append(url)
         return [self._refresh_presigned_url(url, expires=expires) for url in stored_urls]
 
     def resolve_output_data(self, output_data: dict | None, expires: int = 86400) -> dict | None:
-        """将 output_data 中的 object_names 解析为可访问的 processed_images URL。"""
+        """将 output_data 中的对象名解析为可访问 URL（processed_images / final / ai_base）。"""
         if not output_data:
             return output_data
 
@@ -118,11 +136,32 @@ class StorageClient:
                 if extracted:
                     object_names.append(extracted)
 
+        base_urls: list[str] = []
         if object_names:
             result['object_names'] = object_names
-            result['processed_images'] = [
+            base_urls = [
                 self.get_presigned_url(name, expires=expires) for name in object_names
             ]
+            result['ai_base_image_url'] = base_urls[-1]
+        elif result.get('ai_base_image_url'):
+            result['ai_base_image_url'] = self._refresh_presigned_url(
+                result['ai_base_image_url'], expires=expires
+            )
+
+        final_obj = result.get('final_object_name')
+        if isinstance(final_obj, str) and final_obj:
+            result['final_image_url'] = self.get_presigned_url(final_obj, expires=expires)
+        elif result.get('final_image_url'):
+            result['final_image_url'] = self._refresh_presigned_url(
+                result['final_image_url'], expires=expires
+            )
+
+        if result.get('final_image_url'):
+            result['processed_images'] = [result['final_image_url']]
+        elif base_urls:
+            result['processed_images'] = base_urls
+        elif result.get('ai_base_image_url'):
+            result['processed_images'] = [result['ai_base_image_url']]
 
         return result
 

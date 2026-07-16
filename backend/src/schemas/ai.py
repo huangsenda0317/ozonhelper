@@ -195,6 +195,7 @@ class TextLayoutItem(BaseModel):
 
 class SuggestTextLayoutRequest(BaseModel):
     image_url: str
+    object_name: str | None = Field(default=None, description='MinIO 对象名，优先于 URL 下载')
     items: list[TextLayoutItem] = Field(default_factory=list)
 
 
