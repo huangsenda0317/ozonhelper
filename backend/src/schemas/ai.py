@@ -114,7 +114,14 @@ class TaskResponse(BaseModel):
     id: str
     collected_product_id: str | None
     task_type: str
-    status: str
+    status: Literal[
+        'pending',
+        'running',
+        'awaiting_annotation',
+        'success',
+        'failed',
+        'cancelled',
+    ]
     input_data: dict | None
     output_data: dict | None
     seededit_status: str | None

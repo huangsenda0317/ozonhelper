@@ -1,13 +1,15 @@
-"""AI 处理 API 端点 — 改图 + 翻译"""
+"""AI 处理 API 端点 — 改图 + 翻译 + 主图工作流"""
 
 import asyncio
 import uuid
+from copy import deepcopy
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 
 from src.api.deps import get_current_user
 from src.api.exceptions import (
@@ -22,6 +24,7 @@ from src.models.processing_task import ProcessingTask
 from src.models.user import User
 from src.schemas.ai import (
     ChatRequest,
+    CompleteAnnotationRequest,
     ImageEditRequest,
     OutputOverrideRequest,
     RetryRequest,
@@ -31,12 +34,23 @@ from src.schemas.ai import (
     TranslateTextRequest,
     TranslateTextResponse,
     UploadImageResponse,
+    WorkflowSubmitRequest,
 )
 from src.schemas.common import ApiResponse
 from src.services.ai_processor.chat_service import stream_chat
+from src.services.ai_processor.image_resizer import resize_to_ozon_spec
 from src.services.ai_processor.tmt_translator import TMTError, tmt_translator
+from src.services.ai_processor.workflow_planner import (
+    WorkflowStep,
+    estimate_cost_yuan,
+    plan_workflow,
+)
 from src.storage import storage
-from src.worker.ai_tasks import process_image_edit_task, process_translate_task
+from src.worker.ai_tasks import (
+    process_image_edit_task,
+    process_image_workflow_task,
+    process_translate_task,
+)
 from src.worker.app import celery_app
 
 router = APIRouter(prefix='/api/v1/ai', tags=['AI 处理'])
@@ -189,6 +203,54 @@ async def submit_image_edit(
     )
 
 
+@router.post('/workflow', response_model=ApiResponse[dict], status_code=202)
+async def submit_workflow(
+    request: WorkflowSubmitRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """发起 AI 主图工作流任务（SeedEdit 步骤合并 + 可选俄文注解）。"""
+    steps = [
+        WorkflowStep(id=s.id, enabled=s.enabled, order=s.order, prompt=s.prompt)
+        for s in request.steps
+    ]
+    plan = plan_workflow(steps)
+    input_data = {
+        'mode': 'workflow',
+        'images': [{'url': request.image_url, 'object_name': request.object_name}],
+        'steps': [s.model_dump() for s in request.steps],
+        'seed': request.seed,
+        'scale': request.scale,
+        'planned_calls': [
+            {'seededit_prompt': c.seededit_prompt, 'covers': c.covers}
+            for c in plan.planned_calls
+        ],
+        'estimated_seededit_count': plan.estimated_seededit_count,
+        'needs_annotation': plan.needs_annotation,
+    }
+    task = ProcessingTask(
+        task_type='image_workflow',
+        status='pending',
+        input_data=input_data,
+    )
+    db.add(task)
+    await db.flush()
+
+    async_result = process_image_workflow_task.delay(task_id=str(task.id))
+    task.input_data = {**input_data, 'celery_task_id': async_result.id}
+    await db.flush()
+
+    return ApiResponse(
+        success=True,
+        data={
+            'task_id': str(task.id),
+            'status': 'pending',
+            'estimated_seededit_count': plan.estimated_seededit_count,
+            'estimated_cost_yuan': estimate_cost_yuan(plan.estimated_seededit_count),
+        },
+    )
+
+
 @router.post('/translate-text', response_model=ApiResponse[TranslateTextResponse])
 async def translate_text(
     request: TranslateTextRequest,
@@ -313,15 +375,15 @@ async def cancel_task(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """终止排队中或处理中的 AI 改图任务；已完成的图片保留在结果中。"""
+    """终止排队中、处理中或待注解的 AI 任务；已完成的图片保留在结果中。"""
     stmt = select(ProcessingTask).where(ProcessingTask.id == task_id)
     result = await db.execute(stmt)
     t = result.scalar_one_or_none()
     if not t:
         raise NotFoundException('AI 任务', str(task_id))
 
-    if t.status not in ('pending', 'running'):
-        raise DuplicateException('仅排队中或处理中的任务可终止')
+    if t.status not in ('pending', 'running', 'awaiting_annotation'):
+        raise DuplicateException('仅排队中、处理中或待注解的任务可终止')
 
     was_pending = t.status == 'pending'
     t.status = 'cancelled'
@@ -431,6 +493,112 @@ async def retry_image_edit(
     return ApiResponse(
         success=True,
         data={'task_id': str(t.id), 'status': 'pending'},
+    )
+
+
+@router.post('/workflow/{task_id}/retry', response_model=ApiResponse[dict])
+async def retry_workflow(
+    task_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """重试失败或已取消的主图工作流任务。"""
+    stmt = select(ProcessingTask).where(ProcessingTask.id == task_id)
+    result = await db.execute(stmt)
+    t = result.scalar_one_or_none()
+    if not t:
+        raise NotFoundException('AI 任务', str(task_id))
+    if t.task_type != 'image_workflow':
+        raise ValidationException('仅 image_workflow 任务可由此接口重试')
+    if t.status not in ('failed', 'cancelled'):
+        raise DuplicateException('仅失败或已取消的工作流任务可重试')
+
+    t.status = 'pending'
+    t.error_message = None
+    t.error_code = None
+    t.seededit_status = None
+    t.completed_at = None
+    t.retry_count = t.retry_count + 1
+    await db.flush()
+
+    async_result = process_image_workflow_task.delay(task_id=str(t.id))
+    t.input_data = {**(t.input_data or {}), 'celery_task_id': async_result.id}
+    flag_modified(t, 'input_data')
+    await db.flush()
+
+    return ApiResponse(
+        success=True,
+        data={'task_id': str(t.id), 'status': 'pending'},
+    )
+
+
+@router.post('/workflow/{task_id}/complete-annotation', response_model=ApiResponse[dict])
+async def complete_annotation(
+    task_id: uuid.UUID,
+    request: CompleteAnnotationRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """完成俄文注解：skip 使用 AI 底图，或上传烘烤图后标记 success。"""
+    stmt = select(ProcessingTask).where(ProcessingTask.id == task_id)
+    result = await db.execute(stmt)
+    t = result.scalar_one_or_none()
+    if not t:
+        raise NotFoundException('AI 任务', str(task_id))
+    if t.task_type != 'image_workflow':
+        raise ValidationException('仅 image_workflow 任务可完成注解')
+    if t.status != 'awaiting_annotation':
+        raise DuplicateException('仅待注解状态的任务可完成注解')
+
+    out = deepcopy(t.output_data or {})
+    if request.skip:
+        object_names = list(out.get('object_names') or [])
+        if object_names:
+            final_url = storage.get_presigned_url(object_names[-1])
+        else:
+            final_url = out.get('ai_base_image_url')
+        if not final_url:
+            raise ValidationException('缺少 AI 底图，无法 skip 完成注解')
+        out['final_image_url'] = final_url
+        out['annotation_skipped'] = True
+    else:
+        assert request.object_name  # validated by CompleteAnnotationRequest
+        try:
+            raw = await asyncio.to_thread(storage.get_bytes, request.object_name)
+            resized = await asyncio.to_thread(resize_to_ozon_spec, raw)
+            final_obj = f'products/processed/{uuid.uuid4().hex}.png'
+            await asyncio.to_thread(
+                storage.upload_bytes,
+                resized,
+                content_type='image/png',
+                object_name=final_obj,
+            )
+        except Exception as e:
+            raise AppException(
+                code='ANNOTATION_STORE_FAILED',
+                message=f'烘烤图转存失败: {e}',
+                http_status=status.HTTP_502_BAD_GATEWAY,
+            ) from e
+        final_url = storage.get_presigned_url(final_obj)
+        out['final_image_url'] = final_url
+        out['final_object_name'] = final_obj
+        out['annotation_skipped'] = False
+
+    t.output_data = out
+    flag_modified(t, 'output_data')
+    t.status = 'success'
+    t.completed_at = datetime.now(timezone.utc)
+    t.cost_amount = float(out.get('seededit_cost_yuan') or 0)
+    await db.flush()
+
+    return ApiResponse(
+        success=True,
+        data={
+            'task_id': str(t.id),
+            'status': 'success',
+            'final_image_url': out['final_image_url'],
+            'annotation_skipped': out['annotation_skipped'],
+        },
     )
 
 
