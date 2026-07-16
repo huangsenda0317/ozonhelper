@@ -67,3 +67,6 @@ backend/alembic/versions/*.pyc
 .terraform/
 *.tfstate*
 *.tfvars
+
+# Git worktrees (local isolation)
+.worktrees/
