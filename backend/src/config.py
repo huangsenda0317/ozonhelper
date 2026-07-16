@@ -46,6 +46,11 @@ class Settings(BaseSettings):
     # DeepSeek (AI 问答)
     deepseek_api_key: str = ''
 
+    # Moonshot Vision（工作流俄文注解自动定位）
+    moonshot_api_key: str = ''
+    moonshot_api_base: str = 'https://api.moonshot.cn/v1'
+    moonshot_vision_model: str = 'moonshot-v1-128k-vision-preview'
+
     # 腾讯云机器翻译 TMT (AI 翻译)
     tencent_secret_id: str = ''
     tencent_secret_key: str = ''

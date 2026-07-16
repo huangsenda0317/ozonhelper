@@ -146,3 +146,73 @@ class RetryRequest(BaseModel):
 class OutputOverrideRequest(BaseModel):
     """手动覆盖 AI 输出。"""
     output_data: dict
+
+
+ALLOWED_WORKFLOW_STEPS = frozenset({
+    'remove_watermark', 'cutout', 'add_scene', 'annotate_ru',
+})
+
+
+class WorkflowStepInput(BaseModel):
+    id: str
+    enabled: bool = True
+    order: int = Field(ge=0)
+    prompt: str = Field(default='', max_length=800)
+
+    @model_validator(mode='after')
+    def validate_id(self):
+        if self.id not in ALLOWED_WORKFLOW_STEPS:
+            raise ValueError(f'未知步骤: {self.id}')
+        return self
+
+
+class WorkflowSubmitRequest(BaseModel):
+    image_url: str = Field(..., min_length=1)
+    object_name: str = Field(..., min_length=1)
+    steps: list[WorkflowStepInput] = Field(..., min_length=1)
+    seed: int = Field(default=-1, ge=-1)
+    scale: float = Field(default=0.5, ge=0, le=1)
+
+    @model_validator(mode='after')
+    def validate_workflow(self):
+        if not any(s.enabled for s in self.steps):
+            raise ValueError('至少启用一个步骤')
+        # 首期单图已由单字段表达；禁止未来误传多图扩展时在此校验
+        return self
+
+
+class TextLayoutItem(BaseModel):
+    id: str
+    text: str = Field(..., min_length=1)
+
+
+class SuggestTextLayoutRequest(BaseModel):
+    image_url: str
+    items: list[TextLayoutItem] = Field(default_factory=list)
+
+
+class TextLayoutSuggestion(BaseModel):
+    id: str
+    x: float = Field(ge=0, le=1)
+    y: float = Field(ge=0, le=1)
+    fontSize: float | None = None
+    align: Literal['left', 'center', 'right'] | None = None
+
+
+class SuggestTextLayoutResponse(BaseModel):
+    suggestions: list[TextLayoutSuggestion]
+
+
+class CompleteAnnotationRequest(BaseModel):
+    """上传烘烤图；若 skip=True 则直接用 AI 底图完成（0 条文案）。"""
+    skip: bool = False
+    image_url: str | None = None
+    object_name: str | None = None
+
+    @model_validator(mode='after')
+    def validate_payload(self):
+        if self.skip:
+            return self
+        if not self.image_url or not self.object_name:
+            raise ValueError('未 skip 时必须提供 image_url 与 object_name')
+        return self
