@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Construction } from "lucide-react";
 
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
@@ -10,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { ImagePreview } from "@/components/features/ImageCompare";
 import { AITaskList, type AITask } from "@/components/features/AITaskList";
 import { FreeformEditPanel } from "@/components/features/ai-edit/FreeformEditPanel";
+import { WorkflowEditPanel } from "@/components/features/ai-edit/WorkflowEditPanel";
 
 type EditMode = "workflow" | "freeform";
 
@@ -79,25 +79,6 @@ function TaskStats({ tasks }: { tasks: AITask[] }) {
         <dd className={statClass}>{failed}</dd>
       </div>
     </dl>
-  );
-}
-
-function WorkflowPlaceholder() {
-  return (
-    <Card
-      variant="default"
-      padding="lg"
-      className="flex flex-col items-center justify-center gap-md py-xxl text-center min-h-[320px]"
-    >
-      <Construction
-        className="h-10 w-10 text-muted"
-        aria-hidden="true"
-      />
-      <div className="space-y-xs max-w-sm">
-        <h2 className="text-heading-sm font-display text-ink">工作流</h2>
-        <p className="text-caption text-muted">即将接入</p>
-      </div>
-    </Card>
   );
 }
 
@@ -312,7 +293,7 @@ export default function AIEditPage() {
         {/* Left: mode panel */}
         <div id="ai-edit-form">
           {mode === "workflow" ? (
-            <WorkflowPlaceholder />
+            <WorkflowEditPanel onTasksRefresh={() => fetchTasks()} />
           ) : (
             <FreeformEditPanel onTasksRefresh={() => fetchTasks()} />
           )}
